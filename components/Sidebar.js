@@ -49,12 +49,15 @@ export default function Sidebar({ selectedId, onSelect }) {
     <div className="flex flex-col h-full" style={{ backgroundColor: '#f9fafb', borderRight: '1px solid #e5e7eb' }}>
       {/* Header */}
       <div className="px-4 py-5 border-b border-gray-200">
-        <div className="flex items-center gap-2">
+        <button
+          onClick={() => onSelect(null)}
+          className="flex items-center gap-2 hover:opacity-75 transition-opacity"
+        >
           <svg className="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill={ACCENT}>
             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h3a1 1 0 001-1v-3h2v3a1 1 0 001 1h3a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
           </svg>
           <span className="font-bold text-gray-900 text-base leading-tight">FSBO Texas Guide</span>
-        </div>
+        </button>
       </div>
 
       {/* Steps */}
