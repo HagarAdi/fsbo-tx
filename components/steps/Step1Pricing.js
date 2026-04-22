@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
 const ACCENT = '#16a34a'
-const EMPTY_COMP = { address: '', price: '', sqft: '', dom: '' }
+const EMPTY_COMP = { address: '', price: '', sqft: '', yearBuilt: '', dom: '' }
 
 const RENOVATIONS = [
   { key: 'newRoof', label: 'New roof (last 5 years)', pct: 0.015, source: 'NAR Remodeling Impact Report' },
@@ -136,7 +136,8 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
     comp_address: 'Find on Redfin or HAR.com under Recently Sold',
     comp_price: 'Final sale price, not list price. Do not use Zestimate',
     comp_sqft: 'Heated area only. On the listing or CAD record',
-    comp_dom: 'Under 21 days = priced right. Over 45 days = was overpriced, use with caution',
+    comp_yr: 'Year the home was built. Find on the listing or CAD record',
+    comp_dom: 'Under 14 days = sold fast. 14–30 = normal. 31–60 = took a while. Over 60 = may have had issues',
   }
 
   // Price calculation (derived values, only meaningful when avgPpsf and sqft exist)
@@ -455,6 +456,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                   { id: 'comp_address', label: 'Address' },
                   { id: 'comp_price', label: 'Sale Price' },
                   { id: 'comp_sqft', label: 'Sqft' },
+                  { id: 'comp_yr', label: 'Yr Built' },
                   { id: 'comp_dom', label: 'DOM' },
                   { id: null, label: '$/sqft' },
                 ].map(({ id, label }) => (
@@ -483,14 +485,30 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
             <tbody>
               {comps.map((comp, i) => {
                 const ppsf = getPpsf(comp)
+
+                const priceOutlier = ppsf !== null && avgPpsf !== null
+                  && Math.abs(parseFloat(ppsf) / parseFloat(avgPpsf) - 1) > 0.15
+
+                const compSqftNum = comp.sqft !== '' ? parseFloat(comp.sqft) : NaN
+                const sqftOutlier = sqftNum > 0 && !isNaN(compSqftNum)
+                  && Math.abs(compSqftNum / sqftNum - 1) > 0.25
+
+                const compYearBuiltNum = (comp.yearBuilt || '') !== '' ? parseInt(comp.yearBuilt) : NaN
+                const homeYearBuiltNum = yearBuilt !== '' ? parseInt(yearBuilt) : NaN
+                const yearBuiltNewer = !isNaN(compYearBuiltNum) && !isNaN(homeYearBuiltNum)
+                  && compYearBuiltNum > homeYearBuiltNum + 15
+
                 const domNum = comp.dom !== '' ? parseFloat(comp.dom) : NaN
-                const domNote = !isNaN(domNum)
-                  ? domNum < 21
-                    ? { color: '#15803d', bg: '#f0fdf4', border: '#bbf7d0', text: '✓ Priced right — reliable comp' }
-                    : domNum >= 45
-                    ? { color: '#9a3412', bg: '#fff7ed', border: '#fed7aa', text: '⚠️ This comp sat too long — it was likely overpriced. Consider using a different comp or weighting it less' }
-                    : null
+                const domNote = !isNaN(domNum) && comp.price !== '' && !isNaN(parseFloat(comp.price))
+                  ? domNum < 14
+                    ? { color: '#15803d', bg: '#f0fdf4', text: '✓ Sold fast — strong reliable comp' }
+                    : domNum <= 30
+                    ? { color: '#1d4ed8', bg: '#eff6ff', text: '✓ Normal market time — decent comp' }
+                    : domNum <= 60
+                    ? { color: '#92400e', bg: '#fffbeb', text: '⚠️ Took some time to sell — verify condition and location before using' }
+                    : { color: '#9a3412', bg: '#fff7ed', text: '⚠️ Sat a long time — may have had pricing, condition, or location issues. Consider finding a different comp' }
                   : null
+
                 return (
                   <>
                     <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
@@ -511,6 +529,9 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                           placeholder="485000"
                           className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
                         />
+                        {priceOutlier && (
+                          <p className="mt-1 text-xs text-gray-400">This comp is an outlier — it may skew your estimate</p>
+                        )}
                       </td>
                       <td className="px-4 py-2.5">
                         <input
@@ -520,6 +541,21 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                           placeholder="2050"
                           className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
                         />
+                        {sqftOutlier && (
+                          <p className="mt-1 text-xs text-gray-400">This comp is significantly different in size — may not be a reliable benchmark</p>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <input
+                          type="number"
+                          value={comp.yearBuilt || ''}
+                          onChange={(e) => updateComp(i, 'yearBuilt', e.target.value)}
+                          placeholder="2005"
+                          className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
+                        />
+                        {yearBuiltNewer && (
+                          <p className="mt-1 text-xs text-gray-400">Much newer than your home — consider adjusting for age difference</p>
+                        )}
                       </td>
                       <td className="px-4 py-2.5">
                         <input
@@ -536,7 +572,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                     </tr>
                     {domNote && (
                       <tr key={`${i}-note`} style={{ backgroundColor: domNote.bg }}>
-                        <td colSpan={5} className="px-4 py-1.5">
+                        <td colSpan={6} className="px-4 py-1.5">
                           <p className="text-xs font-medium" style={{ color: domNote.color }}>{domNote.text}</p>
                         </td>
                       </tr>
@@ -547,7 +583,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
             </tbody>
             <tfoot>
               <tr className="border-t border-gray-200 bg-gray-50">
-                <td colSpan={4} className="px-4 py-3 text-xs font-semibold text-gray-500 text-right">
+                <td colSpan={5} className="px-4 py-3 text-xs font-semibold text-gray-500 text-right">
                   Average price per sqft
                 </td>
                 <td className="px-4 py-3 text-sm font-bold" style={{ color: ACCENT }}>
