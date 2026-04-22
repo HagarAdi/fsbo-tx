@@ -132,6 +132,22 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
     return (sum / valid.length).toFixed(2)
   })()
 
+  const cleanedMedianPpsf = (() => {
+    const values = comps
+      .map((c) => getPpsf(c))
+      .filter((v) => v !== null)
+      .map((v) => parseFloat(v))
+      .sort((a, b) => a - b)
+    if (!values.length) return null
+    const mid = Math.floor(values.length / 2)
+    const rawMedian =
+      values.length % 2 !== 0 ? values[mid] : (values[mid - 1] + values[mid]) / 2
+    const cleaned = values.filter((v) => Math.abs(v / rawMedian - 1) <= 0.5)
+    if (!cleaned.length) return rawMedian
+    const cMid = Math.floor(cleaned.length / 2)
+    return cleaned.length % 2 !== 0 ? cleaned[cMid] : (cleaned[cMid - 1] + cleaned[cMid]) / 2
+  })()
+
   const compTooltips = {
     comp_address: 'Find on Redfin or HAR.com under Recently Sold',
     comp_price: 'Final sale price, not list price. Do not use Zestimate',
@@ -486,8 +502,8 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
               {comps.map((comp, i) => {
                 const ppsf = getPpsf(comp)
 
-                const priceOutlier = ppsf !== null && avgPpsf !== null
-                  && Math.abs(parseFloat(ppsf) / parseFloat(avgPpsf) - 1) > 0.15
+                const priceOutlier = ppsf !== null && cleanedMedianPpsf !== null
+                  && Math.abs(parseFloat(ppsf) / cleanedMedianPpsf - 1) > 0.15
 
                 const compSqftNum = comp.sqft !== '' ? parseFloat(comp.sqft) : NaN
                 const sqftOutlier = sqftNum > 0 && !isNaN(compSqftNum)
