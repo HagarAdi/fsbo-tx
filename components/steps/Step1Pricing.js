@@ -31,6 +31,8 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
   const [bedsBaths, setBedsBaths] = useState('')
   const [yearBuilt, setYearBuilt] = useState('')
   const [condition, setCondition] = useState('')
+  const [bedrooms, setBedrooms] = useState('')
+  const [stories, setStories] = useState(null)
   const [pool, setPool] = useState(null)
   const [garage, setGarage] = useState(null)
   const [comps, setComps] = useState([
@@ -50,6 +52,8 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
           if (s1.bedsBaths !== undefined) setBedsBaths(s1.bedsBaths)
           if (s1.yearBuilt !== undefined) setYearBuilt(s1.yearBuilt)
           if (s1.condition !== undefined) setCondition(s1.condition)
+          if (s1.bedrooms !== undefined) setBedrooms(s1.bedrooms)
+          if (s1.stories !== undefined) setStories(s1.stories)
           if (s1.pool !== undefined) setPool(s1.pool)
           if (s1.garage !== undefined) setGarage(s1.garage)
           if (s1.comps && s1.comps.length > 0) setComps(s1.comps)
@@ -64,10 +68,10 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
       const existing = saved ? JSON.parse(saved) : {}
       localStorage.setItem(
         'fsbo_stepData',
-        JSON.stringify({ ...existing, step1: { sqft, bedsBaths, yearBuilt, condition, pool, garage, comps } })
+        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bedsBaths, yearBuilt, condition, stories, pool, garage, comps } })
       )
     } catch {}
-  }, [sqft, bedsBaths, yearBuilt, condition, pool, garage, comps])
+  }, [sqft, bedrooms, bedsBaths, yearBuilt, condition, stories, pool, garage, comps])
 
   const updateComp = (index, field, value) => {
     setComps((prev) => {
@@ -120,38 +124,6 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
         sit and get stigmatized. Texas buyers are data-savvy and know the comps.
       </p>
 
-      {/* How to find your comps */}
-      <section className="mb-10">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">How to find your comps</h3>
-        <ol className="space-y-3">
-          {[
-            <>
-              Go to{' '}
-              <span className="font-medium text-gray-800">Redfin.com</span> → search your address →
-              click &quot;Recently Sold&quot; → filter: last 90 days, within 0.5 miles, similar sqft
-              (±20%)
-            </>,
-            <>
-              Go to{' '}
-              <span className="font-medium text-gray-800">HAR.com</span> → search sold homes with
-              same filters — more accurate for Texas
-            </>,
-            'Pick 3–5 comps: same subdivision, similar sqft, low days on market (under 21), sold within 90 days',
-            'Avoid comps that sat 60+ days — they were overpriced and will skew your data',
-          ].map((item, i) => (
-            <li key={i} className="flex gap-3">
-              <span
-                className="flex-shrink-0 w-6 h-6 rounded-full text-xs font-bold text-white flex items-center justify-center mt-0.5"
-                style={{ backgroundColor: ACCENT }}
-              >
-                {i + 1}
-              </span>
-              <span className="text-gray-700 text-sm leading-relaxed">{item}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
-
       {/* Your home details */}
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-5">Your home details</h3>
@@ -170,6 +142,24 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
               value={sqft}
               onChange={(e) => setSqft(e.target.value)}
               placeholder="e.g. 2100"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Bedrooms */}
+          <div>
+            <div className="flex items-center mb-1">
+              <label className="text-sm font-medium text-gray-700">Bedrooms</label>
+              <TooltipIcon id="bedrooms" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+            </div>
+            {activeTooltip === 'bedrooms' && (
+              <Tooltip>Number of bedrooms. Buyers filter by this — comps should match your bedroom count</Tooltip>
+            )}
+            <input
+              type="number"
+              value={bedrooms}
+              onChange={(e) => setBedrooms(e.target.value)}
+              placeholder="e.g. 4"
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
@@ -232,6 +222,43 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
               <option value="Average">Average</option>
               <option value="Fair">Fair</option>
             </select>
+          </div>
+
+          {/* Stories */}
+          <div>
+            <div className="flex items-center mb-2">
+              <label className="text-sm font-medium text-gray-700">One-story or Two-story</label>
+              <TooltipIcon id="stories" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+            </div>
+            {activeTooltip === 'stories' && (
+              <Tooltip>In Texas, single-story homes typically sell faster and for more per sqft, especially for buyers over 50</Tooltip>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setStories('one')}
+                className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
+                style={
+                  stories === 'one'
+                    ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
+                    : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
+                }
+              >
+                One-story
+              </button>
+              <button
+                type="button"
+                onClick={() => setStories('two')}
+                className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
+                style={
+                  stories === 'two'
+                    ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
+                    : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
+                }
+              >
+                Two-story
+              </button>
+            </div>
           </div>
 
           {/* Pool */}
@@ -304,6 +331,38 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* How to find your comps */}
+      <section className="mb-10">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">How to find your comps</h3>
+        <ol className="space-y-3">
+          {[
+            <>
+              Go to{' '}
+              <span className="font-medium text-gray-800">Redfin.com</span> → search your address →
+              click &quot;Recently Sold&quot; → filter: last 90 days, within 0.5 miles, similar sqft
+              (±20%)
+            </>,
+            <>
+              Go to{' '}
+              <span className="font-medium text-gray-800">HAR.com</span> → search sold homes with
+              same filters — more accurate for Texas
+            </>,
+            'Pick 3–5 comps: same subdivision, similar sqft, low days on market (under 21), sold within 90 days',
+            'Avoid comps that sat 60+ days — they were overpriced and will skew your data',
+          ].map((item, i) => (
+            <li key={i} className="flex gap-3">
+              <span
+                className="flex-shrink-0 w-6 h-6 rounded-full text-xs font-bold text-white flex items-center justify-center mt-0.5"
+                style={{ backgroundColor: ACCENT }}
+              >
+                {i + 1}
+              </span>
+              <span className="text-gray-700 text-sm leading-relaxed">{item}</span>
+            </li>
+          ))}
+        </ol>
       </section>
 
       {/* Comparable sales */}
