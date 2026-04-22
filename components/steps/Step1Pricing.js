@@ -690,6 +690,48 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
         </section>
       )}
 
+      {/* Pro tips */}
+      <section className="mb-10">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Pro tips</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {[
+            { tip: 'Homes priced correctly sell 50% faster than overpriced ones', source: 'Zillow Research 2023' },
+            { tip: 'After 21 days on market, buyers assume something is wrong with the home', source: 'NAR Profile of Home Buyers' },
+            { tip: 'A $400 pre-listing appraisal gives you a defensible price to show buyers', source: 'HomeLight Agent Survey' },
+            { tip: 'Price reductions signal desperation — better to price right the first time', source: 'Industry best practice' },
+          ].map(({ tip, source }, i) => (
+            <div key={i} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-4">
+              <p className="text-sm text-gray-800 leading-relaxed mb-2">{tip}</p>
+              <p className="text-xs text-gray-400">— {source}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Tools & resources */}
+      <section className="mb-10">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Where to find your data</h3>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { label: 'Redfin', href: 'https://redfin.com' },
+            { label: 'HAR.com', href: 'https://har.com' },
+            { label: 'Zillow', href: 'https://zillow.com' },
+            { label: 'Williamson CAD', href: 'https://wcad.org' },
+            { label: 'Travis CAD', href: 'https://traviscad.org' },
+          ].map(({ label, href }) => (
+            <a
+              key={label}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            >
+              {label}
+            </a>
+          ))}
+        </div>
+      </section>
+
       {/* Mark complete */}
       <div className="pt-6 border-t border-gray-100">
         {isCompleted ? (
