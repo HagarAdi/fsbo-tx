@@ -10,8 +10,12 @@ export default function Home() {
 
   const selectedStep = steps.find((s) => s.id === selectedId) ?? null
 
-  const handleComplete = (id) => {
-    setCompleted((prev) => new Set([...prev, id]))
+  const handleComplete = (id, value) => {
+    setCompleted((prev) => {
+      const next = new Set(prev)
+      value ? next.add(id) : next.delete(id)
+      return next
+    })
   }
 
   return (
@@ -27,7 +31,7 @@ export default function Home() {
           <StepPlaceholder
             step={selectedStep}
             isComplete={completed.has(selectedStep.id)}
-            onComplete={() => handleComplete(selectedStep.id)}
+            onComplete={(value) => handleComplete(selectedStep.id, value)}
           />
         ) : (
           <WelcomeScreen />

@@ -39,16 +39,24 @@ export default function StepPlaceholder({ step, isComplete, onComplete }) {
 
       <div className="mt-auto pt-10">
         {isComplete ? (
-          <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ACCENT }}>
-            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="7" fill={ACCENT} />
-              <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Completed
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ACCENT }}>
+              <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="7" fill={ACCENT} />
+                <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Completed
+            </span>
+            <button
+              onClick={() => onComplete(false)}
+              className="text-xs text-gray-400 underline hover:text-gray-600 transition-colors"
+            >
+              Undo
+            </button>
+          </div>
         ) : (
           <button
-            onClick={onComplete}
+            onClick={() => onComplete(true)}
             className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
             style={{ backgroundColor: ACCENT }}
           >
