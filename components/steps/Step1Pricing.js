@@ -3,6 +3,23 @@ import { useState, useEffect } from 'react'
 const ACCENT = '#16a34a'
 const EMPTY_COMP = { address: '', price: '', sqft: '', dom: '' }
 
+const RENOVATIONS = [
+  { key: 'newRoof', label: 'New roof (last 5 years)', pct: 0.015, source: 'NAR Remodeling Impact Report' },
+  { key: 'updatedKitchen', label: 'Updated kitchen', pct: 0.03, source: 'NAR Remodeling Impact Report' },
+  { key: 'updatedBathrooms', label: 'Updated bathrooms', pct: 0.02, source: 'NAR Remodeling Impact Report' },
+  { key: 'freshPaint', label: 'Fresh interior paint', pct: 0.0075, source: 'Zillow Research' },
+  { key: 'newFlooring', label: 'New flooring', pct: 0.015, source: 'NAR Remodeling Impact Report' },
+  { key: 'newWindows', label: 'New windows', pct: 0.0075, source: 'NAR Remodeling Impact Report' },
+  { key: 'hvacOld', label: 'HVAC over 15 years old', pct: -0.015, source: 'HomeLight Agent Survey' },
+  { key: 'roofOld', label: 'Roof over 20 years old', pct: -0.015, source: 'HomeLight Agent Survey' },
+]
+
+const CONDITION_PCT = { Excellent: 0.04, Good: 0, Average: -0.03, Fair: -0.06 }
+
+function formatDollars(n) {
+  return Math.round(n).toLocaleString()
+}
+
 function TooltipIcon({ id, activeTooltip, setActiveTooltip }) {
   return (
     <button
@@ -24,7 +41,7 @@ function Tooltip({ children }) {
   )
 }
 
-export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
+export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onPriceUpdate }) {
   const [activeTooltip, setActiveTooltip] = useState(null)
 
   const [sqft, setSqft] = useState('')
@@ -40,6 +57,8 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
     { ...EMPTY_COMP },
     { ...EMPTY_COMP },
   ])
+  const [renovations, setRenovations] = useState({})
+  const [estimateSaved, setEstimateSaved] = useState(false)
 
   useEffect(() => {
     try {
@@ -57,6 +76,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
           if (s1.pool !== undefined) setPool(s1.pool)
           if (s1.garage !== undefined) setGarage(s1.garage)
           if (s1.comps && s1.comps.length > 0) setComps(s1.comps)
+          if (s1.renovations !== undefined) setRenovations(s1.renovations)
         }
       }
     } catch {}
@@ -68,10 +88,14 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
       const existing = saved ? JSON.parse(saved) : {}
       localStorage.setItem(
         'fsbo_stepData',
-        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bedsBaths, yearBuilt, condition, stories, pool, garage, comps } })
+        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bedsBaths, yearBuilt, condition, stories, pool, garage, comps, renovations } })
       )
     } catch {}
-  }, [sqft, bedrooms, bedsBaths, yearBuilt, condition, stories, pool, garage, comps])
+  }, [sqft, bedrooms, bedsBaths, yearBuilt, condition, stories, pool, garage, comps, renovations])
+
+  useEffect(() => {
+    setEstimateSaved(false)
+  }, [sqft, condition, stories, pool, renovations, comps])
 
   const updateComp = (index, field, value) => {
     setComps((prev) => {
@@ -104,6 +128,48 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
     comp_price: 'Final sale price, not list price. Do not use Zestimate',
     comp_sqft: 'Heated area only. On the listing or CAD record',
     comp_dom: 'Under 21 days = priced right. Over 45 days = was overpriced, use with caution',
+  }
+
+  // Price calculation (derived values, only meaningful when avgPpsf and sqft exist)
+  const sqftNum = parseFloat(sqft)
+  const hasComps = avgPpsf !== null
+  const baseValue = hasComps && sqftNum > 0 ? parseFloat(avgPpsf) * sqftNum : null
+
+  const condPct = CONDITION_PCT[condition] ?? null
+  const condAmt = baseValue && condPct !== null ? baseValue * condPct : 0
+  const poolAmt = baseValue && pool === true ? 20000 : 0
+  const storyAmt = baseValue && stories === 'one' ? baseValue * 0.02 : 0
+  const renovationAmounts = baseValue
+    ? RENOVATIONS.filter((r) => renovations[r.key]).map((r) => ({ ...r, amount: baseValue * r.pct }))
+    : []
+  const calculatedValue = baseValue
+    ? baseValue + condAmt + poolAmt + storyAmt + renovationAmounts.reduce((acc, r) => acc + r.amount, 0)
+    : null
+  const rangeMin = calculatedValue ? calculatedValue * 0.98 : null
+  const rangeMax = calculatedValue ? calculatedValue * 1.02 : null
+  const tipPrice = calculatedValue ? Math.ceil(calculatedValue / 25000) * 25000 - 1000 : null
+
+  const handleSaveEstimate = () => {
+    if (!calculatedValue) return
+    const adjustments = [
+      { step: 1, reason: 'comp average', amount: Math.round(baseValue) },
+    ]
+    if (condAmt !== 0) adjustments.push({ step: 1, reason: `condition (${condition})`, amount: Math.round(condAmt) })
+    if (poolAmt) adjustments.push({ step: 1, reason: 'pool', amount: poolAmt })
+    if (storyAmt) adjustments.push({ step: 1, reason: 'one-story premium', amount: Math.round(storyAmt) })
+    renovationAmounts.forEach((r) =>
+      adjustments.push({ step: 1, reason: r.label, amount: Math.round(r.amount) })
+    )
+    const estimate = {
+      basePrice: Math.round(baseValue),
+      adjustments,
+      currentEstimate: Math.round(calculatedValue),
+    }
+    try {
+      localStorage.setItem('fsbo_priceEstimate', JSON.stringify(estimate))
+    } catch {}
+    if (onPriceUpdate) onPriceUpdate(estimate)
+    setEstimateSaved(true)
   }
 
   return (
@@ -477,6 +543,152 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted }) {
           </button>
         )}
       </section>
+
+      {/* Section 1: Renovation checklist */}
+      <section className="mb-10">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">What have you updated?</h3>
+        <p className="text-sm text-gray-500 mb-5">
+          Check everything that applies. These adjustments will be reflected in your price estimate below.
+        </p>
+        <div className="space-y-3">
+          {RENOVATIONS.map((item) => (
+            <label key={item.key} className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={renovations[item.key] || false}
+                onChange={(e) =>
+                  setRenovations((prev) => ({ ...prev, [item.key]: e.target.checked }))
+                }
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer"
+                style={{ accentColor: ACCENT }}
+              />
+              <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                <span className="text-sm text-gray-800">{item.label}</span>
+                <span
+                  className="text-sm font-semibold"
+                  style={{ color: item.pct > 0 ? ACCENT : '#dc2626' }}
+                >
+                  {item.pct > 0 ? '+' : ''}{(item.pct * 100) % 1 === 0 ? item.pct * 100 : (item.pct * 100).toFixed(2).replace(/0+$/, '')}%
+                </span>
+                <span className="text-xs text-gray-400">— {item.source}</span>
+              </div>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      {/* Section 2: Price calculation */}
+      {hasComps && baseValue && (
+        <section className="mb-10">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your estimated price</h3>
+
+          <div className="rounded-lg border border-gray-200 overflow-hidden">
+            <div className="divide-y divide-gray-100">
+              {/* Base value */}
+              <div className="flex items-center justify-between px-5 py-3 bg-white">
+                <span className="text-sm text-gray-600">
+                  Base value: avg ${avgPpsf}/sqft × {Number(sqft).toLocaleString()} sqft
+                </span>
+                <span className="text-sm font-semibold text-gray-900">${formatDollars(baseValue)}</span>
+              </div>
+
+              {/* Condition adjustment */}
+              {condition && condPct !== null && condAmt !== 0 && (
+                <div className="flex items-center justify-between px-5 py-3 bg-white">
+                  <span className="text-sm text-gray-600">
+                    Condition ({condition}): {condPct > 0 ? '+' : ''}{condPct * 100}%
+                  </span>
+                  <span
+                    className="text-sm font-semibold"
+                    style={{ color: condAmt >= 0 ? ACCENT : '#dc2626' }}
+                  >
+                    {condAmt >= 0 ? '+' : '-'}${formatDollars(Math.abs(condAmt))}
+                  </span>
+                </div>
+              )}
+              {condition === 'Good' && (
+                <div className="flex items-center justify-between px-5 py-3 bg-white">
+                  <span className="text-sm text-gray-600">Condition (Good): 0%</span>
+                  <span className="text-sm font-semibold text-gray-500">$0</span>
+                </div>
+              )}
+
+              {/* Pool */}
+              {pool === true && (
+                <div className="flex items-center justify-between px-5 py-3 bg-white">
+                  <span className="text-sm text-gray-600">
+                    Pool (TX adds $15K–$30K regardless of home price)
+                  </span>
+                  <span className="text-sm font-semibold" style={{ color: ACCENT }}>+$20,000</span>
+                </div>
+              )}
+
+              {/* One-story premium */}
+              {stories === 'one' && (
+                <div className="flex items-center justify-between px-5 py-3 bg-white">
+                  <span className="text-sm text-gray-600">One-story premium: +2%</span>
+                  <span className="text-sm font-semibold" style={{ color: ACCENT }}>
+                    +${formatDollars(storyAmt)}
+                  </span>
+                </div>
+              )}
+
+              {/* Renovation adjustments */}
+              {renovationAmounts.map((r) => (
+                <div key={r.key} className="flex items-center justify-between px-5 py-3 bg-white">
+                  <span className="text-sm text-gray-600">
+                    {r.label}: {r.pct > 0 ? '+' : ''}{(r.pct * 100) % 1 === 0 ? r.pct * 100 : (r.pct * 100).toFixed(2).replace(/0+$/, '')}%
+                  </span>
+                  <span
+                    className="text-sm font-semibold"
+                    style={{ color: r.amount >= 0 ? ACCENT : '#dc2626' }}
+                  >
+                    {r.amount >= 0 ? '+' : '-'}${formatDollars(Math.abs(r.amount))}
+                  </span>
+                </div>
+              ))}
+
+              {/* Dividing line + price range */}
+              <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
+                <span className="text-sm font-semibold text-gray-900">Recommended price range</span>
+                <span className="text-sm font-bold text-gray-900">
+                  ${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Tip box */}
+          <div
+            className="mt-4 rounded-lg px-4 py-3"
+            style={{ backgroundColor: '#f0fdf4', borderWidth: 1, borderStyle: 'solid', borderColor: '#bbf7d0' }}
+          >
+            <p className="text-sm" style={{ color: '#166534' }}>
+              <span className="font-semibold">Tip:</span> Price at{' '}
+              <span className="font-semibold">${formatDollars(tipPrice)}</span> to appear in more
+              search filters on Zillow and Redfin
+            </p>
+          </div>
+
+          {/* Save button */}
+          <div className="mt-4">
+            {estimateSaved ? (
+              <span className="text-sm font-semibold" style={{ color: ACCENT }}>
+                ✓ Estimate saved
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSaveEstimate}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: ACCENT }}
+              >
+                Save this estimate
+              </button>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Mark complete */}
       <div className="pt-6 border-t border-gray-100">
