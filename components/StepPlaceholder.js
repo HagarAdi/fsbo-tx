@@ -4,7 +4,9 @@ const phaseColors = {
   Close:   { bg: '#fef9c3', text: '#a16207' },
 }
 
-export default function StepPlaceholder({ step }) {
+const ACCENT = '#16a34a'
+
+export default function StepPlaceholder({ step, isComplete, onComplete }) {
   const colors = phaseColors[step.phase] ?? { bg: '#f3f4f6', text: '#374151' }
 
   return (
@@ -33,6 +35,26 @@ export default function StepPlaceholder({ step }) {
         <p className="text-sm text-gray-400 italic">
           Step content coming soon.
         </p>
+      </div>
+
+      <div className="mt-auto pt-10">
+        {isComplete ? (
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ACCENT }}>
+            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7" fill={ACCENT} />
+              <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Completed
+          </span>
+        ) : (
+          <button
+            onClick={onComplete}
+            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ backgroundColor: ACCENT }}
+          >
+            Mark complete
+          </button>
+        )}
       </div>
     </div>
   )
