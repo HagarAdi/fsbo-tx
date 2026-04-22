@@ -5,19 +5,44 @@ import StepPlaceholder from '../components/StepPlaceholder'
 import { steps } from '../data/steps'
 
 export default function Home() {
-  const [selectedId, setSelectedId] = useState(null)
-  const [completed, setCompleted] = useState(new Set())
+  const [selectedId, setSelectedId] = useState(() => {
+    if (typeof window === 'undefined') return null
+    const saved = localStorage.getItem('fsbo_lastVisited')
+    return saved !== null ? Number(saved) : null
+  })
+
+  const [completed, setCompleted] = useState(() => {
+    if (typeof window === 'undefined') return new Set()
+    try {
+      const saved = localStorage.getItem('fsbo_completedSteps')
+      return saved ? new Set(JSON.parse(saved)) : new Set()
+    } catch {
+      return new Set()
+    }
+  })
 
   const selectedStep = steps.find((s) => s.id === selectedId) ?? null
 
+  const handleSelect = (id) => {
+    setSelectedId(id)
+    if (id !== null) {
+      localStorage.setItem('fsbo_lastVisited', id)
+    }
+  }
+
   const handleComplete = (id) => {
-    setCompleted((prev) => new Set([...prev, id]))
+    setCompleted((prev) => {
+      const next = new Set([...prev, id])
+      localStorage.setItem('fsbo_completedSteps', JSON.stringify([...next]))
+      return next
+    })
   }
 
   const handleUndo = (id) => {
     setCompleted((prev) => {
       const next = new Set(prev)
       next.delete(id)
+      localStorage.setItem('fsbo_completedSteps', JSON.stringify([...next]))
       return next
     })
   }
@@ -26,7 +51,7 @@ export default function Home() {
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar — 25% */}
       <div className="w-1/4 min-w-[220px] h-full overflow-hidden flex-shrink-0">
-        <Sidebar selectedId={selectedId} onSelect={setSelectedId} completed={completed} />
+        <Sidebar selectedId={selectedId} onSelect={handleSelect} completed={completed} />
       </div>
 
       {/* Main area — 75% */}
