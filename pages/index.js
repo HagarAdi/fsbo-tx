@@ -56,6 +56,13 @@ export default function Home() {
     })
   }
 
+  const handlePriceUpdate = (estimate) => {
+    setPriceEstimate(estimate)
+    try {
+      localStorage.setItem('fsbo_priceEstimate', JSON.stringify(estimate))
+    } catch {}
+  }
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar — 25% */}
@@ -71,6 +78,7 @@ export default function Home() {
               homeAddress={homeAddress}
               onComplete={(value) => value ? handleComplete(1) : handleUndo(1)}
               isCompleted={completed.has(1)}
+              onPriceUpdate={handlePriceUpdate}
             />
           ) : (
             <StepPlaceholder
