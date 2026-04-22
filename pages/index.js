@@ -5,11 +5,7 @@ import StepPlaceholder from '../components/StepPlaceholder'
 import { steps } from '../data/steps'
 
 export default function Home() {
-  const [selectedId, setSelectedId] = useState(() => {
-    if (typeof window === 'undefined') return null
-    const saved = localStorage.getItem('fsbo_lastVisited')
-    return saved !== null ? Number(saved) : null
-  })
+  const [selectedId, setSelectedId] = useState(null)
 
   const [completed, setCompleted] = useState(() => {
     if (typeof window === 'undefined') return new Set()
@@ -25,9 +21,6 @@ export default function Home() {
 
   const handleSelect = (id) => {
     setSelectedId(id)
-    if (id !== null) {
-      localStorage.setItem('fsbo_lastVisited', id)
-    }
   }
 
   const handleComplete = (id) => {
