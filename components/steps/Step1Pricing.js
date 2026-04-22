@@ -109,6 +109,15 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
     if (comps.length < 5) setComps((prev) => [...prev, { ...EMPTY_COMP }])
   }
 
+  const handleRenovationChange = (key, checked) => {
+    setRenovations((prev) => {
+      const next = { ...prev, [key]: checked }
+      if (checked && key === 'newRoof') next.roofOld = false
+      if (checked && key === 'roofOld') next.newRoof = false
+      return next
+    })
+  }
+
   const getPpsf = (comp) => {
     const price = parseFloat(comp.price)
     const sf = parseFloat(comp.sqft)
@@ -474,48 +483,65 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
             <tbody>
               {comps.map((comp, i) => {
                 const ppsf = getPpsf(comp)
+                const domNum = comp.dom !== '' ? parseFloat(comp.dom) : NaN
+                const domNote = !isNaN(domNum)
+                  ? domNum < 21
+                    ? { color: '#15803d', bg: '#f0fdf4', border: '#bbf7d0', text: '✓ Priced right — reliable comp' }
+                    : domNum >= 45
+                    ? { color: '#9a3412', bg: '#fff7ed', border: '#fed7aa', text: '⚠️ This comp sat too long — it was likely overpriced. Consider using a different comp or weighting it less' }
+                    : null
+                  : null
                 return (
-                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
-                    <td className="px-4 py-2.5">
-                      <input
-                        type="text"
-                        value={comp.address}
-                        onChange={(e) => updateComp(i, 'address', e.target.value)}
-                        placeholder="456 Oak St, Round Rock TX"
-                        className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                      />
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <input
-                        type="number"
-                        value={comp.price}
-                        onChange={(e) => updateComp(i, 'price', e.target.value)}
-                        placeholder="485000"
-                        className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                      />
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <input
-                        type="number"
-                        value={comp.sqft}
-                        onChange={(e) => updateComp(i, 'sqft', e.target.value)}
-                        placeholder="2050"
-                        className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                      />
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <input
-                        type="number"
-                        value={comp.dom}
-                        onChange={(e) => updateComp(i, 'dom', e.target.value)}
-                        placeholder="12"
-                        className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                      />
-                    </td>
-                    <td className="px-4 py-2.5 text-xs font-semibold text-gray-700 whitespace-nowrap">
-                      {ppsf ? `$${ppsf}` : '—'}
-                    </td>
-                  </tr>
+                  <>
+                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
+                      <td className="px-4 py-2.5">
+                        <input
+                          type="text"
+                          value={comp.address}
+                          onChange={(e) => updateComp(i, 'address', e.target.value)}
+                          placeholder="456 Oak St, Round Rock TX"
+                          className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
+                        />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <input
+                          type="number"
+                          value={comp.price}
+                          onChange={(e) => updateComp(i, 'price', e.target.value)}
+                          placeholder="485000"
+                          className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
+                        />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <input
+                          type="number"
+                          value={comp.sqft}
+                          onChange={(e) => updateComp(i, 'sqft', e.target.value)}
+                          placeholder="2050"
+                          className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
+                        />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <input
+                          type="number"
+                          value={comp.dom}
+                          onChange={(e) => updateComp(i, 'dom', e.target.value)}
+                          placeholder="12"
+                          className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
+                        />
+                      </td>
+                      <td className="px-4 py-2.5 text-xs font-semibold text-gray-700 whitespace-nowrap">
+                        {ppsf ? `$${ppsf}` : '—'}
+                      </td>
+                    </tr>
+                    {domNote && (
+                      <tr key={`${i}-note`} style={{ backgroundColor: domNote.bg }}>
+                        <td colSpan={5} className="px-4 py-1.5">
+                          <p className="text-xs font-medium" style={{ color: domNote.color }}>{domNote.text}</p>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 )
               })}
             </tbody>
@@ -556,9 +582,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
               <input
                 type="checkbox"
                 checked={renovations[item.key] || false}
-                onChange={(e) =>
-                  setRenovations((prev) => ({ ...prev, [item.key]: e.target.checked }))
-                }
+                onChange={(e) => handleRenovationChange(item.key, e.target.checked)}
                 className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer"
                 style={{ accentColor: ACCENT }}
               />
