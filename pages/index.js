@@ -14,6 +14,14 @@ export default function Home() {
     setCompleted((prev) => new Set([...prev, id]))
   }
 
+  const handleUndo = (id) => {
+    setCompleted((prev) => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+  }
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar — 25% */}
@@ -28,6 +36,7 @@ export default function Home() {
             step={selectedStep}
             isComplete={completed.has(selectedStep.id)}
             onComplete={() => handleComplete(selectedStep.id)}
+            onUndo={() => handleUndo(selectedStep.id)}
           />
         ) : (
           <WelcomeScreen />
