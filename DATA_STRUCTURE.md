@@ -37,6 +37,20 @@ Number — the ID of the last step the user visited.
 Default: null
 Example: 2
 
+### `fsbo_priceEstimate`
+Object — the living price estimate that updates as steps are completed.
+Default: null
+Example:
+{
+  "basePrice": 485000,
+  "adjustments": [
+    { "step": 1, "reason": "comp average", "amount": 485000 },
+    { "step": 2, "reason": "new roof", "amount": 8000 },
+    { "step": 3, "reason": "staging", "amount": 5000 }
+  ],
+  "currentEstimate": 498000
+}
+
 ## Storage Strategy
 - Current: localStorage (browser only, no login required)
 - Future: Supabase database (when multi-user accounts are needed)

@@ -41,7 +41,7 @@ function PhaseGroup({ phase, steps, selectedId, onSelect, completed }) {
   )
 }
 
-export default function Sidebar({ selectedId, onSelect, completed }) {
+export default function Sidebar({ selectedId, onSelect, completed, priceEstimate }) {
   const completedCount = completed.size
   const total = steps.length
   const pct = Math.round((completedCount / total) * 100)
@@ -87,6 +87,13 @@ export default function Sidebar({ selectedId, onSelect, completed }) {
             style={{ width: `${pct}%`, backgroundColor: ACCENT }}
           />
         </div>
+        {priceEstimate ? (
+          <p className="text-xs font-medium mt-2" style={{ color: ACCENT }}>
+            Est. price: ${priceEstimate.currentEstimate.toLocaleString()}
+          </p>
+        ) : (
+          <p className="text-xs text-gray-400 mt-2">Est. price: —</p>
+        )}
       </div>
     </div>
   )

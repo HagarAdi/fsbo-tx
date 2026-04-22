@@ -11,9 +11,14 @@ const HomeIcon = ({ className }) => (
   </svg>
 )
 
-export default function WelcomeScreen() {
+export default function WelcomeScreen({ priceEstimate }) {
   const completed = steps.filter((s) => s.complete).length
   const total = steps.length
+
+  const lastAdjustment = priceEstimate?.adjustments?.length
+    ? priceEstimate.adjustments[priceEstimate.adjustments.length - 1]
+    : null
+  const lastStepTitle = lastAdjustment ? steps.find((s) => s.id === lastAdjustment.step)?.title : null
 
   const [address, setAddress] = useState(() => {
     if (typeof window === 'undefined') return ''
@@ -51,6 +56,36 @@ export default function WelcomeScreen() {
         $18,000 saved by going FSBO
         <span className="opacity-75 font-normal">($600K × 3%)</span>
       </div>
+
+      {/* Price estimate banner */}
+      {priceEstimate ? (
+        <div
+          className="w-full max-w-md rounded-2xl px-6 py-5 mb-8 text-left"
+          style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #bbf7d0' }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#15803d' }}>
+            Your estimated list price
+          </p>
+          <p className="text-3xl font-bold text-gray-900">
+            ${priceEstimate.currentEstimate.toLocaleString()}
+          </p>
+          {lastAdjustment && (
+            <p className="text-xs text-gray-400 mt-2">
+              Last updated: Step {lastAdjustment.step}{lastStepTitle ? ` — ${lastStepTitle}` : ''}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="w-full max-w-md rounded-2xl px-6 py-4 mb-8 bg-gray-50 border border-gray-200 flex items-center gap-3">
+          <svg className="w-5 h-5 text-gray-300 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+          </svg>
+          <p className="text-sm text-gray-400 flex-1">Complete Step 1 to get your estimated list price</p>
+          <svg className="w-4 h-4 text-gray-300 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor">
+            <path d="M10 4l-4 4 4 4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      )}
 
       {/* Address card */}
       {address ? (

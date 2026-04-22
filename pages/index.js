@@ -17,6 +17,16 @@ export default function Home() {
     }
   })
 
+  const [priceEstimate, setPriceEstimate] = useState(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const saved = localStorage.getItem('fsbo_priceEstimate')
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })
+
   const selectedStep = steps.find((s) => s.id === selectedId) ?? null
 
   const handleSelect = (id) => {
@@ -44,7 +54,7 @@ export default function Home() {
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar — 25% */}
       <div className="w-1/4 min-w-[220px] h-full overflow-hidden flex-shrink-0">
-        <Sidebar selectedId={selectedId} onSelect={handleSelect} completed={completed} />
+        <Sidebar selectedId={selectedId} onSelect={handleSelect} completed={completed} priceEstimate={priceEstimate} />
       </div>
 
       {/* Main area — 75% */}
@@ -57,7 +67,7 @@ export default function Home() {
             onUndo={() => handleUndo(selectedStep.id)}
           />
         ) : (
-          <WelcomeScreen />
+          <WelcomeScreen priceEstimate={priceEstimate} />
         )}
       </main>
     </div>
