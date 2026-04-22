@@ -2,7 +2,7 @@ import { steps, phases } from '../data/steps'
 
 const ACCENT = '#16a34a'
 
-function PhaseGroup({ phase, steps, selectedId, onSelect }) {
+function PhaseGroup({ phase, steps, selectedId, onSelect, completed }) {
   return (
     <div className="mb-4">
       <p className="px-4 mb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
@@ -10,6 +10,7 @@ function PhaseGroup({ phase, steps, selectedId, onSelect }) {
       </p>
       {steps.map((step) => {
         const isSelected = step.id === selectedId
+        const isComplete = completed.has(step.id)
         return (
           <button
             key={step.id}
@@ -24,7 +25,7 @@ function PhaseGroup({ phase, steps, selectedId, onSelect }) {
               {step.title}
             </span>
             <span className="ml-2 shrink-0">
-              {step.complete ? (
+              {isComplete ? (
                 <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
                   <circle cx="8" cy="8" r="7" fill={ACCENT} />
                   <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -40,10 +41,10 @@ function PhaseGroup({ phase, steps, selectedId, onSelect }) {
   )
 }
 
-export default function Sidebar({ selectedId, onSelect }) {
-  const completed = steps.filter((s) => s.complete).length
+export default function Sidebar({ selectedId, onSelect, completed }) {
+  const completedCount = completed.size
   const total = steps.length
-  const pct = Math.round((completed / total) * 100)
+  const pct = Math.round((completedCount / total) * 100)
 
   return (
     <div className="flex flex-col h-full" style={{ backgroundColor: '#f9fafb', borderRight: '1px solid #e5e7eb' }}>
@@ -69,6 +70,7 @@ export default function Sidebar({ selectedId, onSelect }) {
             steps={steps.filter((s) => s.phase === phase)}
             selectedId={selectedId}
             onSelect={onSelect}
+            completed={completed}
           />
         ))}
       </nav>
@@ -77,7 +79,7 @@ export default function Sidebar({ selectedId, onSelect }) {
       <div className="px-4 py-4 border-t border-gray-200">
         <div className="flex justify-between text-xs text-gray-500 mb-1.5">
           <span>Progress</span>
-          <span>{completed}/{total} steps complete</span>
+          <span>{completedCount}/{total} steps complete</span>
         </div>
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
