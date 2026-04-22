@@ -39,6 +39,14 @@ export default function WelcomeScreen({ priceEstimate }) {
     setInputValue('')
   }
 
+  const handleReset = () => {
+    if (!window.confirm('Are you sure? This will clear all your progress, saved address, and price estimate. This cannot be undone.')) return
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith('fsbo_'))
+      .forEach((k) => localStorage.removeItem(k))
+    window.location.reload()
+  }
+
   return (
     <div className="flex flex-col items-center justify-center h-full px-8 text-center">
       <h1 className="text-4xl font-bold text-gray-900 mb-6 tracking-tight">
@@ -158,6 +166,13 @@ export default function WelcomeScreen({ priceEstimate }) {
       <p className="text-gray-400 text-sm">
         Select a step on the left to get started
       </p>
+
+      <button
+        onClick={handleReset}
+        className="mt-8 text-xs text-gray-300 hover:text-gray-500 transition-colors"
+      >
+        ↺ Reset all data
+      </button>
     </div>
   )
 }
