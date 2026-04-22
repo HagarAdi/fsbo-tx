@@ -2,10 +2,16 @@ import { useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import WelcomeScreen from '../components/WelcomeScreen'
 import StepPlaceholder from '../components/StepPlaceholder'
+import Step1Pricing from '../components/steps/Step1Pricing'
 import { steps } from '../data/steps'
 
 export default function Home() {
   const [selectedId, setSelectedId] = useState(null)
+
+  const [homeAddress] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return localStorage.getItem('fsbo_homeAddress') || ''
+  })
 
   const [completed, setCompleted] = useState(() => {
     if (typeof window === 'undefined') return new Set()
@@ -60,12 +66,20 @@ export default function Home() {
       {/* Main area — 75% */}
       <main className="flex-1 h-full overflow-y-auto bg-white">
         {selectedStep ? (
-          <StepPlaceholder
-            step={selectedStep}
-            isComplete={completed.has(selectedStep.id)}
-            onComplete={() => handleComplete(selectedStep.id)}
-            onUndo={() => handleUndo(selectedStep.id)}
-          />
+          selectedStep.id === 1 ? (
+            <Step1Pricing
+              homeAddress={homeAddress}
+              onComplete={(value) => value ? handleComplete(1) : handleUndo(1)}
+              isCompleted={completed.has(1)}
+            />
+          ) : (
+            <StepPlaceholder
+              step={selectedStep}
+              isComplete={completed.has(selectedStep.id)}
+              onComplete={() => handleComplete(selectedStep.id)}
+              onUndo={() => handleUndo(selectedStep.id)}
+            />
+          )
         ) : (
           <WelcomeScreen priceEstimate={priceEstimate} />
         )}
