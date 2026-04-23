@@ -59,10 +59,10 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
   const [activeTooltip, setActiveTooltip] = useState(null)
 
   const [sqft, setSqft] = useState('')
-  const [bedsBaths, setBedsBaths] = useState('')
+  const [bedrooms, setBedrooms] = useState('')
+  const [bathrooms, setBathrooms] = useState('')
   const [yearBuilt, setYearBuilt] = useState('')
   const [condition, setCondition] = useState('')
-  const [bedrooms, setBedrooms] = useState('')
   const [stories, setStories] = useState(null)
   const [pool, setPool] = useState(null)
   const [garage, setGarage] = useState(null)
@@ -83,10 +83,10 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
         const s1 = data.step1
         if (s1) {
           if (s1.sqft !== undefined) setSqft(s1.sqft)
-          if (s1.bedsBaths !== undefined) setBedsBaths(s1.bedsBaths)
+          if (s1.bedrooms !== undefined) setBedrooms(s1.bedrooms)
+          if (s1.bathrooms !== undefined) setBathrooms(s1.bathrooms)
           if (s1.yearBuilt !== undefined) setYearBuilt(s1.yearBuilt)
           if (s1.condition !== undefined) setCondition(s1.condition)
-          if (s1.bedrooms !== undefined) setBedrooms(s1.bedrooms)
           if (s1.stories !== undefined) setStories(s1.stories)
           if (s1.pool !== undefined) setPool(s1.pool)
           if (s1.garage !== undefined) setGarage(s1.garage)
@@ -103,10 +103,10 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
       const existing = saved ? JSON.parse(saved) : {}
       localStorage.setItem(
         'fsbo_stepData',
-        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bedsBaths, yearBuilt, condition, stories, pool, garage, comps, renovations } })
+        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garage, comps, renovations } })
       )
     } catch {}
-  }, [sqft, bedrooms, bedsBaths, yearBuilt, condition, stories, pool, garage, comps, renovations])
+  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garage, comps, renovations])
 
   useEffect(() => {
     setEstimateSaved(false)
@@ -267,24 +267,28 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
               value={bedrooms}
               onChange={(e) => setBedrooms(e.target.value)}
               placeholder="e.g. 4"
+              step="1"
+              min="0"
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
 
-          {/* Beds / Baths */}
+          {/* Bathrooms */}
           <div>
             <div className="flex items-center mb-1">
-              <label className="text-sm font-medium text-gray-700">Beds / Baths</label>
-              <TooltipIcon id="bedsBaths" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+              <label className="text-sm font-medium text-gray-700">Bathrooms</label>
+              <TooltipIcon id="bathrooms" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
             </div>
-            {activeTooltip === 'bedsBaths' && (
-              <Tooltip>Enter as 3/2 or 4/2.5. Half baths count as 0.5</Tooltip>
+            {activeTooltip === 'bathrooms' && (
+              <Tooltip>Full baths count as 1, half baths (no shower) count as 0.5</Tooltip>
             )}
             <input
-              type="text"
-              value={bedsBaths}
-              onChange={(e) => setBedsBaths(e.target.value)}
-              placeholder="e.g. 4/2.5"
+              type="number"
+              value={bathrooms}
+              onChange={(e) => setBathrooms(e.target.value)}
+              placeholder="e.g. 2.5"
+              step="0.5"
+              min="0"
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
