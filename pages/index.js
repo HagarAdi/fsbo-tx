@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar'
 import WelcomeScreen from '../components/WelcomeScreen'
 import StepPlaceholder from '../components/StepPlaceholder'
 import Step1Pricing from '../components/steps/Step1Pricing'
+import Step2Repairs from '../components/steps/Step2Repairs'
 import { steps } from '../data/steps'
 
 export default function Home() {
@@ -79,6 +80,12 @@ export default function Home() {
               onComplete={(value) => value ? handleComplete(1) : handleUndo(1)}
               isCompleted={completed.has(1)}
               onPriceUpdate={handlePriceUpdate}
+              onSelectStep={handleSelect}
+            />
+          ) : selectedStep.id === 2 ? (
+            <Step2Repairs
+              onComplete={(value) => value ? handleComplete(2) : handleUndo(2)}
+              isCompleted={completed.has(2)}
               onSelectStep={handleSelect}
             />
           ) : (

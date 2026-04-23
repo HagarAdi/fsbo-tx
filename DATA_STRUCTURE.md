@@ -26,6 +26,9 @@ Example:
     ],
     "recommendedPrice": 498000
   },
+  "step2": {
+    "checkedItems": ["recaulk", "smoke"]
+  },
   "step3": {
     "stagingPhotos": [],
     "stagingNotes": ""
