@@ -89,7 +89,11 @@ export default function Home() {
             />
           )
         ) : (
-          <WelcomeScreen priceEstimate={priceEstimate} />
+          <WelcomeScreen
+            priceEstimate={priceEstimate}
+            completedSteps={[...completed]}
+            onSelectStep={handleSelect}
+          />
         )}
       </main>
     </div>
