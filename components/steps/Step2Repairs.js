@@ -92,6 +92,12 @@ const PRIORITY_CONFIG = {
   optional: { label: 'Optional', bg: '#f9fafb', text: '#6b7280', border: '#e5e7eb' },
 }
 
+const AI_PRIORITY_STYLE = {
+  'Must Fix':    { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' },
+  'Recommended': { bg: '#fefce8', text: '#ca8a04', border: '#fef08a' },
+  'Optional':    { bg: '#f9fafb', text: '#6b7280', border: '#e5e7eb' },
+}
+
 function PriorityBadge({ priority }) {
   const cfg = PRIORITY_CONFIG[priority]
   return (
@@ -116,6 +122,7 @@ function UploadZone({ photos, onAdd, maxPhotos }) {
     const toAdd = valid.slice(0, remaining).map((f) => ({
       name: f.name,
       url: URL.createObjectURL(f),
+      file: f,
     }))
     if (toAdd.length > 0) onAdd(toAdd)
   }
@@ -185,7 +192,66 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep }) 
   const [wizardStage, setWizardStage] = useState(0)
   const [wizardDone, setWizardDone] = useState(false)
   const [photos, setPhotos] = useState({ bathrooms: [], kitchen: [], front: [], other: [] })
-  const [showAnalysisTip, setShowAnalysisTip] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analyzeError, setAnalyzeError] = useState(null)
+  const [aiFindings, setAiFindings] = useState(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const saved = localStorage.getItem('fsbo_stepData')
+      if (saved) {
+        const data = JSON.parse(saved)
+        const findings = data?.step2?.aiFindings
+        if (Array.isArray(findings) && findings.length > 0) return findings
+      }
+    } catch {}
+    return null
+  })
+
+  const toBase64 = (file) => new Promise(resolve => {
+    const r = new FileReader()
+    r.onload = () => resolve(r.result.split(',')[1])
+    r.readAsDataURL(file)
+  })
+
+  const handleAnalyze = async () => {
+    const allFiles = Object.values(photos).flat().map(p => p.file).filter(Boolean)
+    setAnalyzing(true)
+    setAiFindings(null)
+    setAnalyzeError(null)
+    try {
+      const base64Images = await Promise.all(allFiles.map(toBase64))
+      const res = await fetch('/api/analyze-photos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: base64Images }),
+      })
+      const data = await res.json()
+      const findings = data.issues || []
+      setAiFindings(findings)
+      findings.forEach(finding => {
+        const words = finding.issue.toLowerCase().split(/\s+/).filter(w => w.length >= 3)
+        CHECKLIST_CATEGORIES.forEach(cat => {
+          cat.items.forEach(item => {
+            if (words.some(word => item.name.toLowerCase().includes(word))) {
+              handleCheck(item.id, true)
+            }
+          })
+        })
+      })
+      try {
+        const saved = localStorage.getItem('fsbo_stepData')
+        const existing = saved ? JSON.parse(saved) : {}
+        localStorage.setItem('fsbo_stepData', JSON.stringify({
+          ...existing,
+          step2: { ...existing.step2, aiFindings: findings },
+        }))
+      } catch {}
+    } catch {
+      setAnalyzeError("Couldn't analyze photos — no worries, use the checklist below.")
+    } finally {
+      setAnalyzing(false)
+    }
+  }
 
   const [checkedItems, setCheckedItems] = useState(() => {
     if (typeof window === 'undefined') return new Set()
@@ -326,22 +392,18 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep }) 
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-              <div className="relative">
+              <div>
                 <button
                   type="button"
-                  disabled
-                  onMouseEnter={() => setShowAnalysisTip(true)}
-                  onMouseLeave={() => setShowAnalysisTip(false)}
-                  className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white opacity-50 cursor-not-allowed"
+                  onClick={handleAnalyze}
+                  disabled={analyzing}
+                  className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: ACCENT }}
                 >
-                  Analyze my photos →
+                  {analyzing ? 'Analyzing your photos... 🔍' : 'Analyze my photos →'}
                 </button>
-                {showAnalysisTip && (
-                  <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg whitespace-nowrap z-10">
-                    AI analysis coming soon
-                    <div className="absolute top-full left-4 w-0 h-0" style={{ borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '4px solid #1f2937' }} />
-                  </div>
+                {analyzeError && (
+                  <p className="mt-2 text-sm text-gray-500">{analyzeError}</p>
                 )}
               </div>
 
@@ -359,6 +421,34 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep }) 
           </div>
         )}
       </section>
+
+      {/* AI findings */}
+      {aiFindings && aiFindings.length > 0 && (
+        <section className="mb-10">
+          <h3 className="text-base font-semibold text-gray-900 mb-4">📷 AI spotted these in your photos:</h3>
+          <div className="space-y-3">
+            {aiFindings.map((finding, i) => {
+              const style = AI_PRIORITY_STYLE[finding.priority] || AI_PRIORITY_STYLE['Optional']
+              return (
+                <div key={i} className="rounded-lg border p-4" style={{ borderColor: style.border, backgroundColor: style.bg }}>
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="text-sm font-semibold text-gray-900">{finding.issue}</span>
+                    <span
+                      className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                      style={{ backgroundColor: style.bg, color: style.text, border: `1px solid ${style.border}` }}
+                    >
+                      {finding.priority}
+                    </span>
+                    <span className="text-xs text-gray-400 ml-auto">{finding.room}</span>
+                  </div>
+                  <p className="text-xs font-medium text-gray-600 mb-0.5">{finding.costRange}</p>
+                  <p className="text-xs text-gray-500 italic">&ldquo;{finding.whyItMatters}&rdquo;</p>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Repair checklist */}
       <section id="repair-checklist" className="mb-10">

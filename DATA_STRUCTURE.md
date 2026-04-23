@@ -27,7 +27,16 @@ Example:
     "recommendedPrice": 498000
   },
   "step2": {
-    "checkedItems": ["recaulk", "smoke"]
+    "checkedItems": ["recaulk", "smoke"],
+    "aiFindings": [
+      {
+        "issue": "Dripping faucet",
+        "priority": "Must Fix",
+        "costRange": "$20-100 DIY",
+        "whyItMatters": "Drips make buyers wonder what else is wrong.",
+        "room": "Bathroom"
+      }
+    ]
   },
   "step3": {
     "stagingPhotos": [],
