@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 
 const ACCENT = '#16a34a'
 const EMPTY_COMP = { address: '', price: '', sqft: '', yearBuilt: '', dom: '' }
@@ -15,6 +15,20 @@ const RENOVATIONS = [
 ]
 
 const CONDITION_PCT = { Excellent: 0.04, Good: 0, Average: -0.03, Fair: -0.06 }
+
+function getQualityBadge(domNum) {
+  if (domNum < 14) return { label: 'Strong', bg: '#16a34a', color: 'white', border: '#16a34a' }
+  if (domNum <= 30) return { label: 'Good', bg: '#f0fdf4', color: '#16a34a', border: '#86efac' }
+  if (domNum <= 60) return { label: 'Verify', bg: '#fef3c7', color: '#d97706', border: '#fcd34d' }
+  return { label: 'Risky', bg: '#fef2f2', color: '#dc2626', border: '#fca5a5' }
+}
+
+function getDomDetailText(domNum) {
+  if (domNum < 14) return 'Sold fast — strong reliable comp'
+  if (domNum <= 30) return 'Normal market time — decent comp'
+  if (domNum <= 60) return 'Took some time to sell — verify condition and location before using'
+  return 'Sat a long time — may have had pricing, condition, or location issues. Consider finding a different comp'
+}
 
 function formatDollars(n) {
   return Math.round(n).toLocaleString()
@@ -59,6 +73,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
   ])
   const [renovations, setRenovations] = useState({})
   const [estimateSaved, setEstimateSaved] = useState(false)
+  const [openDetailIndex, setOpenDetailIndex] = useState(null)
 
   useEffect(() => {
     try {
@@ -475,6 +490,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                   { id: 'comp_yr', label: 'Yr Built' },
                   { id: 'comp_dom', label: 'DOM' },
                   { id: null, label: '$/sqft' },
+                  { id: null, label: '' },
                 ].map(({ id, label }) => (
                   <th key={label} className="text-left px-4 py-3 font-medium text-gray-600">
                     <div>
@@ -515,19 +531,25 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                   && compYearBuiltNum > homeYearBuiltNum + 15
 
                 const domNum = comp.dom !== '' ? parseFloat(comp.dom) : NaN
-                const domNote = !isNaN(domNum) && comp.price !== '' && !isNaN(parseFloat(comp.price))
-                  ? domNum < 14
-                    ? { color: '#15803d', bg: '#f0fdf4', text: '✓ Sold fast — strong reliable comp' }
-                    : domNum <= 30
-                    ? { color: '#1d4ed8', bg: '#eff6ff', text: '✓ Normal market time — decent comp' }
-                    : domNum <= 60
-                    ? { color: '#92400e', bg: '#fffbeb', text: '⚠️ Took some time to sell — verify condition and location before using' }
-                    : { color: '#9a3412', bg: '#fff7ed', text: '⚠️ Sat a long time — may have had pricing, condition, or location issues. Consider finding a different comp' }
-                  : null
+                const showBadges = comp.price !== '' && !isNaN(parseFloat(comp.price)) && comp.dom !== '' && !isNaN(domNum)
+                const qualityBadge = showBadges ? getQualityBadge(domNum) : null
+                const detailOpen = openDetailIndex === i
+
+                const badgeStyle = {
+                  fontSize: '11px',
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                  cursor: 'pointer',
+                  minHeight: '44px',
+                  lineHeight: '1',
+                  display: 'flex',
+                  alignItems: 'center',
+                  border: '1px solid',
+                }
 
                 return (
-                  <>
-                    <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
+                  <Fragment key={i}>
+                    <tr className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
                       <td className="px-4 py-2.5">
                         <input
                           type="text"
@@ -545,9 +567,6 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                           placeholder="485000"
                           className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
                         />
-                        {priceOutlier && (
-                          <p className="mt-1 text-xs text-gray-400">This comp is an outlier — it may skew your estimate</p>
-                        )}
                       </td>
                       <td className="px-4 py-2.5">
                         <input
@@ -557,9 +576,6 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                           placeholder="2050"
                           className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
                         />
-                        {sqftOutlier && (
-                          <p className="mt-1 text-xs text-gray-400">This comp is significantly different in size — may not be a reliable benchmark</p>
-                        )}
                       </td>
                       <td className="px-4 py-2.5">
                         <input
@@ -569,9 +585,6 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                           placeholder="2005"
                           className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
                         />
-                        {yearBuiltNewer && (
-                          <p className="mt-1 text-xs text-gray-400">Much newer than your home — consider adjusting for age difference</p>
-                        )}
                       </td>
                       <td className="px-4 py-2.5">
                         <input
@@ -585,21 +598,77 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                       <td className="px-4 py-2.5 text-xs font-semibold text-gray-700 whitespace-nowrap">
                         {ppsf ? `$${ppsf}` : '—'}
                       </td>
+                      <td className="px-2 py-2.5 whitespace-nowrap">
+                        {showBadges && (
+                          <div className="flex items-center gap-1 justify-end" style={{ minHeight: '44px' }}>
+                            <button
+                              type="button"
+                              onClick={() => setOpenDetailIndex(detailOpen ? null : i)}
+                              style={{
+                                ...badgeStyle,
+                                backgroundColor: qualityBadge.bg,
+                                color: qualityBadge.color,
+                                borderColor: qualityBadge.border,
+                              }}
+                            >
+                              {qualityBadge.label}
+                            </button>
+                            {priceOutlier && (
+                              <button
+                                type="button"
+                                onClick={() => setOpenDetailIndex(detailOpen ? null : i)}
+                                style={{
+                                  ...badgeStyle,
+                                  backgroundColor: '#f3f4f6',
+                                  color: '#6b7280',
+                                  borderColor: '#d1d5db',
+                                }}
+                              >
+                                Outlier
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </td>
                     </tr>
-                    {domNote && (
-                      <tr key={`${i}-note`} style={{ backgroundColor: domNote.bg }}>
-                        <td colSpan={6} className="px-4 py-1.5">
-                          <p className="text-xs font-medium" style={{ color: domNote.color }}>{domNote.text}</p>
+                    {detailOpen && showBadges && (
+                      <tr className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
+                        <td colSpan={7} className="px-4 pb-3 pt-0">
+                          <div style={{
+                            backgroundColor: '#f9fafb',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '6px',
+                            padding: '8px 12px',
+                          }}>
+                            <p className="text-xs text-gray-700 mb-1">{getDomDetailText(domNum)}</p>
+                            {priceOutlier && (
+                              <p className="text-xs text-gray-600">• Price/sqft differs significantly from other comps — may skew your estimate</p>
+                            )}
+                            {sqftOutlier && (
+                              <p className="text-xs text-gray-600">• Size differs significantly from your home — may not be a reliable benchmark</p>
+                            )}
+                            {yearBuiltNewer && (
+                              <p className="text-xs text-gray-600">• Much newer than your home — consider adjusting for age difference</p>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setOpenDetailIndex(null)}
+                              className="mt-2 text-xs text-gray-400"
+                              style={{ cursor: 'pointer' }}
+                            >
+                              Close ✕
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 )
               })}
             </tbody>
             <tfoot>
               <tr className="border-t border-gray-200 bg-gray-50">
-                <td colSpan={5} className="px-4 py-3 text-xs font-semibold text-gray-500 text-right">
+                <td colSpan={6} className="px-4 py-3 text-xs font-semibold text-gray-500 text-right">
                   Average price per sqft
                 </td>
                 <td className="px-4 py-3 text-sm font-bold" style={{ color: ACCENT }}>
