@@ -1,7 +1,12 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(500).json({ error: 'API key not configured' });
+  }
+
   const { images } = req.body;
+  console.log('Images received:', images?.length);
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -36,6 +41,8 @@ export default async function handler(req, res) {
   );
 
   const data = await response.json();
+  console.log('Gemini status:', response.status);
+  console.log('Gemini response:', JSON.stringify(data).slice(0, 500));
 
   try {
     const text = data.candidates[0].content.parts[0].text;
