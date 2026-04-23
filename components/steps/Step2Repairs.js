@@ -188,7 +188,7 @@ function UploadZone({ photos, onAdd, maxPhotos }) {
   )
 }
 
-export default function Step2Repairs({ onComplete, isCompleted, onSelectStep }) {
+export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, onPriceUpdate, priceEstimate }) {
   const [wizardStage, setWizardStage] = useState(0)
   const [wizardDone, setWizardDone] = useState(false)
   const [photos, setPhotos] = useState({ bathrooms: [], kitchen: [], front: [], other: [] })
@@ -288,6 +288,30 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep }) 
       )
     } catch {}
   }, [checkedItems])
+
+  const priceEstimateRef = useRef(priceEstimate)
+  useEffect(() => { priceEstimateRef.current = priceEstimate }, [priceEstimate])
+
+  useEffect(() => {
+    if (!onPriceUpdate) return
+    const mustFix = CHECKLIST_CATEGORIES.flatMap(c => c.items).filter(i => i.priority === 'must')
+    const allDone = mustFix.length > 0 && mustFix.every(i => checkedItems.has(i.id))
+    const pe = priceEstimateRef.current
+    const hasAdj = (pe?.adjustments || []).some(a => a.step === 2)
+    if (allDone && !hasAdj) {
+      onPriceUpdate({
+        ...pe,
+        adjustments: [...(pe?.adjustments || []), { step: 2, reason: 'Pre-listing repairs completed', amount: 5000 }],
+        currentEstimate: (pe?.currentEstimate || 0) + 5000,
+      })
+    } else if (!allDone && hasAdj) {
+      onPriceUpdate({
+        ...pe,
+        adjustments: (pe?.adjustments || []).filter(a => a.step !== 2),
+        currentEstimate: (pe?.currentEstimate || 0) - 5000,
+      })
+    }
+  }, [checkedItems]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCheck = (id, checked) => {
     setCheckedItems((prev) => {
@@ -588,6 +612,36 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep }) 
             <div key={tip} className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-4">
               <p className="text-sm text-gray-800 mb-2">&ldquo;{tip}&rdquo;</p>
               <p className="text-xs text-gray-400">{source}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Contractor cards */}
+      <div className="mb-8">
+        <h3 className="text-base font-semibold text-gray-900 mb-1">Need help? Get a quote</h3>
+        <p className="text-sm text-gray-400 mb-4">
+          We&apos;ll personalize these to your address soon. For now, these are trusted starting points.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { name: 'Texas Home Services', service: 'General repairs', rating: '4.8', url: 'https://thumbtack.com' },
+            { name: 'Round Rock Handyman Pro', service: 'Handyman', rating: '4.7', url: 'https://thumbtack.com' },
+            { name: 'Austin Paint & Patch', service: 'Painting', rating: '4.9', url: 'https://thumbtack.com' },
+          ].map(({ name, service, rating, url }) => (
+            <div key={name} className="rounded-lg border border-gray-200 bg-white px-4 py-4 flex flex-col gap-2">
+              <p className="text-sm font-semibold text-gray-900">{name}</p>
+              <p className="text-xs text-gray-500">{service}</p>
+              <p className="text-xs text-gray-500">⭐ {rating}</p>
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-auto inline-block text-center px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: ACCENT }}
+              >
+                Get quote
+              </a>
             </div>
           ))}
         </div>

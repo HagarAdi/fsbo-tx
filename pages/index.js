@@ -87,6 +87,8 @@ export default function Home() {
               onComplete={(value) => value ? handleComplete(2) : handleUndo(2)}
               isCompleted={completed.has(2)}
               onSelectStep={handleSelect}
+              onPriceUpdate={handlePriceUpdate}
+              priceEstimate={priceEstimate}
             />
           ) : (
             <StepPlaceholder
