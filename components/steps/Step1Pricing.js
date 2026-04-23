@@ -55,7 +55,7 @@ function Tooltip({ children }) {
   )
 }
 
-export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onPriceUpdate }) {
+export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onPriceUpdate, onSelectStep }) {
   const [activeTooltip, setActiveTooltip] = useState(null)
 
   const [sqft, setSqft] = useState('')
@@ -836,31 +836,41 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
       {/* Mark complete */}
       <div className="pt-6 border-t border-gray-100">
         {isCompleted ? (
-          <div className="flex items-center gap-4">
-            <span
-              className="inline-flex items-center gap-1.5 text-sm font-semibold"
-              style={{ color: ACCENT }}
-            >
-              <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="7" fill={ACCENT} />
-                <path
-                  d="M5 8l2.5 2.5L11 5.5"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Completed
-            </span>
+          <>
+            <div className="flex items-center gap-4 mb-4">
+              <span
+                className="inline-flex items-center gap-1.5 text-sm font-semibold"
+                style={{ color: ACCENT }}
+              >
+                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="7" fill={ACCENT} />
+                  <path
+                    d="M5 8l2.5 2.5L11 5.5"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Completed
+              </span>
+              <button
+                type="button"
+                onClick={() => onComplete(false)}
+                className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors"
+              >
+                Undo
+              </button>
+            </div>
             <button
               type="button"
-              onClick={() => onComplete(false)}
-              className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors"
+              onClick={() => onSelectStep && onSelectStep(2)}
+              className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
+              style={{ backgroundColor: ACCENT }}
             >
-              Undo
+              Next: Step 2 — Repairs &amp; Pre-Listing Fixes →
             </button>
-          </div>
+          </>
         ) : (
           <button
             type="button"
