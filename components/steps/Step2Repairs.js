@@ -207,11 +207,23 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep }) 
     return null
   })
 
-  const toBase64 = (file) => new Promise(resolve => {
-    const r = new FileReader()
-    r.onload = () => resolve(r.result.split(',')[1])
-    r.readAsDataURL(file)
-  })
+  const toBase64Compressed = (file) => new Promise(resolve => {
+    const canvas = document.createElement('canvas');
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const maxW = 800;
+      const scale = Math.min(1, maxW / img.width);
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+      URL.revokeObjectURL(url);
+      resolve(base64);
+    };
+    img.src = url;
+  });
 
   const handleAnalyze = async () => {
     const allFiles = Object.values(photos).flat().map(p => p.file).filter(Boolean)
@@ -219,7 +231,7 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep }) 
     setAiFindings(null)
     setAnalyzeError(null)
     try {
-      const base64Images = await Promise.all(allFiles.map(toBase64))
+      const base64Images = await Promise.all(allFiles.map(toBase64Compressed))
       const res = await fetch('/api/analyze-photos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
