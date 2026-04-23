@@ -16,18 +16,11 @@ const RENOVATIONS = [
 
 const CONDITION_PCT = { Excellent: 0.04, Good: 0, Average: -0.03, Fair: -0.06 }
 
-function getQualityBadge(domNum) {
-  if (domNum < 14) return { label: 'Strong', bg: '#16a34a', color: 'white', border: '#16a34a' }
-  if (domNum <= 30) return { label: 'Good', bg: '#f0fdf4', color: '#16a34a', border: '#86efac' }
-  if (domNum <= 60) return { label: 'Verify', bg: '#fef3c7', color: '#d97706', border: '#fcd34d' }
-  return { label: 'Risky', bg: '#fef2f2', color: '#dc2626', border: '#fca5a5' }
-}
-
-function getDomDetailText(domNum) {
-  if (domNum < 14) return 'Sold fast — strong reliable comp'
-  if (domNum <= 30) return 'Normal market time — decent comp'
-  if (domNum <= 60) return 'Took some time to sell — verify condition and location before using'
-  return 'Sat a long time — may have had pricing, condition, or location issues. Consider finding a different comp'
+function getDomNote(domNum) {
+  if (domNum < 14) return { text: '✓ Sold fast — strong reliable comp', color: '#16a34a' }
+  if (domNum <= 30) return { text: '✓ Normal market time — decent comp', color: '#2563eb' }
+  if (domNum <= 60) return { text: '⚠ Took some time to sell — verify condition and location before using', color: '#d97706' }
+  return { text: '⚠ Sat a long time — may have had pricing, condition, or location issues. Consider a different comp', color: '#dc2626' }
 }
 
 function formatDollars(n) {
@@ -38,7 +31,14 @@ function TooltipIcon({ id, activeTooltip, setActiveTooltip }) {
   return (
     <button
       type="button"
-      onClick={() => setActiveTooltip(activeTooltip === id ? null : id)}
+      onMouseEnter={() => setActiveTooltip(id)}
+      onMouseLeave={() => setActiveTooltip((cur) => cur === id ? null : cur)}
+      onPointerDown={(e) => {
+        if (e.pointerType === 'touch') {
+          e.preventDefault()
+          setActiveTooltip((cur) => cur === id ? null : id)
+        }
+      }}
       className="inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-bold text-gray-400 border border-gray-300 hover:text-gray-600 hover:border-gray-400 transition-colors ml-1.5 flex-shrink-0 leading-none"
       aria-label="Show tip"
     >
@@ -73,7 +73,6 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
   ])
   const [renovations, setRenovations] = useState({})
   const [estimateSaved, setEstimateSaved] = useState(false)
-  const [openDetailIndex, setOpenDetailIndex] = useState(null)
 
   useEffect(() => {
     try {
@@ -533,23 +532,14 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                 const homeYearBuiltNum = yearBuilt !== '' ? parseInt(yearBuilt) : NaN
                 const yearBuiltNewer = !isNaN(compYearBuiltNum) && !isNaN(homeYearBuiltNum)
                   && compYearBuiltNum > homeYearBuiltNum + 15
+                const yearBuiltOlder = !isNaN(compYearBuiltNum) && !isNaN(homeYearBuiltNum)
+                  && compYearBuiltNum < homeYearBuiltNum - 15
 
                 const domNum = comp.dom !== '' ? parseFloat(comp.dom) : NaN
-                const showBadges = comp.price !== '' && !isNaN(parseFloat(comp.price)) && comp.dom !== '' && !isNaN(domNum)
-                const qualityBadge = showBadges ? getQualityBadge(domNum) : null
-                const detailOpen = openDetailIndex === i
+                const showDomNote = comp.price !== '' && !isNaN(parseFloat(comp.price)) && comp.dom !== '' && !isNaN(domNum)
+                const domNote = showDomNote ? getDomNote(domNum) : null
 
-                const badgeStyle = {
-                  fontSize: '11px',
-                  padding: '2px 8px',
-                  borderRadius: '9999px',
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                  lineHeight: '1',
-                  display: 'flex',
-                  alignItems: 'center',
-                  border: '1px solid',
-                }
+                const hasAnyNote = showDomNote || priceOutlier || sqftOutlier || yearBuiltNewer || yearBuiltOlder
 
                 return (
                   <Fragment key={i}>
@@ -602,66 +592,27 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                       <td className="px-4 py-2.5 text-xs font-semibold text-gray-700 whitespace-nowrap">
                         {ppsf ? `$${ppsf}` : '—'}
                       </td>
-                      <td className="px-2 py-2.5 whitespace-nowrap">
-                        {showBadges && (
-                          <div className="flex items-center gap-1 justify-end" style={{ minHeight: '44px' }}>
-                            <button
-                              type="button"
-                              onClick={() => setOpenDetailIndex(detailOpen ? null : i)}
-                              style={{
-                                ...badgeStyle,
-                                backgroundColor: qualityBadge.bg,
-                                color: qualityBadge.color,
-                                borderColor: qualityBadge.border,
-                              }}
-                            >
-                              {qualityBadge.label}
-                            </button>
-                            {priceOutlier && (
-                              <button
-                                type="button"
-                                onClick={() => setOpenDetailIndex(detailOpen ? null : i)}
-                                style={{
-                                  ...badgeStyle,
-                                  backgroundColor: '#f3f4f6',
-                                  color: '#6b7280',
-                                  borderColor: '#d1d5db',
-                                }}
-                              >
-                                Outlier
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </td>
+                      <td className="px-2 py-2.5" />
                     </tr>
-                    {detailOpen && showBadges && (
+                    {hasAnyNote && (
                       <tr className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
-                        <td colSpan={7} className="px-4 pb-3 pt-0">
-                          <div style={{
-                            backgroundColor: '#f9fafb',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '6px',
-                            padding: '8px 12px',
-                          }}>
-                            <p className="text-xs text-gray-700 mb-1">{getDomDetailText(domNum)}</p>
+                        <td colSpan={7} className="px-4 pb-2 pt-0">
+                          <div className="space-y-0.5">
+                            {domNote && (
+                              <p style={{ fontSize: '12px', color: domNote.color }}>{domNote.text}</p>
+                            )}
                             {priceOutlier && (
-                              <p className="text-xs text-gray-600">• Price/sqft differs significantly from other comps — may skew your estimate</p>
+                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ Price/sqft differs significantly from other comps — may skew your estimate</p>
                             )}
                             {sqftOutlier && (
-                              <p className="text-xs text-gray-600">• Size differs significantly from your home — may not be a reliable benchmark</p>
+                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ This comp is significantly different in size from your home — may not be a reliable benchmark</p>
                             )}
                             {yearBuiltNewer && (
-                              <p className="text-xs text-gray-600">• Much newer than your home — consider adjusting for age difference</p>
+                              <p style={{ fontSize: '12px', color: '#6b7280' }}>ℹ Much newer than your home — buyers may compare it to newer builds</p>
                             )}
-                            <button
-                              type="button"
-                              onClick={() => setOpenDetailIndex(null)}
-                              className="mt-2 text-xs text-gray-400"
-                              style={{ cursor: 'pointer' }}
-                            >
-                              Close ✕
-                            </button>
+                            {yearBuiltOlder && (
+                              <p style={{ fontSize: '12px', color: '#6b7280' }}>ℹ Much older than your home — may not reflect current market value</p>
+                            )}
                           </div>
                         </td>
                       </tr>
