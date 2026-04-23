@@ -318,6 +318,28 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep }) 
 
   const currentStage = WIZARD_STAGES[wizardStage]
 
+  const allChecklistItems = CHECKLIST_CATEGORIES.flatMap(c => c.items)
+  const mustFixItems = allChecklistItems.filter(i => i.priority === 'must')
+  const recommendedItems = allChecklistItems.filter(i => i.priority === 'recommended')
+  const mustFixDone = mustFixItems.filter(i => checkedItems.has(i.id)).length
+  const recommendedDone = recommendedItems.filter(i => checkedItems.has(i.id)).length
+  const parseLowCost = (s) => {
+    if (!s || s.toLowerCase() === 'free') return 0
+    const m = s.match(/\$(\d+)/)
+    return m ? parseInt(m[1], 10) : 0
+  }
+  const estimatedCost = allChecklistItems
+    .filter(i => checkedItems.has(i.id))
+    .reduce((sum, i) => sum + parseLowCost(i.cost), 0)
+  const motivatingMessage =
+    mustFixDone === 0
+      ? 'Start with Must Fix items — they protect your asking price'
+      : mustFixDone === mustFixItems.length
+      ? '✓ All critical items done! Your home is inspection-ready'
+      : 'Good progress! Keep going on the Must Fix items'
+  const motivatingColor =
+    mustFixDone === mustFixItems.length ? '#166534' : mustFixDone > 0 ? '#92400e' : '#1e40af'
+
   return (
     <div className="px-10 py-12 max-w-3xl">
       {/* Header */}
@@ -528,6 +550,48 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep }) 
           </div>
         )}
       </section>
+
+      {/* Repair summary card */}
+      <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
+        <h3 className="text-base font-semibold text-gray-900 mb-4">Your repair progress</h3>
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="rounded-lg bg-gray-50 px-4 py-3">
+            <p className="text-2xl font-bold text-gray-900">
+              {mustFixDone} <span className="text-base font-normal text-gray-400">of {mustFixItems.length}</span>
+            </p>
+            <p className="text-xs font-semibold mt-0.5" style={{ color: '#dc2626' }}>Must Fix done</p>
+          </div>
+          <div className="rounded-lg bg-gray-50 px-4 py-3">
+            <p className="text-2xl font-bold text-gray-900">
+              {recommendedDone} <span className="text-base font-normal text-gray-400">of {recommendedItems.length}</span>
+            </p>
+            <p className="text-xs font-semibold mt-0.5" style={{ color: '#ca8a04' }}>Recommended done</p>
+          </div>
+        </div>
+        <div className="rounded-lg bg-gray-50 px-4 py-3 mb-4">
+          <p className="text-xs text-gray-500 font-medium mb-0.5">Estimated cost of checked items (low-end DIY)</p>
+          <p className="text-xl font-bold text-gray-900">${estimatedCost.toLocaleString()}</p>
+        </div>
+        <p className="text-sm font-medium" style={{ color: motivatingColor }}>{motivatingMessage}</p>
+      </div>
+
+      {/* Pro tips */}
+      <div className="mb-8">
+        <h3 className="text-base font-semibold text-gray-900 mb-4">Pro tips</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { tip: 'Buyers negotiate 1–3% of purchase price for repairs found at inspection', source: 'HomeLight Agent Survey' },
+            { tip: 'Homes with pre-listing inspections sell faster and with fewer surprises', source: 'NAR Profile of Home Buyers' },
+            { tip: 'A $20 caulk job can prevent a $500 negotiation', source: 'Industry best practice' },
+            { tip: 'Having HVAC service receipts ready increases buyer confidence in Texas', source: 'HomeLight Agent Survey' },
+          ].map(({ tip, source }) => (
+            <div key={tip} className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-4">
+              <p className="text-sm text-gray-800 mb-2">&ldquo;{tip}&rdquo;</p>
+              <p className="text-xs text-gray-400">{source}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Mark complete */}
       <div className="pt-6 border-t border-gray-100">
