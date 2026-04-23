@@ -11,9 +11,13 @@ const HomeIcon = ({ className }) => (
   </svg>
 )
 
-export default function WelcomeScreen({ priceEstimate }) {
+export default function WelcomeScreen({ priceEstimate, completedSteps = [], onSelectStep }) {
   const completed = steps.filter((s) => s.complete).length
   const total = steps.length
+
+  const nextStep = steps.find((s) => !completedSteps.includes(s.id))
+  const allComplete = !nextStep
+  const isStart = completedSteps.length === 0
 
   const lastAdjustment = priceEstimate?.adjustments?.length
     ? priceEstimate.adjustments[priceEstimate.adjustments.length - 1]
@@ -138,6 +142,31 @@ export default function WelcomeScreen({ priceEstimate }) {
           </button>
         </div>
       )}
+
+      {/* Next step button */}
+      <div className="w-full max-w-md mb-8">
+        {allComplete ? (
+          <p className="text-center text-lg font-semibold" style={{ color: ACCENT }}>
+            🎉 You&apos;re ready to list your home!
+          </p>
+        ) : (
+          <>
+            <button
+              onClick={() => onSelectStep && onSelectStep(nextStep.id)}
+              className="w-full py-4 px-6 rounded-xl text-white font-semibold text-base flex items-center justify-between transition-opacity hover:opacity-90 active:opacity-80"
+              style={{ backgroundColor: ACCENT }}
+            >
+              <span>
+                {isStart
+                  ? `Start with Step 1: ${nextStep.title}`
+                  : `Next: Step ${nextStep.id} — ${nextStep.title}`}
+              </span>
+              <span className="ml-3">→</span>
+            </button>
+            <p className="text-center text-sm text-gray-400 mt-2">or select any step on the left</p>
+          </>
+        )}
+      </div>
 
       {/* Progress summary */}
       <p className="text-gray-500 text-base mb-8">
