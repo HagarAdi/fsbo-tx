@@ -58,16 +58,25 @@ export default function WelcomeScreen({ priceEstimate, completedSteps = [], onSe
       </h1>
 
       {/* Savings banner */}
-      <div
-        className="flex items-center gap-3 px-6 py-3 rounded-full mb-8 text-white font-semibold text-sm"
-        style={{ backgroundColor: ACCENT }}
-      >
-        <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-        </svg>
-        $18,000 saved by going FSBO
-        <span className="opacity-75 font-normal">($600K × 3%)</span>
-      </div>
+      {(() => {
+        const estimate = priceEstimate?.currentEstimate
+        const savings = estimate ? Math.round(estimate * 0.03).toLocaleString() : null
+        const estFormatted = estimate ? `$${Math.round(estimate).toLocaleString()}` : null
+        return (
+          <div
+            className="flex items-center gap-3 px-6 py-3 rounded-full mb-8 text-white font-semibold text-sm"
+            style={{ backgroundColor: ACCENT }}
+          >
+            <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+            </svg>
+            {savings
+              ? <>${savings} saved by going FSBO<span className="opacity-75 font-normal ml-1">(based on your {estFormatted} estimate at 3%)</span></>
+              : <>${'18,000'} saved by going FSBO<span className="opacity-75 font-normal ml-1">($600K × 3%)</span></>
+            }
+          </div>
+        )
+      })()}
 
       {/* Price estimate banner */}
       {priceEstimate ? (
