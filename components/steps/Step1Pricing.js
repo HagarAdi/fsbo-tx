@@ -536,7 +536,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                   && compYearBuiltNum < homeYearBuiltNum - 15
 
                 const domNum = comp.dom !== '' ? parseFloat(comp.dom) : NaN
-                const showDomNote = comp.price !== '' && !isNaN(parseFloat(comp.price)) && comp.dom !== '' && !isNaN(domNum)
+                const showDomNote = !isNaN(parseFloat(comp.price)) && !isNaN(domNum)
                 const domNote = showDomNote ? getDomNote(domNum) : null
 
                 const hasAnyNote = showDomNote || priceOutlier || sqftOutlier || yearBuiltNewer || yearBuiltOlder
