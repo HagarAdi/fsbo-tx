@@ -85,6 +85,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
   })
 
   const [safetyOpen, setSafetyOpen] = useState(false)
+  const [openHouseOpen, setOpenHouseOpen] = useState(false)
 
   const [form, setForm] = useState({ date: '', time: '', agent: '', status: 'Scheduled', notes: '' })
 
@@ -418,6 +419,165 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
         {showings.length === 0 && (
           <p className="text-sm text-gray-400 text-center py-4">No showings logged yet.</p>
         )}
+      </section>
+
+      {/* Virtual tour */}
+      <section className="mb-12">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Add a virtual tour 🎥</h3>
+        <p className="text-sm text-gray-500 mb-6">
+          Buyers who take a virtual tour are 60% more likely to make an offer.
+        </p>
+        <div className="space-y-3">
+          {[
+            {
+              label: 'Matterport 3D Tour',
+              cost: '$150–300 hired',
+              costPaid: true,
+              description: 'The gold standard. Professional 3D walkthrough buyers can explore online.',
+              link: { label: 'Get quote →', url: 'https://thumbtack.com' },
+            },
+            {
+              label: 'Zillow 3D Home App',
+              cost: 'Free',
+              costPaid: false,
+              description: 'Shoot it yourself with Zillow\'s free app. Good enough for most listings.',
+              link: { label: 'Get the app →', url: 'https://zillow.com/z3d' },
+            },
+            {
+              label: 'Simple video walkthrough',
+              cost: 'Free',
+              costPaid: false,
+              description: 'Walk through your home on video, post to YouTube, add link to your listing. Takes 30 minutes.',
+              link: null,
+            },
+          ].map(({ label, cost, costPaid, description, link }) => (
+            <div key={label} className="rounded-xl border border-gray-200 bg-white px-5 py-4 flex items-start gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="text-sm font-semibold text-gray-900">{label}</span>
+                  <span
+                    className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                    style={costPaid
+                      ? { backgroundColor: '#fef3c7', color: '#92400e' }
+                      : { backgroundColor: '#dcfce7', color: '#15803d' }}
+                  >
+                    {cost}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600">{description}</p>
+              </div>
+              {link && (
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0 text-sm font-semibold whitespace-nowrap transition-opacity hover:opacity-80"
+                  style={{ color: ACCENT }}
+                >
+                  {link.label}
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Open house planner */}
+      <section className="mb-12">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Hosting an open house? 🏠</h3>
+        <p className="text-sm text-gray-500 mb-6">
+          Open houses work best on Sunday 1–4pm. Here&apos;s how to make yours count.
+        </p>
+        <button
+          type="button"
+          onClick={() => setOpenHouseOpen(o => !o)}
+          className="w-full flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+        >
+          <span className="text-sm font-semibold text-gray-900">Open house day checklist</span>
+          <svg
+            className="w-5 h-5 text-gray-400 flex-shrink-0 transition-transform"
+            style={{ transform: openHouseOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+            viewBox="0 0 20 20" fill="currentColor"
+          >
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </button>
+        {openHouseOpen && (
+          <div className="mt-1 rounded-xl border border-gray-200 bg-white px-5 py-4 divide-y divide-gray-100">
+            {[
+              { text: 'Follow your full showing prep checklist', isLink: true },
+              { text: 'Print 20+ flyers with photos, price, and your contact info' },
+              { text: 'Post on Facebook Marketplace, Nextdoor, and HAR.com 3 days before' },
+              { text: 'Put directional signs at nearby intersections' },
+              { text: 'Have a sign-in sheet for visitor names and emails' },
+              { text: 'Prepare a home facts sheet with: sqft, beds/baths, year built, roof age, HVAC age, utility averages' },
+              { text: 'Have your disclosure documents ready to show' },
+              { text: 'Follow up with every visitor within 24 hours' },
+            ].map(({ text, isLink }, i) => (
+              <div key={i} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                <span className="mt-0.5 text-base flex-shrink-0">✓</span>
+                {isLink ? (
+                  <p className="text-sm text-gray-700">
+                    <button
+                      type="button"
+                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                      className="font-medium underline underline-offset-2 transition-colors hover:text-gray-900"
+                      style={{ color: BLUE }}
+                    >
+                      Follow your full showing prep checklist
+                    </button>
+                    {' '}(see top of page)
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-700">{text}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Pro tips */}
+      <section className="mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[
+            { text: 'Homes that are easy to show sell faster — accept as many showing requests as possible', source: 'HomeLight Agent Survey' },
+            { text: 'Buyers spend an average of 30 minutes at showings — make every minute count', source: 'NAR Profile of Home Buyers' },
+            { text: 'A printed home facts sheet reduces buyer objections by answering questions before they\'re asked', source: 'Industry best practice' },
+            { text: 'In Texas, weekend showings (Saturday and Sunday) account for 60% of all offers', source: 'HAR.com data' },
+          ].map(({ text, source }) => (
+            <div key={source} className="rounded-xl border border-gray-200 bg-white px-5 py-4">
+              <p className="text-sm font-medium text-gray-800 mb-2">&ldquo;{text}&rdquo;</p>
+              <p className="text-xs text-gray-400">{source}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Vendor chips */}
+      <section className="mb-12">
+        <div className="flex flex-wrap gap-2">
+          {[
+            { label: 'ShowingTime', url: 'https://showingtime.com' },
+            { label: 'Matterport', url: 'https://matterport.com' },
+            { label: 'Zillow 3D Home', url: 'https://zillow.com/z3d' },
+            { label: 'Amazon yard signs', url: 'https://amazon.com/s?k=fsbo+yard+sign' },
+            { label: 'Home Depot lockbox', url: 'https://homedepot.com' },
+          ].map(({ label, url }) => (
+            <a
+              key={label}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900 transition-colors"
+            >
+              {label}
+              <svg className="w-3 h-3 text-gray-400" viewBox="0 0 12 12" fill="none">
+                <path d="M2.5 9.5l7-7M9.5 2.5H4M9.5 2.5v5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </a>
+          ))}
+        </div>
       </section>
 
       {/* Mark complete */}
