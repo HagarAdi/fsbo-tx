@@ -87,12 +87,22 @@ export default function Sidebar({ selectedId, onSelect, completed, priceEstimate
             style={{ width: `${pct}%`, backgroundColor: ACCENT }}
           />
         </div>
-        {priceEstimate ? (
-          <p className="text-xs font-medium mt-2" style={{ color: ACCENT }}>
-            Est. price: ${priceEstimate.currentEstimate.toLocaleString()}
-          </p>
+        {/* Estimated price */}
+        {priceEstimate?.currentEstimate ? (
+          <div className="mt-2 text-sm text-gray-600">
+            Est. Price: <span className="font-semibold text-gray-900">
+              ${priceEstimate.currentEstimate.toLocaleString()}
+            </span>
+          </div>
         ) : (
           <p className="text-xs text-gray-400 mt-2">Est. price: —</p>
+        )}
+
+        {/* Protected value badge — only shows after Step 2 Must Fix complete */}
+        {priceEstimate?.protectedValue && (
+          <div className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+            🛡️ ${priceEstimate.protectedValue.toLocaleString()} protected
+          </div>
         )}
       </div>
     </div>
