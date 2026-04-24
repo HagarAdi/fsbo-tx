@@ -352,8 +352,8 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
   const motivatingColor =
     mustFixDone === mustFixItems.length ? '#166534' : mustFixDone > 0 ? '#92400e' : '#1e40af'
   const allMustFixDone = mustFixDone === mustFixItems.length
-  const protectedValue = priceEstimate?.basePrice
-    ? Math.round(priceEstimate.basePrice * 0.01)
+  const protectedValue = priceEstimate?.currentEstimate
+    ? Math.round(priceEstimate.currentEstimate * 0.01)
     : null
 
   return (
