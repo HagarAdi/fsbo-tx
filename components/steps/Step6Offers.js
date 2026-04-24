@@ -139,6 +139,7 @@ function ChevronIcon({ open }) {
 
 export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
   const [openTerms, setOpenTerms] = useState({})
+  const [showTable, setShowTable] = useState(false)
 
   const [offers, setOffers] = useState(() => {
     if (typeof window === 'undefined') return [makeEmptyOffer('Offer 1'), makeEmptyOffer('Offer 2')]
@@ -430,11 +431,23 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
           </button>
         )}
 
+        {/* Compare button */}
+        {showComparison && !showTable && (
+          <button
+            type="button"
+            onClick={() => setShowTable(true)}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
+            style={{ backgroundColor: ACCENT }}
+          >
+            Compare offers →
+          </button>
+        )}
+
         {/* Comparison table */}
-        {showComparison && (
+        {showComparison && showTable && (
           <div>
             <div className="overflow-x-auto rounded-xl border border-gray-200">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[480px]">
                 <thead>
                   <tr className="border-b border-gray-200">
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide bg-gray-50 w-36">
@@ -442,25 +455,16 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                     </th>
                     {filledOffers.map((o, i) => (
                       <th key={i} className="text-left px-4 py-3 bg-gray-50">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-bold text-gray-900 whitespace-nowrap">
-                            {o.nickname || `Offer ${i + 1}`}
-                          </span>
-                          {i === winnerIdx && (
-                            <span
-                              className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
-                              style={{ backgroundColor: '#dcfce7', color: '#15803d' }}
-                            >
-                              Strongest offer ✓
-                            </span>
-                          )}
-                        </div>
+                        <span className="text-xs font-bold text-gray-900 whitespace-nowrap">
+                          {o.nickname || `Offer ${i + 1}`}
+                        </span>
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {compareRows.map((row, ri) => {
+                    const isScoreRow = row.label === 'Strength Score'
                     const raws = row.values.map(v => v.raw)
                     const validRaws = raws.filter(r => r !== Infinity && r !== 0 && !isNaN(r))
                     const bestRaw = validRaws.length > 0
@@ -480,7 +484,17 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                               className="px-4 py-3 text-sm font-medium"
                               style={isWinner ? { backgroundColor: '#f0fdf4', color: '#15803d' } : { color: '#374151' }}
                             >
-                              {v.display}
+                              {isScoreRow && isWinner ? (
+                                <span className="flex items-center gap-1.5 flex-wrap">
+                                  <span>{v.display}</span>
+                                  <span
+                                    className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
+                                    style={{ backgroundColor: '#dcfce7', color: '#15803d' }}
+                                  >
+                                    ✓ Strongest
+                                  </span>
+                                </span>
+                              ) : v.display}
                             </td>
                           )
                         })}
@@ -491,17 +505,18 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
               </table>
             </div>
 
-            <p className="mt-3 text-xs text-gray-400 text-center">
-              This score is a guide — always consult with a real estate attorney or title company for final decisions.
-            </p>
-          </div>
-        )}
-
-        {!showComparison && (
-          <div className="rounded-xl border border-dashed border-gray-200 px-5 py-8 text-center">
-            <p className="text-sm text-gray-400">
-              Enter a purchase price for at least 2 offers to see the comparison table.
-            </p>
+            <div className="mt-3 flex items-center justify-between flex-wrap gap-2">
+              <p className="text-xs text-gray-400">
+                This score is a guide — always consult with a real estate attorney or title company for final decisions.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowTable(false)}
+                className="text-xs text-gray-400 underline hover:text-gray-600 transition-colors flex-shrink-0"
+              >
+                Hide comparison
+              </button>
+            </div>
           </div>
         )}
       </section>
