@@ -39,8 +39,23 @@ Example:
     ]
   },
   "step3": {
-    "stagingPhotos": [],
-    "stagingNotes": ""
+    "checkedItems": ["mow-lawn", "clear-countertops", "deep-clean"],
+    "stagingFindings": [
+      {
+        "room": "Living Room",
+        "suggestion": "Remove the large armchair near the window to open up the space",
+        "effort": "Easy",
+        "impact": "High"
+      }
+    ],
+    "stagingVerifyFindings": [
+      {
+        "room": "Kitchen",
+        "suggestion": "Countertops look clear — great job",
+        "effort": "Done",
+        "impact": "Looks Good"
+      }
+    ]
   }
 }
 
