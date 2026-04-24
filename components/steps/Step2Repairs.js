@@ -297,6 +297,7 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
     const mustFix = CHECKLIST_CATEGORIES.flatMap(c => c.items).filter(i => i.priority === 'must')
     const allDone = mustFix.length > 0 && mustFix.every(i => checkedItems.has(i.id))
     const pe = priceEstimateRef.current
+    if (!pe) return
     const hasAdj = (pe?.adjustments || []).some(a => a.step === 2)
     if (allDone && !hasAdj) {
       onPriceUpdate({
@@ -363,6 +364,7 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
       : 'Good progress! Keep going on the Must Fix items'
   const motivatingColor =
     mustFixDone === mustFixItems.length ? '#166534' : mustFixDone > 0 ? '#92400e' : '#1e40af'
+  const allMustFixDone = mustFixDone === mustFixItems.length
 
   return (
     <div className="px-10 py-12 max-w-3xl">
@@ -645,6 +647,21 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Must Fix status message */}
+      <div
+        className="mb-6 rounded-lg px-4 py-3"
+        style={allMustFixDone
+          ? { backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }
+          : { backgroundColor: '#fffbeb', border: '1px solid #fde68a' }
+        }
+      >
+        <p className="text-sm font-medium" style={{ color: allMustFixDone ? '#166534' : '#92400e' }}>
+          {allMustFixDone
+            ? '🎉 All Must Fix items done! Your estimate has been updated.'
+            : '✓ Complete all Must Fix items to add $5,000 to your estimated price'}
+        </p>
       </div>
 
       {/* Mark complete */}
