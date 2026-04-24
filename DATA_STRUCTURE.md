@@ -56,6 +56,12 @@ Example:
         "impact": "Looks Good"
       }
     ]
+  },
+  "step4": {
+    "uploadedRooms": [],
+    "beforePhotos": {},
+    "afterPhotos": {},
+    "listingDetails": {}
   }
 }
 
