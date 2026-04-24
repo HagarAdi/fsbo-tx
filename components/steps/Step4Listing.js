@@ -182,11 +182,10 @@ export default function Step4Listing({ onComplete, isCompleted, onSelectStep }) 
   const [photos, setPhotos] = useState({ living: [], kitchen: [], bathrooms: [], exterior: [] })
   const [showAiTooltip, setShowAiTooltip] = useState(false)
 
+  const [beforeWizardComplete, setBeforeWizardComplete] = useState(false)
+
   // After wizard
-  const [savedUploadedRooms, setSavedUploadedRooms] = useState(() => {
-    if (typeof window === 'undefined') return []
-    return loadStepData().step4?.uploadedRooms || []
-  })
+  const [savedUploadedRooms, setSavedUploadedRooms] = useState([])
   const [afterWizardStage, setAfterWizardStage] = useState(0)
   const [afterWizardDone, setAfterWizardDone] = useState(false)
   const [afterPhotos, setAfterPhotos] = useState({ living: [], kitchen: [], bathrooms: [], exterior: [] })
@@ -251,8 +250,13 @@ export default function Step4Listing({ onComplete, isCompleted, onSelectStep }) 
         step4: { ...existing.step4, uploadedRooms },
       }))
     } catch {}
-    setSavedUploadedRooms(uploadedRooms)
   }, [wizardDone]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Read uploadedRooms from localStorage when after wizard becomes visible
+  useEffect(() => {
+    if (!beforeWizardComplete) return
+    setSavedUploadedRooms(loadStepData().step4?.uploadedRooms || [])
+  }, [beforeWizardComplete])
 
   // Save after photos when after wizard finishes
   useEffect(() => {
@@ -300,7 +304,7 @@ export default function Step4Listing({ onComplete, isCompleted, onSelectStep }) 
 
   const advanceBeforeWizard = () => {
     if (wizardStage < BEFORE_STAGES.length - 1) setWizardStage(s => s + 1)
-    else setWizardDone(true)
+    else { setWizardDone(true); setBeforeWizardComplete(true) }
   }
 
   const addAfterPhotos = (id, newPhotos) =>
@@ -419,63 +423,65 @@ export default function Step4Listing({ onComplete, isCompleted, onSelectStep }) 
         )}
       </section>
 
-      {/* After photo wizard */}
-      <section className="mb-12">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Now let&apos;s see the real thing 📸</h3>
-        <p className="text-sm text-gray-500 mb-6">
-          Upload your final listing photos — same rooms as before so we can compare.
-        </p>
+      {/* After photo wizard — only visible after before wizard is complete */}
+      {beforeWizardComplete && (
+        <section className="mb-12">
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">Now let&apos;s see the real thing 📸</h3>
+          <p className="text-sm text-gray-500 mb-6">
+            Upload your final listing photos — same rooms as before so we can compare.
+          </p>
 
-        {savedUploadedRooms.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-gray-50 px-6 py-8 text-center">
-            <p className="text-sm text-gray-600 mb-4">
-              Upload your before photos first to enable room-by-room comparison
-            </p>
-            <button
-              type="button"
-              onClick={() => beforeSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
-              className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-white transition-colors"
-            >
-              Go back to before photos
-            </button>
-          </div>
-        ) : !afterWizardDone ? (
-          <PhotoWizard
-            stages={afterStages}
-            stageIndex={afterWizardStage}
-            photos={afterPhotos}
-            onAdd={addAfterPhotos}
-            onAdvance={advanceAfterWizard}
-            label="Room"
-          />
-        ) : (
-          <div className="rounded-xl border border-gray-200 bg-white p-6">
-            <p className="text-sm font-medium text-gray-700 mb-5">
-              {totalAfterPhotos > 0
-                ? `You uploaded ${totalAfterPhotos} final photo${totalAfterPhotos !== 1 ? 's' : ''} across ${afterUploadedRooms.length} room${afterUploadedRooms.length !== 1 ? 's' : ''}`
-                : "No final photos uploaded — that's okay, you can still move forward."}
-            </p>
-            <div className="relative inline-block">
+          {savedUploadedRooms.length === 0 ? (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-6 py-8 text-center">
+              <p className="text-sm text-gray-600 mb-4">
+                Upload your before photos first to enable room-by-room comparison
+              </p>
               <button
                 type="button"
-                disabled
-                onMouseEnter={() => setShowCompareTooltip(true)}
-                onMouseLeave={() => setShowCompareTooltip(false)}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white cursor-not-allowed opacity-60"
-                style={{ backgroundColor: ACCENT }}
+                onClick={() => beforeSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-white transition-colors"
               >
-                Compare before &amp; after →
+                Go back to before photos
               </button>
-              {showCompareTooltip && (
-                <div className="absolute bottom-full left-0 mb-2 w-52 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg z-10 pointer-events-none">
-                  AI comparison coming soon
-                  <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-800" />
-                </div>
-              )}
             </div>
-          </div>
-        )}
-      </section>
+          ) : !afterWizardDone ? (
+            <PhotoWizard
+              stages={afterStages}
+              stageIndex={afterWizardStage}
+              photos={afterPhotos}
+              onAdd={addAfterPhotos}
+              onAdvance={advanceAfterWizard}
+              label="Room"
+            />
+          ) : (
+            <div className="rounded-xl border border-gray-200 bg-white p-6">
+              <p className="text-sm font-medium text-gray-700 mb-5">
+                {totalAfterPhotos > 0
+                  ? `You uploaded ${totalAfterPhotos} final photo${totalAfterPhotos !== 1 ? 's' : ''} across ${afterUploadedRooms.length} room${afterUploadedRooms.length !== 1 ? 's' : ''}`
+                  : "No final photos uploaded — that's okay, you can still move forward."}
+              </p>
+              <div className="relative inline-block">
+                <button
+                  type="button"
+                  disabled
+                  onMouseEnter={() => setShowCompareTooltip(true)}
+                  onMouseLeave={() => setShowCompareTooltip(false)}
+                  className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white cursor-not-allowed opacity-60"
+                  style={{ backgroundColor: ACCENT }}
+                >
+                  Compare before &amp; after →
+                </button>
+                {showCompareTooltip && (
+                  <div className="absolute bottom-full left-0 mb-2 w-52 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg z-10 pointer-events-none">
+                    AI comparison coming soon
+                    <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-800" />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Listing description wizard */}
       <section className="mb-12">
