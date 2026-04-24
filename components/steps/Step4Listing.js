@@ -40,6 +40,29 @@ const FEATURE_PLACEHOLDERS = [
   'e.g. Updated kitchen',
 ]
 
+const LISTING_PLATFORMS = [
+  { name: 'HAR.com',              cost: 'Free',     description: 'Texas MLS data — the most accurate source for TX buyers. Essential for Houston and Austin markets.',  url: 'https://har.com' },
+  { name: 'Zillow',               cost: 'Free',     description: 'Highest buyer traffic nationally. Most buyers start their search here.',                              url: 'https://zillow.com' },
+  { name: 'Realtor.com',          cost: 'Free',     description: 'Strong buyer traffic, especially for serious buyers working with agents.',                            url: 'https://realtor.com' },
+  { name: 'Facebook Marketplace', cost: 'Free',     description: 'Reach local buyers directly. Great for Round Rock and Austin neighborhoods.',                         url: 'https://facebook.com/marketplace' },
+  { name: 'Nextdoor',             cost: 'Free',     description: 'Reach neighbors who know buyers. Word of mouth sells homes in TX suburbs.',                           url: 'https://nextdoor.com' },
+  { name: 'FSBO.com',             cost: '$99-399',  description: 'Gets you MLS exposure without a full agent. Worth it for serious FSBO sellers.',                      url: 'https://fsbo.com' },
+  { name: 'Flat Fee MLS TX',      cost: '$300-500', description: 'Lists you directly on the TX MLS — the same database agents use. Maximum exposure.',                 url: 'https://texasflatfeemls.com' },
+]
+
+const LISTING_PRO_TIPS = [
+  { text: 'Homes with professional photos sell 32% faster',                                        source: 'Zillow Research' },
+  { text: 'Listings with 20+ photos get 2× more views than listings with fewer',                   source: 'HAR.com data' },
+  { text: 'The first photo determines if buyers click — always lead with the best exterior shot',  source: 'Industry best practice' },
+  { text: 'Natural light is everything — never shoot on a cloudy or rainy day',                    source: 'Professional RE photographer standard' },
+]
+
+const PHOTO_SERVICES = [
+  { name: 'Austin RE Photography', specialty: 'Real estate photography', rating: '4.9', price: '$200-400', url: 'https://thumbtack.com' },
+  { name: 'Round Rock Photo Pro',  specialty: 'HDR photography',         rating: '4.8', price: '$150-300', url: 'https://thumbtack.com' },
+  { name: 'Texas Listing Photos',  specialty: 'Photos + virtual tour',   rating: '4.7', price: '$300-500', url: 'https://thumbtack.com' },
+]
+
 function loadStepData() {
   try { return JSON.parse(localStorage.getItem('fsbo_stepData') || '{}') } catch { return {} }
 }
@@ -588,6 +611,86 @@ export default function Step4Listing({ onComplete, isCompleted, onSelectStep }) 
               </button>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Where to list */}
+      <section className="mb-12">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Where to list your home</h3>
+        <p className="text-sm text-gray-500 mb-6">
+          List on as many free platforms as possible — more exposure = more offers.
+        </p>
+        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden divide-y divide-gray-100">
+          {LISTING_PLATFORMS.map(({ name, cost, description, url }) => (
+            <div key={name} className="flex items-start gap-4 px-5 py-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-semibold text-gray-900">{name}</span>
+                  <span
+                    className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                    style={cost === 'Free'
+                      ? { backgroundColor: '#dcfce7', color: '#15803d' }
+                      : { backgroundColor: '#fef3c7', color: '#92400e' }}
+                  >
+                    {cost}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500">{description}</p>
+              </div>
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 text-sm font-semibold transition-opacity hover:opacity-80 whitespace-nowrap"
+                style={{ color: ACCENT }}
+              >
+                Get started →
+              </a>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Pro tips */}
+      <section className="mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {LISTING_PRO_TIPS.map(({ text, source }) => (
+            <div key={source} className="rounded-xl border border-gray-200 bg-white px-5 py-4">
+              <p className="text-sm font-medium text-gray-800 mb-2">&ldquo;{text}&rdquo;</p>
+              <p className="text-xs text-gray-400">{source}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Photography services */}
+      <section className="mb-12">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Want professional photos? Get a quote</h3>
+        <p className="text-sm text-gray-500 mb-6">
+          Professional photos typically cost $200-500 and pay for themselves many times over.
+        </p>
+        <div className="space-y-3">
+          {PHOTO_SERVICES.map(({ name, specialty, rating, price, url }) => (
+            <div key={name} className="rounded-xl border border-gray-200 bg-white px-5 py-4 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-900 mb-0.5">{name}</p>
+                <p className="text-xs text-gray-500">{specialty}</p>
+                <div className="flex items-center gap-3 mt-1.5">
+                  <span className="text-xs text-gray-500">⭐ {rating}</span>
+                  <span className="text-xs font-medium text-gray-700">{price}</span>
+                </div>
+              </div>
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: ACCENT }}
+              >
+                Get quote →
+              </a>
+            </div>
+          ))}
         </div>
       </section>
 
