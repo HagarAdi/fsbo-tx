@@ -289,28 +289,15 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
     } catch {}
   }, [checkedItems])
 
-  const priceEstimateRef = useRef(priceEstimate)
-  useEffect(() => { priceEstimateRef.current = priceEstimate }, [priceEstimate])
-
   useEffect(() => {
-    if (!onPriceUpdate) return
-    const mustFix = CHECKLIST_CATEGORIES.flatMap(c => c.items).filter(i => i.priority === 'must')
-    const allDone = mustFix.length > 0 && mustFix.every(i => checkedItems.has(i.id))
-    const pe = priceEstimateRef.current
-    if (!pe) return
-    const hasAdj = (pe?.adjustments || []).some(a => a.step === 2)
-    if (allDone && !hasAdj) {
-      onPriceUpdate({
-        ...pe,
-        adjustments: [...(pe?.adjustments || []), { step: 2, reason: 'Pre-listing repairs completed', amount: 5000 }],
-        currentEstimate: (pe?.currentEstimate || 0) + 5000,
-      })
-    } else if (!allDone && hasAdj) {
-      onPriceUpdate({
-        ...pe,
-        adjustments: (pe?.adjustments || []).filter(a => a.step !== 2),
-        currentEstimate: (pe?.currentEstimate || 0) - 5000,
-      })
+    if (allMustFixDone && protectedValue) {
+      const updated = { ...priceEstimate, protectedValue }
+      localStorage.setItem('fsbo_priceEstimate', JSON.stringify(updated))
+      if (onPriceUpdate) onPriceUpdate(updated)
+    } else if (!allMustFixDone) {
+      const updated = { ...priceEstimate, protectedValue: null }
+      localStorage.setItem('fsbo_priceEstimate', JSON.stringify(updated))
+      if (onPriceUpdate) onPriceUpdate(updated)
     }
   }, [checkedItems]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -365,6 +352,9 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
   const motivatingColor =
     mustFixDone === mustFixItems.length ? '#166534' : mustFixDone > 0 ? '#92400e' : '#1e40af'
   const allMustFixDone = mustFixDone === mustFixItems.length
+  const protectedValue = priceEstimate?.basePrice
+    ? Math.round(priceEstimate.basePrice * 0.01)
+    : null
 
   return (
     <div className="px-10 py-12 max-w-3xl">
@@ -650,19 +640,26 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
       </div>
 
       {/* Must Fix status message */}
-      <div
-        className="mb-6 rounded-lg px-4 py-3"
-        style={allMustFixDone
-          ? { backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }
-          : { backgroundColor: '#fffbeb', border: '1px solid #fde68a' }
-        }
-      >
-        <p className="text-sm font-medium" style={{ color: allMustFixDone ? '#166534' : '#92400e' }}>
-          {allMustFixDone
-            ? '🎉 All Must Fix items done! Your estimate has been updated.'
-            : '✓ Complete all Must Fix items to add $5,000 to your estimated price'}
-        </p>
-      </div>
+      {protectedValue && (
+        <div className={`p-4 rounded-lg text-sm font-medium mb-4 ${
+          allMustFixDone
+            ? 'bg-green-50 text-green-800 border border-green-200'
+            : 'bg-amber-50 text-amber-800 border border-amber-200'
+        }`}>
+          {allMustFixDone ? (
+            <span>🎉 You&apos;ve protected <strong>${protectedValue.toLocaleString()}</strong> of your asking price from buyer negotiation.</span>
+          ) : (
+            <span>🛡️ Complete all Must Fix items to protect an estimated <strong>${protectedValue.toLocaleString()}</strong> of your asking price from buyer negotiation.
+              <span className="ml-1 cursor-pointer group relative inline-block">
+                ⓘ
+                <span className="hidden group-hover:block absolute bottom-full left-0 w-64 p-2 bg-gray-800 text-white text-xs rounded z-10">
+                  Buyers negotiate an average of $7,200 off asking price using inspection findings. Completing Must Fix repairs removes their leverage. We estimate this protects ~1% of your asking price. Source: NAR Home Buyer &amp; Seller Report.
+                </span>
+              </span>
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Mark complete */}
       <div className="pt-6 border-t border-gray-100">
