@@ -62,6 +62,11 @@ Example:
     "beforePhotos": {},
     "afterPhotos": {},
     "listingDetails": {}
+  },
+  "step5": {
+    "showingPrepChecked": [],
+    "showingMethod": "",
+    "showings": []
   }
 }
 
