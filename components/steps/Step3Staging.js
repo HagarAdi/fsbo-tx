@@ -2,6 +2,59 @@ import { useState, useEffect, useRef } from 'react'
 
 const ACCENT = '#16a34a'
 
+const WIZARD_STAGES = [
+  { id: 'living', emoji: '🛋️', label: 'Living Room / Main Space', tip: 'The living room is where buyers spend the most time imagining their life. Clear, bright, and minimal wins.', maxPhotos: 3, nextLabel: 'Next →' },
+  { id: 'kitchen', emoji: '🍳', label: 'Kitchen & Dining', tip: 'Clear countertops photograph 10× better than a lived-in kitchen.', maxPhotos: 3, nextLabel: 'Next →' },
+  { id: 'bedroom', emoji: '🛏️', label: 'Primary Bedroom', tip: 'Neutral bedding and open curtains are the two easiest wins here.', maxPhotos: 3, nextLabel: 'Next →' },
+  { id: 'exterior', emoji: '🏡', label: 'Front Exterior / Curb', tip: 'In Texas, buyers preview listings on their phones before scheduling. This photo decides if they visit.', maxPhotos: 3, nextLabel: 'Done →' },
+]
+
+function UploadZone({ photos, onAdd, maxPhotos }) {
+  const inputRef = useRef(null)
+  const [dragging, setDragging] = useState(false)
+  const handleFiles = (files) => {
+    const valid = Array.from(files).filter(f => ['image/jpeg', 'image/png', 'image/webp'].includes(f.type))
+    const remaining = maxPhotos - photos.length
+    const toAdd = valid.slice(0, remaining).map(f => ({ name: f.name, url: URL.createObjectURL(f), file: f }))
+    if (toAdd.length > 0) onAdd(toAdd)
+  }
+  const handleDrop = (e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files) }
+  const isFull = photos.length >= maxPhotos
+  return (
+    <div className="space-y-3">
+      <div
+        onClick={() => !isFull && inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); if (!isFull) setDragging(true) }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        className="rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors"
+        style={{ borderColor: dragging ? ACCENT : '#d1d5db', backgroundColor: dragging ? '#f0fdf4' : '#fafafa', cursor: isFull ? 'default' : 'pointer' }}
+      >
+        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
+        <div className="text-3xl mb-2">📷</div>
+        {isFull ? <p className="text-sm text-gray-500">Max {maxPhotos} photos uploaded</p> : (
+          <>
+            <p className="text-sm font-medium text-gray-700">Drag photos here or click to browse</p>
+            <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP — up to {maxPhotos} photos</p>
+          </>
+        )}
+      </div>
+      {photos.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {photos.map((p, i) => (
+            <div key={i} className="relative group">
+              <img src={p.url} alt={p.name} className="w-20 h-20 object-cover rounded-lg border border-gray-200" />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-lg">
+                <span className="text-white text-xs font-medium">{i + 1}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const CHECKLIST_CATEGORIES = [
   {
     label: 'Curb Appeal',
@@ -65,6 +118,17 @@ function PriorityBadge({ priority }) {
 }
 
 export default function Step3Staging({ onComplete, isCompleted, onSelectStep, onPriceUpdate, priceEstimate }) {
+  const [wizardStage, setWizardStage] = useState(0)
+  const [wizardDone, setWizardDone] = useState(false)
+  const [photos, setPhotos] = useState({ living: [], kitchen: [], bedroom: [], exterior: [] })
+  const [analyzeNote, setAnalyzeNote] = useState(null)
+
+  const addPhotos = (stageId, newPhotos) => setPhotos(prev => ({ ...prev, [stageId]: [...prev[stageId], ...newPhotos] }))
+  const advanceWizard = () => { if (wizardStage < WIZARD_STAGES.length - 1) setWizardStage(s => s + 1); else setWizardDone(true) }
+  const totalPhotos = Object.values(photos).reduce((sum, arr) => sum + arr.length, 0)
+  const roomsWithPhotos = Object.values(photos).filter(arr => arr.length > 0).length
+  const currentStage = WIZARD_STAGES[wizardStage]
+
   const [checkedItems, setCheckedItems] = useState(() => {
     if (typeof window === 'undefined') return new Set()
     try {
@@ -147,8 +211,68 @@ export default function Step3Staging({ onComplete, isCompleted, onSelectStep, on
         asking price. Buyers decide how they feel about a home in the first 30 seconds.
       </p>
 
+      {/* Photo wizard */}
+      <section className="mb-12">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Let&apos;s see your home&apos;s current look</h3>
+        <p className="text-sm text-gray-500 mb-6">Upload a photo of each room for AI staging suggestions, or skip and use the checklist.</p>
+        {!wizardDone ? (
+          <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+            <div className="px-6 pt-5 pb-4 border-b border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Room {wizardStage + 1} of {WIZARD_STAGES.length}</span>
+                <div className="flex gap-1.5">
+                  {WIZARD_STAGES.map((_, i) => (
+                    <div key={i} className="h-1.5 w-8 rounded-full transition-colors" style={{ backgroundColor: i <= wizardStage ? ACCENT : '#e5e7eb' }} />
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{currentStage.emoji}</span>
+                <h4 className="text-base font-semibold text-gray-900">{currentStage.label}</h4>
+              </div>
+              <p className="mt-1.5 text-sm text-gray-500">{currentStage.tip}</p>
+            </div>
+            <div className="px-6 py-5">
+              <UploadZone photos={photos[currentStage.id]} onAdd={newPhotos => addPhotos(currentStage.id, newPhotos)} maxPhotos={currentStage.maxPhotos} />
+              <div className="flex gap-3 mt-5">
+                <button type="button" onClick={advanceWizard} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>{currentStage.nextLabel}</button>
+                <button type="button" onClick={advanceWizard} className="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors">Skip</button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-gray-200 bg-white p-6">
+            <p className="text-sm font-medium text-gray-700 mb-5">
+              {totalPhotos > 0
+                ? `You uploaded ${totalPhotos} photo${totalPhotos !== 1 ? 's' : ''} across ${roomsWithPhotos} room${roomsWithPhotos !== 1 ? 's' : ''}`
+                : "No photos uploaded — that's okay, you can still use the checklist below."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setAnalyzeNote('AI staging analysis coming soon — we\'ll wire this up once the API key is ready.')}
+                  className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: ACCENT }}
+                >
+                  Analyze my photos →
+                </button>
+                {analyzeNote && <p className="mt-2 text-sm text-gray-500">{analyzeNote}</p>}
+              </div>
+              <button
+                type="button"
+                onClick={() => { const el = document.getElementById('staging-checklist'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }}
+                className="text-sm text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors"
+              >
+                Skip — go straight to checklist
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+
       {/* Staging checklist */}
-      <section className="mb-10">
+      <section id="staging-checklist" className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Your staging checklist</h3>
         <p className="text-sm text-gray-500 mb-8">
           Start with <span className="font-semibold text-red-600">High Impact</span> items — they protect your asking price from lowball offers.
