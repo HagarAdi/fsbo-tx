@@ -287,8 +287,16 @@ export default function Step4Listing({ onComplete, isCompleted, onSelectStep }) 
     } catch {}
   }, [features, neighborhood, vibe, description])
 
-  const addBeforePhotos = (id, newPhotos) =>
+  const addBeforePhotos = (id, newPhotos) => {
     setPhotos(prev => ({ ...prev, [id]: [...prev[id], ...newPhotos] }))
+    try {
+      const existing = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
+      existing.step4 = existing.step4 || {}
+      existing.step4.uploadedRooms = [...new Set([...(existing.step4.uploadedRooms || []), id])]
+      localStorage.setItem('fsbo_stepData', JSON.stringify(existing))
+      setSavedUploadedRooms(existing.step4.uploadedRooms)
+    } catch {}
+  }
 
   const advanceBeforeWizard = () => {
     if (wizardStage < BEFORE_STAGES.length - 1) setWizardStage(s => s + 1)
