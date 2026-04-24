@@ -67,6 +67,9 @@ Example:
     "showingPrepChecked": [],
     "showingMethod": "",
     "showings": []
+  },
+  "step6": {
+    "offers": []
   }
 }
 
