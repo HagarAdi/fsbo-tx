@@ -70,6 +70,14 @@ Example:
   },
   "step6": {
     "offers": []
+  },
+  "step7": {
+    "repairRequests": [],
+    "bottomLine": {
+      "minPrice": null,
+      "maxCredit": null,
+      "dealBreakers": ""
+    }
   }
 }
 
