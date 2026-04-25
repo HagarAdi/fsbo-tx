@@ -58,7 +58,7 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
       })()}
 
       {/* Price estimate banner */}
-      {priceEstimate ? (
+      {priceEstimate && (
         <div
           className="w-full max-w-md rounded-2xl px-6 py-5 mb-8 text-left"
           style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #bbf7d0' }}
@@ -74,16 +74,6 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
               Last updated: Step {lastAdjustment.step}{lastStepTitle ? ` — ${lastStepTitle}` : ''}
             </p>
           )}
-        </div>
-      ) : (
-        <div className="w-full max-w-md rounded-2xl px-6 py-4 mb-8 bg-gray-50 border border-gray-200 flex items-center gap-3">
-          <svg className="w-5 h-5 text-gray-300 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-          </svg>
-          <p className="text-sm text-gray-400 flex-1">Complete Step 1 to get your estimated list price</p>
-          <svg className="w-4 h-4 text-gray-300 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor">
-            <path d="M10 4l-4 4 4 4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
         </div>
       )}
 
@@ -105,6 +95,15 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
         >
           Change
         </button>
+      </div>
+
+      {/* Street View placeholder */}
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-gray-50 mb-8 overflow-hidden">
+        <div className="flex flex-col items-center justify-center gap-2 py-8 px-6">
+          <span className="text-3xl">📍</span>
+          <p className="text-sm font-medium text-gray-700 text-center">{homeAddress}</p>
+          <p className="text-xs text-gray-400">Street view coming soon</p>
+        </div>
       </div>
 
       {/* Next step button */}
