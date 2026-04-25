@@ -102,6 +102,10 @@ Example:
     "wireFraudAcknowledged": false,
     "netProceeds": {},
     "utilitiesChecked": []
+  },
+  "step9": {
+    "walkthroughChecked": [],
+    "afterClosingChecked": []
   }
 }
 
