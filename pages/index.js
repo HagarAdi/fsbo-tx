@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import WelcomeScreen from '../components/WelcomeScreen'
+import OnboardingModal from '../components/OnboardingModal'
 import StepPlaceholder from '../components/StepPlaceholder'
 import Step1Pricing from '../components/steps/Step1Pricing'
 import Step2Repairs from '../components/steps/Step2Repairs'
@@ -17,9 +18,14 @@ export default function Home() {
   const [selectedId, setSelectedId] = useState(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const [homeAddress] = useState(() => {
+  const [homeAddress, setHomeAddress] = useState(() => {
     if (typeof window === 'undefined') return ''
     return localStorage.getItem('fsbo_homeAddress') || ''
+  })
+
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return !localStorage.getItem('fsbo_homeAddress')
   })
 
   const [completed, setCompleted] = useState(() => {
@@ -41,6 +47,18 @@ export default function Home() {
       return null
     }
   })
+
+  const handleAddressSave = (address) => {
+    localStorage.setItem('fsbo_homeAddress', address)
+    setHomeAddress(address)
+    setShowOnboarding(false)
+  }
+
+  const handleShowOnboarding = () => {
+    localStorage.removeItem('fsbo_homeAddress')
+    setHomeAddress('')
+    setShowOnboarding(true)
+  }
 
   const selectedStep = steps.find((s) => s.id === selectedId) ?? null
 
@@ -151,6 +169,8 @@ export default function Home() {
     )
   ) : (
     <WelcomeScreen
+      homeAddress={homeAddress}
+      onShowOnboarding={handleShowOnboarding}
       priceEstimate={priceEstimate}
       completedSteps={[...completed]}
       onSelectStep={handleSelect}
@@ -197,6 +217,10 @@ export default function Home() {
           {mainContent}
         </main>
       </div>
+
+      {showOnboarding && (
+        <OnboardingModal onAddressSave={handleAddressSave} />
+      )}
 
       {/* Mobile sidebar overlay */}
       {mobileMenuOpen && (
