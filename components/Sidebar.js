@@ -15,7 +15,7 @@ function PhaseGroup({ phase, steps, selectedId, onSelect, completed }) {
           <button
             key={step.id}
             onClick={() => onSelect(step.id)}
-            className="w-full flex items-center px-4 py-2.5 text-left hover:bg-gray-100 transition-colors relative"
+            className="w-full flex items-center px-4 py-3 text-left hover:bg-gray-100 transition-colors relative min-h-[44px]"
             style={isSelected ? { borderLeft: `3px solid ${ACCENT}`, paddingLeft: '13px' } : { borderLeft: '3px solid transparent' }}
           >
             <span className="w-5 h-5 flex items-center justify-center text-xs font-semibold text-gray-400 mr-3 shrink-0">
@@ -41,24 +41,38 @@ function PhaseGroup({ phase, steps, selectedId, onSelect, completed }) {
   )
 }
 
-export default function Sidebar({ selectedId, onSelect, completed, priceEstimate }) {
+export default function Sidebar({ selectedId, onSelect, completed, priceEstimate, onClose }) {
   const completedCount = completed.size
   const total = steps.length
   const pct = Math.round((completedCount / total) * 100)
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: '#f9fafb', borderRight: '1px solid #e5e7eb' }}>
+    <div className="flex flex-col h-full w-full" style={{ backgroundColor: '#f9fafb', borderRight: '1px solid #e5e7eb' }}>
       {/* Header */}
-      <div className="px-4 py-5 border-b border-gray-200">
-        <button
-          onClick={() => onSelect(null)}
-          className="flex items-center gap-2 hover:opacity-75 transition-opacity"
-        >
-          <svg className="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill={ACCENT}>
-            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h3a1 1 0 001-1v-3h2v3a1 1 0 001 1h3a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-          </svg>
-          <span className="font-bold text-gray-900 text-base leading-tight">FSBO Texas Guide</span>
-        </button>
+      <div className="px-4 py-5 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => onSelect(null)}
+            className="flex items-center gap-2 hover:opacity-75 transition-opacity min-h-[44px]"
+          >
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill={ACCENT}>
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h3a1 1 0 001-1v-3h2v3a1 1 0 001 1h3a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+            <span className="font-bold text-gray-900 text-base leading-tight">FSBO Texas Guide</span>
+          </button>
+
+          {/* Close button — only shown in mobile overlay */}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex items-center justify-center w-11 h-11 rounded-lg hover:bg-gray-200 transition-colors text-gray-500 text-xl ml-2"
+              aria-label="Close menu"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Steps */}
@@ -76,7 +90,7 @@ export default function Sidebar({ selectedId, onSelect, completed, priceEstimate
       </nav>
 
       {/* Progress bar */}
-      <div className="px-4 py-4 border-t border-gray-200">
+      <div className="px-4 py-4 border-t border-gray-200 flex-shrink-0">
         <div className="flex justify-between text-xs text-gray-500 mb-1.5">
           <span>Progress</span>
           <span>{completedCount}/{total} steps complete</span>

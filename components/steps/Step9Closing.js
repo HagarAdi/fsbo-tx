@@ -137,7 +137,7 @@ export default function Step9Closing({ onComplete, isCompleted, priceEstimate, o
   const savings = currentEstimate * 0.03
 
   return (
-    <div className="px-10 py-12 max-w-3xl">
+    <div className="px-4 py-8 md:px-10 md:py-12 max-w-3xl">
       <style>{`
         @keyframes confettiFall {
           0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
