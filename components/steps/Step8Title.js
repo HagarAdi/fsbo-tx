@@ -646,7 +646,7 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
 
       {/* Section: Net proceeds calculator */}
       <section className="mb-12">
-        <h3 className="text-xl font-bold text-gray-900 mb-1">Estimate your net proceeds 💰</h3>
+        <h3 className="text-xl font-bold text-gray-900 mb-1">Calculate your potential net proceeds 💰</h3>
         <p className="text-sm text-gray-500 mb-6">What will you actually walk away with after closing costs?</p>
 
         <div className="rounded-xl border border-gray-200 bg-white px-5 py-5">
@@ -693,7 +693,7 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
                 className="flex justify-between items-center px-4 py-3 rounded-xl font-bold text-base mb-3"
                 style={{ backgroundColor: '#f0fdf4', color: ACCENT }}
               >
-                <span>Your estimated net proceeds</span>
+                <span>Your calculated net proceeds (based on your inputs)</span>
                 <span className="text-xl">${Math.round(estimatedNet).toLocaleString()}</span>
               </div>
               <div className="px-4 py-3 rounded-xl text-sm" style={{ backgroundColor: '#f8fafc', color: '#64748b' }}>

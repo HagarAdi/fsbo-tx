@@ -104,12 +104,12 @@ export default function Sidebar({ selectedId, onSelect, completed, priceEstimate
         {/* Estimated price */}
         {priceEstimate?.currentEstimate ? (
           <div className="mt-2 text-sm text-gray-600">
-            Est. Price: <span className="font-semibold text-gray-900">
+            Your Estimate: <span className="font-semibold text-gray-900">
               ${priceEstimate.currentEstimate.toLocaleString()}
             </span>
           </div>
         ) : (
-          <p className="text-xs text-gray-400 mt-2">Est. price: —</p>
+          <p className="text-xs text-gray-400 mt-2">Your Estimate: —</p>
         )}
 
         {/* Protected value badge — only shows after Step 2 Must Fix complete */}
