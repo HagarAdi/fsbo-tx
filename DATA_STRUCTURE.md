@@ -77,7 +77,12 @@ Example:
       "minPrice": null,
       "maxCredit": null,
       "dealBreakers": ""
-    }
+    },
+    "optionPeriod": {
+      "startDate": "",
+      "endDate": ""
+    },
+    "contractorNotes": ""
   }
 }
 

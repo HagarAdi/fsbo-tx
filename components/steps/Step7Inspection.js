@@ -130,6 +130,19 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
 
   const [form, setForm] = useState(makeEmptyRequest())
 
+  const [optionPeriod, setOptionPeriod] = useState(() => {
+    if (typeof window === 'undefined') return { startDate: '', endDate: '' }
+    const saved = loadStep7().optionPeriod || {}
+    return { startDate: saved.startDate || '', endDate: saved.endDate || '' }
+  })
+
+  const [sdnChecked, setSdnChecked] = useState([])
+
+  const [contractorNotes, setContractorNotes] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return loadStep7().contractorNotes || ''
+  })
+
   useEffect(() => {
     saveStep7({
       repairRequests,
@@ -138,8 +151,10 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
         maxCredit: bottomLine.maxCredit === '' ? null : bottomLine.maxCredit,
         dealBreakers: bottomLine.dealBreakers,
       },
+      optionPeriod,
+      contractorNotes,
     })
-  }, [repairRequests, bottomLine])
+  }, [repairRequests, bottomLine, optionPeriod, contractorNotes])
 
   const toggleFinding = (i) => setOpenFindings(prev => ({ ...prev, [i]: !prev[i] }))
 
@@ -219,6 +234,231 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
               <span>{note}</span>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Option period tracker */}
+      <section className="mb-12">
+        <h3 className="text-xl font-bold text-gray-900 mb-1">Track your option period ⏰</h3>
+        <p className="text-sm text-gray-500 mb-6">Know exactly how much time you have left to negotiate.</p>
+
+        <div className="rounded-xl border border-gray-200 bg-white px-5 py-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">Option period start date</label>
+              <input
+                type="date"
+                value={optionPeriod.startDate}
+                onChange={e => {
+                  const start = e.target.value
+                  setOptionPeriod(prev => {
+                    // Auto-set end to start + 10 days if end is empty
+                    let end = prev.endDate
+                    if (!end && start) {
+                      const d = new Date(start + 'T00:00:00')
+                      d.setDate(d.getDate() + 10)
+                      end = d.toISOString().slice(0, 10)
+                    }
+                    return { startDate: start, endDate: end }
+                  })
+                }}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:border-transparent transition"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">Option period end date</label>
+              <input
+                type="date"
+                value={optionPeriod.endDate}
+                onChange={e => setOptionPeriod(prev => ({ ...prev, endDate: e.target.value }))}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:border-transparent transition"
+              />
+            </div>
+          </div>
+
+          {optionPeriod.startDate && optionPeriod.endDate && (() => {
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            const start = new Date(optionPeriod.startDate + 'T00:00:00')
+            const end   = new Date(optionPeriod.endDate   + 'T00:00:00')
+            const totalDays = Math.round((end - start) / (1000 * 60 * 60 * 24))
+            const elapsed   = Math.round((today - start) / (1000 * 60 * 60 * 24))
+            const remaining = Math.round((end - today)   / (1000 * 60 * 60 * 24))
+            const pct = totalDays > 0 ? Math.min(100, Math.max(0, (elapsed / totalDays) * 100)) : 0
+
+            const isExpired  = remaining <= 0
+            const isWarning  = !isExpired && remaining <= 2
+            const barColor   = isExpired ? '#dc2626' : isWarning ? '#ca8a04' : ACCENT
+            const textColor  = isExpired ? '#dc2626' : isWarning ? '#854d0e' : '#15803d'
+            const bgColor    = isExpired ? '#fee2e2' : isWarning ? '#fef9c3' : '#f0fdf4'
+
+            return (
+              <div>
+                {/* Progress bar */}
+                <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden mb-4">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${pct}%`, backgroundColor: barColor }}
+                  />
+                </div>
+
+                {/* Days remaining */}
+                <div
+                  className="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold"
+                  style={{ backgroundColor: bgColor, color: textColor }}
+                >
+                  <span className="text-2xl font-bold">
+                    {isExpired ? '0' : remaining}
+                    <span className="text-sm font-semibold ml-1">days remaining</span>
+                  </span>
+                  {isExpired && (
+                    <span>⚠️ Option period expired</span>
+                  )}
+                  {isWarning && (
+                    <span>⚠️ Wrapping up — finalize negotiations</span>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      </section>
+
+      {/* Seller's Disclosure Notice */}
+      <section className="mb-12">
+        <h3 className="text-xl font-bold text-gray-900 mb-1">Your Seller&apos;s Disclosure Notice (SDN) ⚖️</h3>
+        <p className="text-sm text-gray-500 mb-6">
+          This is legally required in Texas — and buyers will review it closely during the option period.
+        </p>
+
+        <div className="space-y-2 mb-6">
+          {[
+            'The SDN must disclose everything you KNOW about your home\'s condition — roof leaks, foundation repairs, flooding history, HOA disputes.',
+            'Non-disclosure = legal liability. When in doubt, disclose.',
+            'Buyers can\'t sue you for something you disclosed — they CAN sue for things you hid.',
+          ].map((note, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
+              style={{ backgroundColor: '#ede9fe', color: '#5b21b6' }}
+            >
+              <span className="flex-shrink-0 font-bold mt-0.5">ℹ</span>
+              <span>{note}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 mb-4">
+          <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">Action items</p>
+          <div className="space-y-3">
+            {[
+              'Review your SDN for completeness',
+              'Make sure all known issues are disclosed',
+              'Have your SDN ready to provide to buyer',
+            ].map((item, i) => (
+              <label key={i} className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sdnChecked.includes(i)}
+                  onChange={() => setSdnChecked(prev =>
+                    prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]
+                  )}
+                  className="h-4 w-4 rounded border-gray-300 flex-shrink-0"
+                  style={{ accentColor: ACCENT }}
+                />
+                <span className={`text-sm ${sdnChecked.includes(i) ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                  {item}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <a
+          href="https://trec.texas.gov/sites/default/files/pdf-forms/OP-H.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold transition-opacity hover:opacity-80"
+          style={{ color: PURPLE }}
+        >
+          Download TREC SDN form →
+        </a>
+      </section>
+
+      {/* Second opinion */}
+      <section className="mb-12">
+        <h3 className="text-xl font-bold text-gray-900 mb-1">Don&apos;t panic — get a second opinion 🔍</h3>
+        <p className="text-sm text-gray-500 mb-6">
+          Before agreeing to major repairs, get your own contractor quote. Inspectors find issues — contractors price them.
+        </p>
+
+        <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 mb-4">
+          <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">When to get a second opinion</p>
+          <div className="space-y-2">
+            {[
+              'Any repair request over $1,000',
+              'Foundation concerns',
+              'Roof concerns',
+              'Electrical panel issues',
+              'Plumbing issues under the slab',
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
+                <span className="text-green-600 flex-shrink-0">✓</span>
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">Add contractor quotes here</label>
+          <textarea
+            value={contractorNotes}
+            onChange={e => setContractorNotes(e.target.value)}
+            rows={4}
+            placeholder="e.g. Foundation — Got quote from ABC Structural: $4,200 vs buyer's requested $8,000"
+            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition resize-none"
+          />
+        </div>
+      </section>
+
+      {/* Appraisal warning */}
+      <section className="mb-12">
+        <h3 className="text-xl font-bold text-gray-900 mb-1">After option period: The appraisal ⚠️</h3>
+        <p className="text-sm text-gray-500 mb-6">If your buyer is financing, an appraisal is coming. Be prepared.</p>
+
+        <div className="space-y-2 mb-6">
+          {[
+            'Lender orders an independent appraisal after option period ends — usually within 2 weeks.',
+            'If home appraises BELOW purchase price, buyer may renegotiate or walk.',
+            'Cash buyers skip the appraisal entirely — another reason cash offers are stronger.',
+          ].map((note, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
+              style={{ backgroundColor: '#fef9c3', color: '#713f12' }}
+            >
+              <span className="flex-shrink-0 font-bold mt-0.5">!</span>
+              <span>{note}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-white px-5 py-4">
+          <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">How to prepare</p>
+          <div className="space-y-2">
+            {[
+              'Have your comp data from Step 1 ready to share with appraiser',
+              'Make sure home is clean and presentable for appraiser visit',
+              'List all recent improvements with dates and costs',
+              'Appraiser will spend 30–60 minutes in your home',
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                <span className="text-green-600 flex-shrink-0 mt-0.5">✓</span>
+                {item}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
