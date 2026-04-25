@@ -232,7 +232,33 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
 
       {/* Your home details */}
       <section className="mb-10">
-        <h3 className="text-lg font-semibold text-gray-900 mb-5">Your home details</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">Your home details</h3>
+
+        {/* Address display */}
+        {homeAddress ? (
+          <div className="flex items-center gap-2 mb-5">
+            <span className="text-sm text-gray-800">🏠 {homeAddress}</span>
+            <button
+              type="button"
+              onClick={() => onSelectStep && onSelectStep(null)}
+              className="text-xs text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors"
+            >
+              Change
+            </button>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 mb-5">
+            Add your address on the home screen first.{' '}
+            <button
+              type="button"
+              onClick={() => onSelectStep && onSelectStep(null)}
+              className="underline underline-offset-2 hover:text-gray-700 transition-colors"
+            >
+              Go back
+            </button>
+          </p>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
           {/* Square footage */}
           <div>
