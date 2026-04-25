@@ -58,7 +58,7 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
       })()}
 
       {/* Price estimate banner */}
-      {priceEstimate && (
+      {priceEstimate?.currentEstimate && (
         <div
           className="w-full max-w-md rounded-2xl px-6 py-5 mb-8 text-left"
           style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #bbf7d0' }}

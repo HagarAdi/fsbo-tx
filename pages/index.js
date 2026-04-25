@@ -20,32 +20,24 @@ export default function Home() {
 
   const [homeAddress, setHomeAddress] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [completed, setCompleted] = useState(new Set())
+  const [priceEstimate, setPriceEstimate] = useState(null)
 
   useEffect(() => {
     const address = localStorage.getItem('fsbo_homeAddress') || ''
     setHomeAddress(address)
     setShowOnboarding(!address)
-  }, [])
 
-  const [completed, setCompleted] = useState(() => {
-    if (typeof window === 'undefined') return new Set()
     try {
       const saved = localStorage.getItem('fsbo_completedSteps')
-      return saved ? new Set(JSON.parse(saved)) : new Set()
-    } catch {
-      return new Set()
-    }
-  })
+      if (saved) setCompleted(new Set(JSON.parse(saved)))
+    } catch {}
 
-  const [priceEstimate, setPriceEstimate] = useState(() => {
-    if (typeof window === 'undefined') return null
     try {
       const saved = localStorage.getItem('fsbo_priceEstimate')
-      return saved ? JSON.parse(saved) : null
-    } catch {
-      return null
-    }
-  })
+      if (saved) setPriceEstimate(JSON.parse(saved))
+    } catch {}
+  }, [])
 
   const handleAddressSave = (address) => {
     localStorage.setItem('fsbo_homeAddress', address)
