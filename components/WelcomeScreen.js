@@ -12,7 +12,6 @@ const HomeIcon = ({ className }) => (
 )
 
 export default function WelcomeScreen({ priceEstimate, completedSteps = [], onSelectStep }) {
-  const completed = steps.filter((s) => s.complete).length
   const total = steps.length
 
   const nextStep = steps.find((s) => !completedSteps.includes(s.id))
@@ -179,7 +178,7 @@ export default function WelcomeScreen({ priceEstimate, completedSteps = [], onSe
 
       {/* Progress summary */}
       <p className="text-gray-500 text-base mb-8">
-        {completed} of {total} steps complete
+        {completedSteps.length} of {total} steps complete
       </p>
 
       {/* Phase pills */}
