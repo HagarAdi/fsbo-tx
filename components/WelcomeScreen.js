@@ -64,7 +64,7 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
           style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #bbf7d0' }}
         >
           <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#15803d' }}>
-            Your estimated list price
+            Your Calculated Estimate
           </p>
           <p className="text-3xl font-bold text-gray-900">
             ${priceEstimate.currentEstimate.toLocaleString()}

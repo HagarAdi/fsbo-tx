@@ -508,6 +508,10 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
           Enter 3–5 recent nearby sales to establish your price baseline.
         </p>
 
+        <p className="mb-4 text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded px-3 py-2">
+          ℹ️ Texas is a non-disclosure state. Enter prices from publicly available listing data (Redfin, HAR.com, Zillow). Displayed prices may not reflect final sold prices.
+        </p>
+
         <div className="overflow-x-auto rounded-lg border border-gray-200">
         <div className="min-w-[500px]">
           <table className="w-full text-sm">
@@ -709,7 +713,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
       {/* Section 2: Price calculation */}
       {hasComps && baseValue && (
         <section className="mb-10">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your estimated price</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Calculated Price Range</h3>
 
           <div className="rounded-lg border border-gray-200 overflow-hidden">
             <div className="divide-y divide-gray-100">
@@ -779,13 +783,18 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
 
               {/* Dividing line + price range */}
               <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
-                <span className="text-sm font-semibold text-gray-900">Recommended price range</span>
+                <span className="text-sm font-semibold text-gray-900">Calculated Price Range (based on your inputs)</span>
                 <span className="text-sm font-bold text-gray-900">
                   ${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}
                 </span>
               </div>
             </div>
           </div>
+
+          {/* Disclaimer */}
+          <p className="mt-3 text-xs text-gray-500">
+            📊 This is a computer-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
+          </p>
 
           {/* Tip box */}
           <div
@@ -812,7 +821,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: ACCENT }}
               >
-                Save this estimate
+                Save my calculation
               </button>
             )}
           </div>
