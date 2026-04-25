@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from '../components/Sidebar'
 import WelcomeScreen from '../components/WelcomeScreen'
 import OnboardingModal from '../components/OnboardingModal'
@@ -18,15 +18,14 @@ export default function Home() {
   const [selectedId, setSelectedId] = useState(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const [homeAddress, setHomeAddress] = useState(() => {
-    if (typeof window === 'undefined') return ''
-    return localStorage.getItem('fsbo_homeAddress') || ''
-  })
+  const [homeAddress, setHomeAddress] = useState('')
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
-  const [showOnboarding, setShowOnboarding] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return !localStorage.getItem('fsbo_homeAddress')
-  })
+  useEffect(() => {
+    const address = localStorage.getItem('fsbo_homeAddress') || ''
+    setHomeAddress(address)
+    setShowOnboarding(!address)
+  }, [])
 
   const [completed, setCompleted] = useState(() => {
     if (typeof window === 'undefined') return new Set()
