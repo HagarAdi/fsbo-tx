@@ -9,7 +9,6 @@ const PREP_CHECKLIST = [
   { id: 'blinds',  label: 'Open all blinds and curtains',               priority: 'must',        note: 'Natural light is a top buyer priority' },
   { id: 'pets',    label: 'Remove pets and all pet items',              priority: 'must',        note: 'Not all buyers are pet lovers — don\'t risk it' },
   { id: 'trash',   label: 'Empty all trash cans',                       priority: 'must',        note: 'Smells kill deals' },
-  { id: 'leave',   label: 'Give buyers space during showings',           priority: 'must',        note: 'Buyers need to feel comfortable exploring and talking openly — don\'t hover' },
   { id: 'scent',   label: 'Add subtle scent — vanilla or citrus',      priority: 'recommended', note: 'Scent triggers emotional memory' },
   { id: 'flowers', label: 'Fresh flowers on kitchen counter',           priority: 'recommended', note: 'Small touch, big impact on photos and visits' },
   { id: 'sheet',   label: 'Leave a printed home facts sheet',           priority: 'recommended', note: 'Roof age, HVAC age, utility averages — buyers always ask' },
