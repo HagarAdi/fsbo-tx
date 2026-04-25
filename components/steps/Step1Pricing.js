@@ -782,8 +782,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
               ))}
 
               {/* Dividing line + price range */}
-              <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
-                <span className="text-sm font-semibold text-gray-900">Calculated Price Range (based on your inputs)</span>
+              <div className="flex items-center justify-end px-5 py-4 bg-gray-50">
                 <span className="text-sm font-bold text-gray-900">
                   ${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}
                 </span>
