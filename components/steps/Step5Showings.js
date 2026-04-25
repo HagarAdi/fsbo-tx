@@ -118,7 +118,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
   const mustDone  = PREP_CHECKLIST.filter(i => i.priority === 'must' && checkedItems.includes(i.id)).length
 
   return (
-    <div className="px-10 py-12 max-w-3xl">
+    <div className="px-4 py-8 md:px-10 md:py-12 max-w-3xl">
 
       {/* Header */}
       <div className="mb-3">

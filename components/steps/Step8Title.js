@@ -249,7 +249,7 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
   const withAgentNet     = estimatedNet - listingAgentCost
 
   return (
-    <div className="px-10 py-12 max-w-3xl">
+    <div className="px-4 py-8 md:px-10 md:py-12 max-w-3xl">
 
       {/* Header */}
       <div className="mb-3">

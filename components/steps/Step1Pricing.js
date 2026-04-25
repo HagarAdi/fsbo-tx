@@ -213,7 +213,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
   }
 
   return (
-    <div className="px-10 py-12 max-w-3xl">
+    <div className="px-4 py-8 md:px-10 md:py-12 max-w-3xl">
       {/* Header */}
       <div className="mb-3">
         <span
@@ -233,7 +233,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
       {/* Your home details */}
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-5">Your home details</h3>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
           {/* Square footage */}
           <div>
             <div className="flex items-center mb-1">
@@ -482,7 +482,8 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
           Enter 3–5 recent nearby sales to establish your price baseline.
         </p>
 
-        <div className="rounded-lg border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <div className="min-w-[500px]">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
@@ -633,6 +634,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
               </tr>
             </tfoot>
           </table>
+        </div>
         </div>
 
         {comps.length < 5 && (
@@ -794,7 +796,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
       {/* Pro tips */}
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Pro tips</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             { tip: 'Homes priced correctly sell 50% faster than overpriced ones', source: 'Zillow Research 2023' },
             { tip: 'After 21 days on market, buyers assume something is wrong with the home', source: 'NAR Profile of Home Buyers' },
