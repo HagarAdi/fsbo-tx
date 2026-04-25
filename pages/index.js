@@ -9,6 +9,7 @@ import Step4Listing from '../components/steps/Step4Listing'
 import Step5Showings from '../components/steps/Step5Showings'
 import Step6Offers from '../components/steps/Step6Offers'
 import Step7Inspection from '../components/steps/Step7Inspection'
+import Step8Title from '../components/steps/Step8Title'
 import { steps } from '../data/steps'
 
 export default function Home() {
@@ -125,6 +126,12 @@ export default function Home() {
             <Step7Inspection
               onComplete={(value) => value ? handleComplete(7) : handleUndo(7)}
               isCompleted={completed.has(7)}
+              onSelectStep={handleSelect}
+            />
+          ) : selectedStep.id === 8 ? (
+            <Step8Title
+              onComplete={(value) => value ? handleComplete(8) : handleUndo(8)}
+              isCompleted={completed.has(8)}
               onSelectStep={handleSelect}
             />
           ) : (

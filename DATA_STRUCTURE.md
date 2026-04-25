@@ -83,6 +83,14 @@ Example:
       "endDate": ""
     },
     "contractorNotes": ""
+  },
+  "step8": {
+    "titleOpened": false,
+    "hasHOA": null,
+    "surveyStatus": "",
+    "surveyConfirmed": false,
+    "payoffRequested": false,
+    "hoaClearanceRequested": false
   }
 }
 
