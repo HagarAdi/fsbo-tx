@@ -90,7 +90,18 @@ Example:
     "surveyStatus": "",
     "surveyConfirmed": false,
     "payoffRequested": false,
-    "hoaClearanceRequested": false
+    "hoaClearanceRequested": false,
+    "closingDates": {
+      "contractSigned": "",
+      "optionEnd": "",
+      "appraisal": "",
+      "loanApproval": "",
+      "closingDate": ""
+    },
+    "documentsChecked": [],
+    "wireFraudAcknowledged": false,
+    "netProceeds": {},
+    "utilitiesChecked": []
   }
 }
 
