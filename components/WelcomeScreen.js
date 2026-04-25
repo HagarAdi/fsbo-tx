@@ -159,9 +159,13 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
         Select a step on the left to get started
       </p>
 
+      <p className="text-xs text-gray-400 max-w-sm mt-8 leading-relaxed">
+        ⚖️ Disclaimer: This tool is for informational purposes only and does not constitute legal, financial, or real estate advice. Real estate laws vary by location. Always consult a licensed real estate attorney, agent, or financial advisor before making any decisions.
+      </p>
+
       <button
         onClick={handleReset}
-        className="mt-8 text-xs text-gray-300 hover:text-gray-500 transition-colors"
+        className="mt-6 text-xs text-gray-300 hover:text-gray-500 transition-colors"
       >
         ↺ Reset all data
       </button>

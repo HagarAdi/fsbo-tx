@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import PasswordGate from '../components/PasswordGate'
 import Sidebar from '../components/Sidebar'
 import WelcomeScreen from '../components/WelcomeScreen'
 import OnboardingModal from '../components/OnboardingModal'
@@ -169,6 +170,7 @@ export default function Home() {
   )
 
   return (
+    <PasswordGate>
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Mobile top navigation bar — hidden on md+ */}
       <nav className="md:hidden flex items-center justify-between px-4 border-b border-gray-200 bg-white flex-shrink-0 h-14 z-10">
@@ -235,5 +237,6 @@ export default function Home() {
         </div>
       )}
     </div>
+    </PasswordGate>
   )
 }
