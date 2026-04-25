@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { steps } from '../data/steps'
 
 const ACCENT = '#16a34a'
@@ -11,7 +10,7 @@ const HomeIcon = ({ className }) => (
   </svg>
 )
 
-export default function WelcomeScreen({ priceEstimate, completedSteps = [], onSelectStep }) {
+export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, priceEstimate, completedSteps = [], onSelectStep }) {
   const total = steps.length
 
   const nextStep = steps.find((s) => !completedSteps.includes(s.id))
@@ -22,25 +21,6 @@ export default function WelcomeScreen({ priceEstimate, completedSteps = [], onSe
     ? priceEstimate.adjustments[priceEstimate.adjustments.length - 1]
     : null
   const lastStepTitle = lastAdjustment ? steps.find((s) => s.id === lastAdjustment.step)?.title : null
-
-  const [address, setAddress] = useState(() => {
-    if (typeof window === 'undefined') return ''
-    return localStorage.getItem('fsbo_homeAddress') || ''
-  })
-  const [inputValue, setInputValue] = useState('')
-
-  const handleSave = () => {
-    const trimmed = inputValue.trim()
-    if (!trimmed) return
-    localStorage.setItem('fsbo_homeAddress', trimmed)
-    setAddress(trimmed)
-    setInputValue('')
-  }
-
-  const handleChange = () => {
-    setAddress('')
-    setInputValue('')
-  }
 
   const handleReset = () => {
     if (!window.confirm('Are you sure? This will clear all your progress, saved address, and price estimate. This cannot be undone.')) return
@@ -108,48 +88,24 @@ export default function WelcomeScreen({ priceEstimate, completedSteps = [], onSe
       )}
 
       {/* Address card */}
-      {address ? (
-        <div
-          className="w-full max-w-md rounded-2xl px-6 py-5 mb-8 text-left"
-          style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #bbf7d0' }}
+      <div
+        className="w-full max-w-md rounded-2xl px-6 py-5 mb-8 text-left"
+        style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #bbf7d0' }}
+      >
+        <div className="flex items-start gap-3">
+          <HomeIcon className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: ACCENT }} />
+          <div>
+            <p className="text-xs font-medium mb-0.5 text-gray-500">Your home</p>
+            <p className="font-bold text-gray-900 text-base">{homeAddress}</p>
+          </div>
+        </div>
+        <button
+          onClick={onShowOnboarding}
+          className="mt-3 ml-9 text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2"
         >
-          <div className="flex items-start gap-3">
-            <HomeIcon className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: ACCENT }} />
-            <div>
-              <p className="text-sm font-medium mb-0.5" style={{ color: '#15803d' }}>Selling:</p>
-              <p className="font-bold text-gray-900 text-base">{address}</p>
-            </div>
-          </div>
-          <button
-            onClick={handleChange}
-            className="mt-3 ml-9 text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2"
-          >
-            Change address
-          </button>
-        </div>
-      ) : (
-        <div className="w-full max-w-md rounded-2xl bg-white border border-gray-200 shadow-sm px-6 py-5 mb-8 text-left">
-          <div className="flex items-center gap-2 mb-3">
-            <HomeIcon className="w-5 h-5 text-gray-400" />
-            <label className="text-sm font-medium text-gray-600">What home are you selling?</label>
-          </div>
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-            placeholder="123 Elm St, Round Rock TX 78664"
-            className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 mb-3"
-          />
-          <button
-            onClick={handleSave}
-            className="w-full py-2.5 rounded-lg text-white text-sm font-semibold transition-opacity hover:opacity-90 active:opacity-80"
-            style={{ backgroundColor: ACCENT }}
-          >
-            Save my home
-          </button>
-        </div>
-      )}
+          Change
+        </button>
+      </div>
 
       {/* Next step button */}
       <div className="w-full max-w-md mb-8">
