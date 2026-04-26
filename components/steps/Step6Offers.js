@@ -41,6 +41,13 @@ const OFFER_TERMS = [
     title: 'Closing Date',
     explanation: 'When ownership transfers.',
     whyItMatters: '30–45 days is standard in Texas. Shorter close can be a negotiating chip.',
+    trecInfo: {
+      termName: 'Closing Date',
+      whatItSays: 'The date by which the transaction must be completed and ownership transferred.',
+      whatItMeans: 'The deadline for everything — financing, inspections, title work — to be done. If closing doesn\'t happen by this date, either party may have grounds to terminate.',
+      moneyTrail: 'On closing day: title company distributes funds. Your mortgage payoff goes to your lender. Your net proceeds wire to your bank account — same day or next morning.',
+      txSellerTip: '30-45 days is standard in Texas. A buyer offering a shorter close (21-28 days) is often more serious — especially cash buyers. Use closing date as a negotiating chip.',
+    },
   },
   {
     title: 'Earnest Money',
@@ -58,6 +65,30 @@ const OFFER_TERMS = [
     title: 'Inclusions',
     explanation: 'What stays with the home.',
     whyItMatters: 'Appliances, fixtures, shelving — get clear on what\'s included to avoid surprises at closing.',
+  },
+  {
+    title: 'Property Condition / Seller\'s Disclosure',
+    explanation: 'Seller\'s known defects and condition disclosures.',
+    whyItMatters: 'You are legally required to disclose everything you know. When in doubt, disclose.',
+    trecInfo: {
+      termName: 'Property Condition / Seller\'s Disclosure',
+      whatItSays: 'Seller\'s representations about the property\'s condition and any known defects, as detailed in the Seller\'s Disclosure Notice.',
+      whatItMeans: 'You are legally required to disclose everything you KNOW about your home\'s condition. What you don\'t know — you don\'t have to disclose. What you DO know — you must.',
+      moneyTrail: 'No money involved — but non-disclosure can cost you everything. Buyers who discover undisclosed defects after closing can sue for damages or rescission.',
+      txSellerTip: 'When in doubt, disclose. A disclosed issue rarely kills a deal — a hidden one discovered later can end in litigation. Fill out the TREC Seller\'s Disclosure Notice completely and honestly.',
+    },
+  },
+  {
+    title: 'Title Policy & Survey',
+    explanation: 'Who pays for title insurance and survey.',
+    whyItMatters: 'In Texas it\'s customary for the seller to pay the owner\'s title policy — factor this into your net proceeds.',
+    trecInfo: {
+      termName: 'Title Policy & Survey',
+      whatItSays: 'Provisions covering who pays for title insurance and property survey, and what type of title policy will be delivered at closing.',
+      whatItMeans: 'Title insurance protects the owner if someone later claims they have a right to the property. In Texas, it\'s customary for the seller to pay for the owner\'s title policy — but this is negotiable.',
+      moneyTrail: 'Owner\'s Title Policy → typically paid by Seller in Texas ($1,000-2,500). Lender\'s Title Policy → paid by Buyer. Survey → negotiable, typically $400-600.',
+      txSellerTip: 'Factor the owner\'s title policy into your net proceeds calculation in Step 8. It\'s a significant cost many FSBO sellers forget to account for.',
+    },
   },
   {
     title: 'Appraisal Contingency',
