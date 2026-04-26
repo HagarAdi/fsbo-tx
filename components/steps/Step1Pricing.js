@@ -1,7 +1,32 @@
 import { useState, useEffect, Fragment } from 'react'
+import SourceDrawer from '../SourceDrawer'
 
 const ACCENT = '#16a34a'
 const EMPTY_COMP = { address: '', price: '', sqft: '', yearBuilt: '', dom: '' }
+
+const SOURCE_DATA = {
+  'NAR Remodeling Impact Report': {
+    title: 'NAR Remodeling Impact Report',
+    year: '2023',
+    keyFinding: 'Homeowners recover an average of 100% of the cost of a new roof at resale. Kitchen upgrades recover 67% and bathroom renovations recover 71% on average.',
+    whyItMatters: 'In the Texas market, roof condition is one of the top buyer concerns — especially with hail season. A new roof removes a major negotiating point.',
+    fullReportUrl: 'https://www.nar.realtor/research-and-statistics/research-reports/remodeling-impact',
+  },
+  'Zillow Research': {
+    title: 'Zillow Paint Color Analysis',
+    year: '2023',
+    keyFinding: 'Homes with specific paint colors sell for more than expected. Fresh interior paint in neutral tones consistently ranks as one of the highest-ROI pre-listing improvements.',
+    whyItMatters: 'Texas buyers touring multiple homes respond strongly to fresh, neutral paint — it signals a well-maintained home and helps buyers visualize themselves in the space.',
+    fullReportUrl: 'https://www.zillow.com/research',
+  },
+  'HomeLight Agent Survey': {
+    title: 'HomeLight Top Agent Insights',
+    year: '2024',
+    keyFinding: 'Agents report that HVAC condition is one of the top buyer concerns, especially in hot climates. Homes with documented HVAC service sell faster and with fewer inspection concessions.',
+    whyItMatters: 'In Texas where AC runs 8+ months a year, HVAC age and condition is the #1 question buyers ask. A service receipt costs $150 and removes a major objection.',
+    fullReportUrl: 'https://www.homelight.com/blog/top-agent-insights',
+  },
+}
 
 const RENOVATIONS = [
   { key: 'newRoof', label: 'New roof (last 5 years)', pct: 0.015, source: 'NAR Remodeling Impact Report' },
@@ -57,6 +82,13 @@ function Tooltip({ children }) {
 
 export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onPriceUpdate, onSelectStep }) {
   const [activeTooltip, setActiveTooltip] = useState(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerSource, setDrawerSource] = useState(null)
+
+  const openDrawer = (sourceKey) => {
+    setDrawerSource(SOURCE_DATA[sourceKey] ?? null)
+    setDrawerOpen(true)
+  }
 
   const [sqft, setSqft] = useState('')
   const [bedrooms, setBedrooms] = useState('')
@@ -703,7 +735,17 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
                 >
                   {item.pct > 0 ? '+' : ''}{(item.pct * 100) % 1 === 0 ? item.pct * 100 : (item.pct * 100).toFixed(2).replace(/0+$/, '')}%
                 </span>
-                <span className="text-xs text-gray-400">— {item.source}</span>
+                <span className="text-xs text-gray-400">
+                  — {SOURCE_DATA[item.source] ? (
+                    <button
+                      type="button"
+                      onClick={() => openDrawer(item.source)}
+                      className="underline underline-offset-2 hover:text-gray-600 transition-colors"
+                    >
+                      {item.source}
+                    </button>
+                  ) : item.source}
+                </span>
               </div>
             </label>
           ))}
@@ -918,6 +960,12 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
           </button>
         )}
       </div>
+
+      <SourceDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        source={drawerSource}
+      />
     </div>
   )
 }
