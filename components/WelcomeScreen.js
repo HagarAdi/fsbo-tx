@@ -46,18 +46,28 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
             className="w-full max-w-md rounded-2xl px-6 py-5 mb-8 text-center"
             style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #86efac' }}
           >
-            <p className="text-xs font-bold uppercase mb-2 text-green-600" style={{ letterSpacing: '0.12em' }}>
+            <p className="text-xs font-bold uppercase mb-3 text-green-600" style={{ letterSpacing: '0.12em' }}>
               Your FSBO Savings
             </p>
-            <p className="text-5xl font-extrabold leading-none mb-2" style={{ color: ACCENT }}>
-              ${savings || '18,000'}
-            </p>
-            <p className="text-sm text-gray-500">
-              {savings
-                ? <>kept vs. paying a 3% commission on your {estFormatted} estimate</>
-                : <>kept vs. paying a 3% agent commission</>
-              }
-            </p>
+            {savings ? (
+              <>
+                <p className="text-5xl font-extrabold leading-none mb-2" style={{ color: ACCENT }}>
+                  ${savings}
+                </p>
+                <p className="text-sm text-gray-500">
+                  kept vs. paying a 3% commission on your {estFormatted} estimate
+                </p>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-2 py-1">
+                <svg className="w-6 h-6 text-green-300" viewBox="0 0 24 24" fill="currentColor">
+                  <path fillRule="evenodd" d="M12 1a4 4 0 00-4 4v3H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-2V5a4 4 0 00-4-4zm2 7V5a2 2 0 10-4 0v3h4z" clipRule="evenodd" />
+                </svg>
+                <p className="text-base font-medium text-green-700">
+                  Complete Step 1 to reveal your potential savings
+                </p>
+              </div>
+            )}
           </div>
         )
       })()}
