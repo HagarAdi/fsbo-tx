@@ -1,20 +1,23 @@
+import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { steps, phases } from '../data/steps'
 
 const ACCENT = '#16a34a'
 
-function PhaseGroup({ phase, steps, selectedId, onSelect, completed }) {
+function PhaseGroup({ phase, steps, activeId, completed, onClose }) {
   return (
     <div className="mb-4">
       <p className="px-4 mb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
         {phase}
       </p>
       {steps.map((step) => {
-        const isSelected = step.id === selectedId
+        const isSelected = step.id === activeId
         const isComplete = completed.has(step.id)
         return (
-          <button
+          <Link
             key={step.id}
-            onClick={() => onSelect(step.id)}
+            href={`/step/${step.id}`}
+            onClick={onClose}
             className="w-full flex items-center px-4 py-3 text-left hover:bg-gray-100 transition-colors relative min-h-[44px]"
             style={isSelected ? { borderLeft: `3px solid ${ACCENT}`, paddingLeft: '13px' } : { borderLeft: '3px solid transparent' }}
           >
@@ -34,14 +37,17 @@ function PhaseGroup({ phase, steps, selectedId, onSelect, completed }) {
                 <span className="block w-2.5 h-2.5 rounded-full bg-gray-300" />
               )}
             </span>
-          </button>
+          </Link>
         )
       })}
     </div>
   )
 }
 
-export default function Sidebar({ selectedId, onSelect, completed, priceEstimate, onClose }) {
+export default function Sidebar({ completed, priceEstimate, onClose }) {
+  const router = useRouter()
+  const activeId = router.query.id ? parseInt(router.query.id, 10) : null
+
   const completedCount = completed.size
   const total = steps.length
   const pct = Math.round((completedCount / total) * 100)
@@ -51,15 +57,16 @@ export default function Sidebar({ selectedId, onSelect, completed, priceEstimate
       {/* Header */}
       <div className="px-4 py-5 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <button
-            onClick={() => onSelect(null)}
+          <Link
+            href="/"
+            onClick={onClose}
             className="flex items-center gap-2 hover:opacity-75 transition-opacity min-h-[44px]"
           >
             <svg className="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill={ACCENT}>
               <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h3a1 1 0 001-1v-3h2v3a1 1 0 001 1h3a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
             </svg>
             <span className="font-bold text-gray-900 text-base leading-tight">FSBO Texas Guide</span>
-          </button>
+          </Link>
 
           {/* Close button — only shown in mobile overlay */}
           {onClose && (
@@ -82,9 +89,9 @@ export default function Sidebar({ selectedId, onSelect, completed, priceEstimate
             key={phase}
             phase={phase}
             steps={steps.filter((s) => s.phase === phase)}
-            selectedId={selectedId}
-            onSelect={onSelect}
+            activeId={activeId}
             completed={completed}
+            onClose={onClose}
           />
         ))}
       </nav>
@@ -112,7 +119,6 @@ export default function Sidebar({ selectedId, onSelect, completed, priceEstimate
           <p className="text-xs text-gray-400 mt-2">Your Estimate: —</p>
         )}
 
-        {/* Protected value badge — only shows after Step 2 Must Fix complete */}
         {priceEstimate?.protectedValue && (
           <div className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
             🛡️ ${priceEstimate.protectedValue.toLocaleString()} protected
