@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import TRECDrawer from '../TRECDrawer'
 
 const ACCENT = '#16a34a'
 const PURPLE = '#7c3aed'
@@ -23,6 +24,13 @@ const OFFER_TERMS = [
     title: 'Option Period',
     explanation: 'A set number of days (typically 5–10) where the buyer can back out for any reason.',
     whyItMatters: 'Shorter option period = more committed buyer. The buyer pays you an option fee — typically $100–500 — which you keep if they walk.',
+    trecInfo: {
+      termName: 'Termination Option / Option Period',
+      whatItSays: 'For a negotiated number of days and fee, the buyer has the unrestricted right to terminate the contract for any reason.',
+      whatItMeans: 'You are giving the buyer a specific number of days to change their mind for ANY reason in exchange for a small fee. No explanation needed — they can just walk.',
+      moneyTrail: 'Option Fee → paid directly to SELLER within 3 days of contract execution. Yours to keep regardless of outcome. Earnest Money stays at title company during this period.',
+      txSellerTip: 'Negotiate the shortest option period possible — 5 days is reasonable, 10 is standard. The option fee is yours either way — make it worth your time off market.',
+    },
   },
   {
     title: 'Option Fee',
@@ -38,6 +46,13 @@ const OFFER_TERMS = [
     title: 'Earnest Money',
     explanation: 'Good faith deposit held by title company.',
     whyItMatters: 'Typically 1% of purchase price. If buyer backs out outside the option period, you may keep this.',
+    trecInfo: {
+      termName: 'Earnest Money',
+      whatItSays: 'A deposit made by the buyer as evidence of good faith, held by the title company until closing or termination.',
+      whatItMeans: 'The buyer puts skin in the game. This money is held by the title company — not you — and protects you if the buyer backs out outside the option period.',
+      moneyTrail: 'Earnest Money → Title Company escrow. If buyer defaults outside option period → may be released to Seller. If deal closes → applied to buyer\'s closing costs.',
+      txSellerTip: '1% of purchase price is standard in Texas. On a $500K home that\'s $5,000. Higher earnest money = more committed buyer — you can negotiate for more.',
+    },
   },
   {
     title: 'Inclusions',
@@ -140,6 +155,10 @@ function ChevronIcon({ open }) {
 export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
   const [openTerms, setOpenTerms] = useState({})
   const [showTable, setShowTable] = useState(false)
+  const [trecDrawer, setTrecDrawer] = useState({ isOpen: false, info: null })
+
+  const openTrecDrawer = (info) => setTrecDrawer({ isOpen: true, info })
+  const closeTrecDrawer = () => setTrecDrawer(prev => ({ ...prev, isOpen: false }))
 
   const [offers, setOffers] = useState(() => {
     if (typeof window === 'undefined') return [makeEmptyOffer('Offer 1'), makeEmptyOffer('Offer 2')]
@@ -263,14 +282,24 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
         <div className="rounded-xl border border-gray-200 bg-white overflow-hidden divide-y divide-gray-100">
           {OFFER_TERMS.map((term, i) => (
             <div key={i}>
-              <button
-                type="button"
+              <div
                 onClick={() => toggleTerm(i)}
-                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors cursor-pointer"
               >
-                <span className="text-sm font-semibold text-gray-900">{term.title}</span>
+                {term.trecInfo ? (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); openTrecDrawer(term.trecInfo) }}
+                    className="text-sm font-semibold text-left hover:underline"
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#16a34a', textDecorationStyle: 'dotted', textUnderlineOffset: '2px' }}
+                  >
+                    {term.title} <span style={{ fontSize: '11px', fontWeight: 600, color: '#9ca3af' }}>⚖️ TREC</span>
+                  </button>
+                ) : (
+                  <span className="text-sm font-semibold text-gray-900">{term.title}</span>
+                )}
                 <ChevronIcon open={!!openTerms[i]} />
-              </button>
+              </div>
               {openTerms[i] && (
                 <div className="px-5 pb-4">
                   <p className="text-sm text-gray-700 mb-2">{term.explanation}</p>
@@ -520,6 +549,16 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
           </div>
         )}
       </section>
+
+      <TRECDrawer
+        isOpen={trecDrawer.isOpen}
+        onClose={closeTrecDrawer}
+        termName={trecDrawer.info?.termName}
+        whatItSays={trecDrawer.info?.whatItSays}
+        whatItMeans={trecDrawer.info?.whatItMeans}
+        moneyTrail={trecDrawer.info?.moneyTrail}
+        txSellerTip={trecDrawer.info?.txSellerTip}
+      />
 
       {/* Mark complete */}
       <div className="pt-6 border-t border-gray-100">
