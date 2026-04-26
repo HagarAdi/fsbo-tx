@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import SourceDrawer from '../SourceDrawer'
 
 const ACCENT = '#16a34a'
 const PURPLE = '#7c3aed'
@@ -57,6 +58,23 @@ const VENDORS_CLOSE = [
   { label: 'TREC',                  url: 'https://trec.texas.gov' },
   { label: 'Texas Title Insurance', url: 'https://tdi.texas.gov' },
 ]
+
+const WIRE_FRAUD_SOURCE = {
+  title: 'Wire Fraud in Real Estate',
+  year: '2024',
+  keyFinding: (
+    <>
+      Real estate wire fraud is the #1 financial cybercrime in the US. The FBI reported over $446 million lost in real estate wire fraud in 2023 alone. Criminals monitor real estate transactions and intercept email communications to send fake wire instructions.
+      <br /><br />
+      • Criminals hack into real estate agent or title company email accounts<br />
+      • They send convincing emails with &lsquo;updated&rsquo; wire instructions<br />
+      • The money is wired to a criminal&apos;s account and is nearly impossible to recover<br />
+      • Always call your title company at a number from their official website — not from any email
+    </>
+  ),
+  whyItMatters: 'Texas real estate closings are a prime target. Always verify wire instructions by calling your title company directly using a phone number you find yourself — never from an email. One wrong wire transfer and your entire sale proceeds could be gone with no recovery.',
+  fullReportUrl: 'https://www.fbi.gov/scams-and-safety/common-scams-and-crimes/real-estate-wire-fraud',
+}
 
 const UTILITIES = [
   { id: 'electric',          label: 'Electric (Oncor, AEP, or your provider)' },
@@ -230,6 +248,7 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
   const [closingDayChecked, setClosingDayChecked] = useState([])
 
   const [timelineOpen, setTimelineOpen] = useState(false)
+  const [wireFraudDrawerOpen, setWireFraudDrawerOpen] = useState(false)
 
   useEffect(() => {
     saveStep8({ titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, netProceeds, utilitiesChecked })
@@ -574,7 +593,17 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
 
       {/* Section: Wire fraud warning */}
       <section className="mb-12">
-        <h3 className="text-xl font-bold text-gray-900 mb-1">⚠️ Protect yourself from wire fraud</h3>
+        <div className="flex items-center gap-3 mb-1">
+          <h3 className="text-xl font-bold text-gray-900">⚠️ Protect yourself from wire fraud</h3>
+          <button
+            type="button"
+            onClick={() => setWireFraudDrawerOpen(true)}
+            className="text-sm font-semibold hover:underline flex-shrink-0"
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#16a34a' }}
+          >
+            Learn more →
+          </button>
+        </div>
         <p className="text-sm text-gray-500 mb-6">
           Real estate wire fraud is the #1 financial crime in the US. Don&apos;t skip this.
         </p>
@@ -855,6 +884,12 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
           ))}
         </div>
       </section>
+
+      <SourceDrawer
+        isOpen={wireFraudDrawerOpen}
+        onClose={() => setWireFraudDrawerOpen(false)}
+        source={WIRE_FRAUD_SOURCE}
+      />
 
       {/* Mark complete */}
       <div className="pt-6 border-t border-gray-100">
