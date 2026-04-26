@@ -43,16 +43,21 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
         const estFormatted = estimate ? `$${Math.round(estimate).toLocaleString()}` : null
         return (
           <div
-            className="flex items-center gap-3 px-6 py-3 rounded-full mb-8 text-white font-semibold text-sm"
-            style={{ backgroundColor: ACCENT }}
+            className="w-full max-w-md rounded-2xl px-6 py-5 mb-8 text-center"
+            style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #86efac' }}
           >
-            <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-            </svg>
-            {savings
-              ? <>${savings} saved by going FSBO<span className="opacity-75 font-normal ml-1">(based on your {estFormatted} estimate at 3%)</span></>
-              : <>${'18,000'} saved by going FSBO<span className="opacity-75 font-normal ml-1">($600K × 3%)</span></>
-            }
+            <p className="text-xs font-bold uppercase mb-2 text-green-600" style={{ letterSpacing: '0.12em' }}>
+              Your FSBO Savings
+            </p>
+            <p className="text-5xl font-extrabold leading-none mb-2" style={{ color: ACCENT }}>
+              ${savings || '18,000'}
+            </p>
+            <p className="text-sm text-gray-500">
+              {savings
+                ? <>kept vs. paying a 3% commission on your {estFormatted} estimate</>
+                : <>kept vs. paying a 3% agent commission</>
+              }
+            </p>
           </div>
         )
       })()}
@@ -61,12 +66,12 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
       {priceEstimate?.currentEstimate && (
         <div
           className="w-full max-w-md rounded-2xl px-6 py-5 mb-8 text-left"
-          style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #bbf7d0' }}
+          style={{ backgroundColor: '#ffffff', border: '1.5px solid #e5e7eb', boxShadow: '0 1px 4px 0 rgba(0,0,0,0.05)' }}
         >
-          <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#15803d' }}>
+          <p className="text-xs font-bold uppercase mb-2 text-gray-400" style={{ letterSpacing: '0.12em' }}>
             Your Calculated Estimate
           </p>
-          <p className="text-3xl font-bold text-gray-900">
+          <p className="text-4xl font-extrabold leading-none text-gray-900">
             ${priceEstimate.currentEstimate.toLocaleString()}
           </p>
           {lastAdjustment && (
@@ -80,13 +85,13 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
       {/* Address card */}
       <div
         className="w-full max-w-md rounded-2xl px-6 py-5 mb-8 text-left"
-        style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #bbf7d0' }}
+        style={{ backgroundColor: '#ffffff', border: '1.5px solid #e5e7eb', boxShadow: '0 1px 4px 0 rgba(0,0,0,0.05)' }}
       >
         <div className="flex items-start gap-3">
-          <HomeIcon className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: ACCENT }} />
+          <HomeIcon className="w-7 h-7 flex-shrink-0 mt-0.5" style={{ color: ACCENT }} />
           <div>
-            <p className="text-xs font-medium mb-0.5 text-gray-500">Your home</p>
-            <p className="font-bold text-gray-900 text-base">{homeAddress}</p>
+            <p className="text-xs font-bold uppercase mb-0.5 text-gray-400" style={{ letterSpacing: '0.1em' }}>Your home</p>
+            <p className="font-semibold text-gray-900 text-base">{homeAddress}</p>
           </div>
         </div>
         <button
@@ -161,7 +166,7 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
 
       <button
         onClick={handleReset}
-        className="mt-8 text-xs text-gray-300 hover:text-gray-500 transition-colors"
+        className="mt-8 text-xs text-red-300 hover:text-red-500 transition-colors"
       >
         ↺ Reset all data
       </button>

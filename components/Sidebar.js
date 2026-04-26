@@ -7,7 +7,7 @@ const ACCENT = '#16a34a'
 function PhaseGroup({ phase, steps, activeId, completed, onClose }) {
   return (
     <div className="mb-4">
-      <p className="px-4 mb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
+      <p className="px-4 pt-2 pb-1.5 font-bold uppercase text-gray-400" style={{ fontSize: '10px', letterSpacing: '0.14em' }}>
         {phase}
       </p>
       {steps.map((step) => {
@@ -19,19 +19,19 @@ function PhaseGroup({ phase, steps, activeId, completed, onClose }) {
             href={`/step/${step.id}`}
             onClick={onClose}
             className="w-full flex items-center px-4 py-3 text-left hover:bg-gray-100 transition-colors relative min-h-[44px]"
-            style={isSelected ? { borderLeft: `3px solid ${ACCENT}`, paddingLeft: '13px' } : { borderLeft: '3px solid transparent' }}
+            style={isSelected ? { borderLeft: `3px solid ${ACCENT}`, paddingLeft: '13px', backgroundColor: '#f0fdf4' } : { borderLeft: '3px solid transparent' }}
           >
             <span className="w-5 h-5 flex items-center justify-center text-xs font-semibold text-gray-400 mr-3 shrink-0">
               {step.id}
             </span>
-            <span className={`flex-1 text-sm ${isSelected ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+            <span className={`flex-1 text-sm ${isSelected ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
               {step.title}
             </span>
             <span className="ml-2 shrink-0">
               {isComplete ? (
-                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="7" fill={ACCENT} />
-                  <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <svg className="w-5 h-5 drop-shadow-sm" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="7.5" fill={ACCENT} />
+                  <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               ) : (
                 <span className="block w-2.5 h-2.5 rounded-full bg-gray-300" />
@@ -102,18 +102,19 @@ export default function Sidebar({ completed, priceEstimate, onClose }) {
           <span>Progress</span>
           <span>{completedCount}/{total} steps complete</span>
         </div>
-        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className="h-full rounded-full transition-all duration-300"
+            className="h-full rounded-full transition-all duration-500"
             style={{ width: `${pct}%`, backgroundColor: ACCENT }}
           />
         </div>
         {/* Estimated price */}
         {priceEstimate?.currentEstimate ? (
-          <div className="mt-2 text-sm text-gray-600">
-            Your Estimate: <span className="font-semibold text-gray-900">
+          <div className="mt-3 rounded-lg px-3 py-2" style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+            <p className="text-xs text-gray-500 mb-0.5">Your Estimate</p>
+            <p className="text-sm font-bold" style={{ color: ACCENT }}>
               ${priceEstimate.currentEstimate.toLocaleString()}
-            </span>
+            </p>
           </div>
         ) : (
           <p className="text-xs text-gray-400 mt-2">Your Estimate: —</p>
