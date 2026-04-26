@@ -7,7 +7,7 @@ const ACCENT = '#16a34a'
 function PhaseGroup({ phase, steps, activeId, completed, onClose }) {
   return (
     <div className="mb-4">
-      <p className="px-4 pt-2 pb-1.5 font-bold uppercase text-gray-400" style={{ fontSize: '10px', letterSpacing: '0.14em' }}>
+      <p className="px-4 pt-2 pb-1.5 text-xs font-semibold uppercase" style={{ color: '#9ca3af', letterSpacing: '0.18em' }}>
         {phase}
       </p>
       {steps.map((step) => {
@@ -19,7 +19,7 @@ function PhaseGroup({ phase, steps, activeId, completed, onClose }) {
             href={`/step/${step.id}`}
             onClick={onClose}
             className="w-full flex items-center px-4 py-3 text-left hover:bg-gray-100 transition-colors relative min-h-[44px]"
-            style={isSelected ? { borderLeft: `3px solid ${ACCENT}`, paddingLeft: '13px', backgroundColor: '#f0fdf4' } : { borderLeft: '3px solid transparent' }}
+            style={isSelected ? { borderLeft: `4px solid ${ACCENT}`, paddingLeft: '12px', backgroundColor: '#f0fdf4' } : { borderLeft: '4px solid transparent' }}
           >
             <span className="w-5 h-5 flex items-center justify-center text-xs font-semibold text-gray-400 mr-3 shrink-0">
               {step.id}
@@ -34,7 +34,7 @@ function PhaseGroup({ phase, steps, activeId, completed, onClose }) {
                   <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               ) : (
-                <span className="block w-2.5 h-2.5 rounded-full bg-gray-300" />
+                <span className="block w-4 h-4 rounded-full border-2 border-gray-300" />
               )}
             </span>
           </Link>
@@ -102,7 +102,7 @@ export default function Sidebar({ completed, priceEstimate, onClose }) {
           <span>Progress</span>
           <span>{completedCount}/{total} steps complete</span>
         </div>
-        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+        <div className="rounded-full overflow-hidden" style={{ height: '8px', backgroundColor: '#e5e7eb' }}>
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{ width: `${pct}%`, backgroundColor: ACCENT }}
