@@ -6,7 +6,12 @@ const ACCENT = '#16a34a'
 const SUB_STEPS = [
   { id: 1, label: 'Photo Assessment' },
   { id: 2, label: 'Repair Checklist' },
-  { id: 3, label: 'Action Plan' },
+]
+
+const CONTRACTORS = [
+  { name: 'Texas Home Services', service: 'General repairs', rating: '4.8', url: 'https://thumbtack.com' },
+  { name: 'Round Rock Handyman Pro', service: 'Handyman', rating: '4.7', url: 'https://thumbtack.com' },
+  { name: 'Austin Paint & Patch', service: 'Painting', rating: '4.9', url: 'https://thumbtack.com' },
 ]
 
 const slideVariants = {
@@ -382,6 +387,15 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
     setDirection(step > activeSubStep ? 1 : -1)
     setActiveSubStep(step)
   }
+  const [expandedCategories, setExpandedCategories] = useState(new Set())
+  const toggleCategory = (label) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(label)) next.delete(label)
+      else next.add(label)
+      return next
+    })
+  }
 
   return (
     <div className="px-4 py-8 md:px-10 md:py-12">
@@ -573,7 +587,7 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
               {activeSubStep === 2 && (
                 <div>
                   {/* Must-Fix progress pill */}
-                  <div className="flex items-center gap-2 mb-6">
+                  <div className="flex items-center gap-2 mb-4">
                     <span className="text-lg font-semibold text-gray-900">Your pre-listing checklist</span>
                     <span
                       className="px-2.5 py-0.5 rounded-full text-xs font-semibold"
@@ -585,142 +599,113 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
                       {mustFixDone} of {mustFixItems.length} Must-Fixes checked
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 mb-8">
-                    Focus on <span className="font-semibold text-red-600">Must Fix</span> items first — they protect your asking price.
-                  </p>
-
-                  <div className="space-y-8 mb-8">
-                    {CHECKLIST_CATEGORIES.map((category) => (
-                      <div key={category.label}>
-                        <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                          {category.label}
-                        </h4>
-                        <div className="space-y-2">
-                          {category.items.map((item) => (
-                            <label
-                              key={item.id}
-                              className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:border-gray-200 hover:bg-gray-50/50 cursor-pointer transition-colors group"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={checkedItems.has(item.id)}
-                                onChange={(e) => handleCheck(item.id, e.target.checked)}
-                                className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer flex-shrink-0"
-                                style={{ accentColor: ACCENT }}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 mb-1">
-                                  <span
-                                    className="text-sm font-medium text-gray-800"
-                                    style={checkedItems.has(item.id) ? { textDecoration: 'line-through', color: '#9ca3af' } : {}}
-                                  >
-                                    {item.name}
-                                  </span>
-                                  <PriorityBadge priority={item.priority} />
-                                </div>
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                                  <span className="text-xs text-gray-500 font-medium">{item.cost}</span>
-                                  <span className="text-xs text-gray-400">—</span>
-                                  <span className="text-xs text-gray-500 italic">
-                                    &ldquo;{item.impact}&rdquo;
-                                    {item.source && (
-                                      <span className="not-italic text-gray-400"> — {item.source}</span>
-                                    )}
-                                  </span>
-                                </div>
-                              </div>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Repair summary card */}
-                  <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6">
-                    <h3 className="text-base font-semibold text-gray-900 mb-4">Your repair progress</h3>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="rounded-lg bg-gray-50 px-4 py-3">
-                        <p className="text-2xl font-bold text-gray-900">
-                          {mustFixDone} <span className="text-base font-normal text-gray-400">of {mustFixItems.length}</span>
-                        </p>
-                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#dc2626' }}>Must Fix done</p>
-                      </div>
-                      <div className="rounded-lg bg-gray-50 px-4 py-3">
-                        <p className="text-2xl font-bold text-gray-900">
-                          {recommendedDone} <span className="text-base font-normal text-gray-400">of {recommendedItems.length}</span>
-                        </p>
-                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#ca8a04' }}>Recommended done</p>
-                      </div>
-                    </div>
-                    <div className="rounded-lg bg-gray-50 px-4 py-3 mb-4">
-                      <p className="text-xs text-gray-500 font-medium mb-0.5">Estimated cost of checked items (low-end DIY)</p>
-                      <p className="text-xl font-bold text-gray-900">${estimatedCost.toLocaleString()}</p>
-                    </div>
-                    <p className="text-sm font-medium" style={{ color: motivatingColor }}>{motivatingMessage}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <button
-                      type="button"
-                      onClick={() => goTo(1)}
-                      className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors"
-                    >
-                      ← Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => goTo(3)}
-                      className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                      style={{ backgroundColor: ACCENT }}
-                    >
-                      Continue to Action Plan →
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Card 3: Action Plan */}
-              {activeSubStep === 3 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Action Plan</h3>
                   <p className="text-sm text-gray-500 mb-6">
-                    Need a hand? Get quotes from trusted contractors or mark this step complete.
+                    Focus on <span className="font-semibold text-red-600">Must Fix</span> items first — they protect your asking price. Tap a category to expand.
                   </p>
 
-                  {/* Contractor cards */}
-                  <div className="mb-8">
-                    <h3 className="text-base font-semibold text-gray-900 mb-1">Need help? Get a quote</h3>
-                    <p className="text-sm text-gray-400 mb-4">
-                      We&apos;ll personalize these to your address soon. For now, these are trusted starting points.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {[
-                        { name: 'Texas Home Services', service: 'General repairs', rating: '4.8', url: 'https://thumbtack.com' },
-                        { name: 'Round Rock Handyman Pro', service: 'Handyman', rating: '4.7', url: 'https://thumbtack.com' },
-                        { name: 'Austin Paint & Patch', service: 'Painting', rating: '4.9', url: 'https://thumbtack.com' },
-                      ].map(({ name, service, rating, url }) => (
-                        <div key={name} className="rounded-lg border border-gray-200 bg-white px-4 py-4 flex flex-col gap-2">
-                          <p className="text-sm font-semibold text-gray-900">{name}</p>
-                          <p className="text-xs text-gray-500">{service}</p>
-                          <p className="text-xs text-gray-500">⭐ {rating}</p>
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-auto inline-block text-center px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                            style={{ backgroundColor: ACCENT }}
+                  {/* Accordion checklist */}
+                  <div className="space-y-2 mb-6">
+                    {CHECKLIST_CATEGORIES.map((category) => {
+                      const isOpen = expandedCategories.has(category.label)
+                      const catMustFix = category.items.filter(i => i.priority === 'must')
+                      const catChecked = category.items.filter(i => checkedItems.has(i.id)).length
+                      const catMustDone = catMustFix.filter(i => checkedItems.has(i.id)).length
+                      return (
+                        <div key={category.label} className="rounded-xl border border-gray-200 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => toggleCategory(category.label)}
+                            className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left"
                           >
-                            Get quote
-                          </a>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm font-semibold text-gray-800">{category.label}</span>
+                              {catMustFix.length > 0 && (
+                                <span
+                                  className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                                  style={{
+                                    backgroundColor: catMustDone === catMustFix.length ? '#dcfce7' : '#fef2f2',
+                                    color: catMustDone === catMustFix.length ? '#15803d' : '#dc2626',
+                                  }}
+                                >
+                                  {catMustDone}/{catMustFix.length} must-fix
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-xs text-gray-400">{catChecked}/{category.items.length} checked</span>
+                              <span className="text-gray-400 text-xs">{isOpen ? '▲' : '▼'}</span>
+                            </div>
+                          </button>
+                          {isOpen && (
+                            <div className="border-t border-gray-100 divide-y divide-gray-50">
+                              {category.items.map((item) => (
+                                <label
+                                  key={item.id}
+                                  className="flex items-start gap-3 px-4 py-3 bg-white hover:bg-gray-50/50 cursor-pointer transition-colors"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checkedItems.has(item.id)}
+                                    onChange={(e) => handleCheck(item.id, e.target.checked)}
+                                    className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer flex-shrink-0"
+                                    style={{ accentColor: ACCENT }}
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                                      <span
+                                        className="text-sm font-medium text-gray-800"
+                                        style={checkedItems.has(item.id) ? { textDecoration: 'line-through', color: '#9ca3af' } : {}}
+                                      >
+                                        {item.name}
+                                      </span>
+                                      <PriorityBadge priority={item.priority} />
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                                      <span className="text-xs text-gray-500 font-medium">{item.cost}</span>
+                                      <span className="text-xs text-gray-400">—</span>
+                                      <span className="text-xs text-gray-500 italic">
+                                        &ldquo;{item.impact}&rdquo;
+                                        {item.source && (
+                                          <span className="not-italic text-gray-400"> — {item.source}</span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </label>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      ))}
+                      )
+                    })}
+                  </div>
+
+                  {/* Progress summary */}
+                  <div className="rounded-xl border border-gray-200 bg-white p-4 mb-6">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">
+                          {mustFixDone}<span className="text-sm font-normal text-gray-400">/{mustFixItems.length}</span>
+                        </p>
+                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#dc2626' }}>Must Fix</p>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">
+                          {recommendedDone}<span className="text-sm font-normal text-gray-400">/{recommendedItems.length}</span>
+                        </p>
+                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#ca8a04' }}>Recommended</p>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">${estimatedCost.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Est. DIY cost</p>
+                      </div>
                     </div>
+                    <p className="text-xs font-medium mt-3" style={{ color: motivatingColor }}>{motivatingMessage}</p>
                   </div>
 
                   {/* Price protection alert */}
                   {protectedValue && (
-                    <div className={`p-4 rounded-lg text-sm font-medium mb-8 ${
+                    <div className={`p-4 rounded-lg text-sm font-medium mb-6 ${
                       allMustFixDone
                         ? 'bg-green-50 text-green-800 border border-green-200'
                         : 'bg-amber-50 text-amber-800 border border-amber-200'
@@ -741,38 +726,29 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
                   )}
 
                   {/* Mark complete */}
-                  <div className="pt-6 border-t border-gray-100">
+                  <div className="pt-4 border-t border-gray-100">
                     <div className="flex items-center justify-between">
                       <button
                         type="button"
-                        onClick={() => goTo(2)}
+                        onClick={() => goTo(1)}
                         className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors"
                       >
                         ← Back
                       </button>
                       {isCompleted ? (
                         <div className="flex items-center gap-4">
-                          <span
-                            className="inline-flex items-center gap-1.5 text-sm font-semibold"
-                            style={{ color: ACCENT }}
-                          >
+                          <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ACCENT }}>
                             <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
                               <circle cx="8" cy="8" r="7" fill={ACCENT} />
                               <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                             Done!
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => onComplete(false)}
-                            className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors"
-                          >
-                            Undo
-                          </button>
+                          <button type="button" onClick={() => onComplete(false)} className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors">Undo</button>
                           <button
                             type="button"
                             onClick={() => onSelectStep && onSelectStep(3)}
-                            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
+                            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
                             style={{ backgroundColor: ACCENT }}
                           >
                             Next up: Staging &amp; Curb Appeal →
@@ -796,19 +772,58 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
           </AnimatePresence>
         </div>
 
-        {/* Sticky Pro Tips right panel */}
-        <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-4">
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
-            <div className="space-y-3">
-              {PRO_TIPS.map(({ tip, source }, i) => (
-                <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
-                  <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
-                  <p className="text-xs text-gray-400">— {source}</p>
-                </div>
-              ))}
+        {/* Sticky right panel — context-aware */}
+        <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-4 space-y-4">
+          {activeSubStep === 1 ? (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
+              <div className="space-y-3">
+                {PRO_TIPS.map(({ tip, source }, i) => (
+                  <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
+                    <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
+                    <p className="text-xs text-gray-400">— {source}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Need Help?</h4>
+                <p className="text-xs text-gray-500 mb-3">Trusted contractors — personalized to your address soon.</p>
+                <div className="space-y-2">
+                  {CONTRACTORS.map(({ name, service, rating, url }) => (
+                    <div key={name} className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-gray-900 truncate">{name}</p>
+                        <p className="text-xs text-gray-400">{service} · ⭐ {rating}</p>
+                      </div>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-shrink-0 text-center px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                        style={{ backgroundColor: ACCENT }}
+                      >
+                        Quote
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
+                <div className="space-y-3">
+                  {PRO_TIPS.slice(0, 2).map(({ tip, source }, i) => (
+                    <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
+                      <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
+                      <p className="text-xs text-gray-400">— {source}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </aside>
       </div>
     </div>
