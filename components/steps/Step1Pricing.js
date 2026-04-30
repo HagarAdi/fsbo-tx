@@ -266,7 +266,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
 
   return (
     <div className="px-4 py-8 md:px-10 md:py-12 max-w-3xl">
-      {/* Header */}
+      {/* Static header */}
       <div className="mb-3">
         <span
           className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide"
@@ -276,13 +276,61 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
         </span>
       </div>
       <h2 className="text-3xl font-bold text-gray-900 mb-3">Price Your Home Correctly</h2>
-      <p className="text-gray-600 leading-relaxed mb-10">
+      <p className="text-gray-600 leading-relaxed mb-8">
         <span className="font-semibold text-gray-800">Why it matters:</span> Pricing is the single
         most important decision you&apos;ll make. Homes priced right sell in days — overpriced homes
         sit and get stigmatized. Texas buyers are data-savvy and know the comps.
       </p>
 
-      {/* Your home details */}
+      {/* Sub-step progress indicator */}
+      <div className="flex items-center mb-8">
+        {SUB_STEPS.map((s, i) => (
+          <div key={s.id} className="flex items-center">
+            <button
+              type="button"
+              onClick={() => s.id < activeSubStep && goTo(s.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                s.id === activeSubStep
+                  ? 'text-white'
+                  : s.id < activeSubStep
+                  ? 'text-green-700 hover:bg-green-50 cursor-pointer'
+                  : 'text-gray-400 cursor-default'
+              }`}
+              style={s.id === activeSubStep ? { backgroundColor: ACCENT } : {}}
+            >
+              <span
+                className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                  s.id < activeSubStep
+                    ? 'bg-green-500 text-white'
+                    : s.id === activeSubStep
+                    ? 'bg-white/30 text-white'
+                    : 'bg-gray-200 text-gray-500'
+                }`}
+              >
+                {s.id < activeSubStep ? '✓' : s.id}
+              </span>
+              {s.label}
+            </button>
+            {i < SUB_STEPS.length - 1 && (
+              <div className={`w-5 h-px mx-1 ${activeSubStep > s.id ? 'bg-green-400' : 'bg-gray-200'}`} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Animated card content */}
+      <AnimatePresence mode="wait" custom={direction}>
+        <motion.div
+          key={activeSubStep}
+          custom={direction}
+          variants={slideVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+        >
+
+      {/* ── CARD 1: Property Details ── */}
+      {activeSubStep === 1 && (
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Your home details</h3>
 
@@ -519,7 +567,31 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
             </div>
           </div>
         </div>
+
+        {/* Card 1 → Next */}
+        <div className="mt-8 flex justify-end">
+          <button
+            type="button"
+            onClick={() => goTo(2)}
+            className="px-6 py-3 rounded-lg text-sm font-semibold text-white flex items-center gap-2 transition-opacity hover:opacity-90"
+            style={{ backgroundColor: ACCENT }}
+          >
+            Continue: Market Comps →
+          </button>
+        </div>
       </section>
+      )}
+
+      {/* ── CARDS 2 & 3 (temporary combined — split in Stage 3) ── */}
+      {activeSubStep !== 1 && (
+      <div>
+        <button
+          type="button"
+          onClick={() => goTo(1)}
+          className="mb-6 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1"
+        >
+          ← Back to Property Details
+        </button>
 
       {/* How to find your comps */}
       <section className="mb-10">
@@ -980,6 +1052,12 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
           </button>
         )}
       </div>
+
+      </div>
+      )}
+
+        </motion.div>
+      </AnimatePresence>
 
       <SourceDrawer
         isOpen={drawerOpen}
