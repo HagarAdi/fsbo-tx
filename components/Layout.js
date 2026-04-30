@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -18,12 +18,16 @@ const pageVariants = {
 export default function Layout({ children }) {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const { homeAddress, showOnboarding, completed, priceEstimate, handleAddressSave } =
     useAppStateContext()
 
+  useEffect(() => setMounted(true), [])
+
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
-  const displaySavings = priceEstimate?.currentEstimate
+  // Only computed after client hydration so localStorage values are available
+  const displaySavings = mounted && priceEstimate?.currentEstimate
     ? Math.round(priceEstimate.currentEstimate * 0.03)
     : null
 
