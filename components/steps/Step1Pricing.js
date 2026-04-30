@@ -1,4 +1,5 @@
 import { useState, useEffect, Fragment } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import SourceDrawer from '../SourceDrawer'
 
 const ACCENT = '#16a34a'
@@ -40,6 +41,18 @@ const RENOVATIONS = [
 ]
 
 const CONDITION_PCT = { Excellent: 0.04, Good: 0, Average: -0.03, Fair: -0.06 }
+
+const SUB_STEPS = [
+  { id: 1, label: 'Property Details' },
+  { id: 2, label: 'Market Comps' },
+  { id: 3, label: 'Value Additions' },
+]
+
+const slideVariants = {
+  initial: (dir) => ({ opacity: 0, x: dir * 40 }),
+  animate: { opacity: 1, x: 0, transition: { duration: 0.22, ease: 'easeOut' } },
+  exit: (dir) => ({ opacity: 0, x: dir * -40, transition: { duration: 0.16, ease: 'easeIn' } }),
+}
 
 function getDomNote(domNum) {
   if (domNum < 14) return { text: '✓ Sold fast — strong reliable comp', color: '#16a34a' }
@@ -105,6 +118,13 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
   ])
   const [renovations, setRenovations] = useState({})
   const [estimateSaved, setEstimateSaved] = useState(false)
+  const [activeSubStep, setActiveSubStep] = useState(1)
+  const [direction, setDirection] = useState(1)
+
+  const goTo = (step) => {
+    setDirection(step > activeSubStep ? 1 : -1)
+    setActiveSubStep(step)
+  }
 
   useEffect(() => {
     try {
