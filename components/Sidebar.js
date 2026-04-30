@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { steps, phases } from '../data/steps'
+import { useAppStateContext } from '../hooks/AppStateContext'
 
 const ACCENT = '#16a34a'
 
@@ -44,8 +45,9 @@ function PhaseGroup({ phase, steps, activeId, completed, onClose }) {
   )
 }
 
-export default function Sidebar({ completed, priceEstimate, onClose }) {
+export default function Sidebar({ onClose }) {
   const router = useRouter()
+  const { completed, priceEstimate } = useAppStateContext()
   const activeId = router.query.id ? parseInt(router.query.id, 10) : null
 
   const completedCount = completed.size
