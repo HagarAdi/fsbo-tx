@@ -23,11 +23,7 @@ export default function Layout({ children }) {
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
-  const totalSavings =
-    (priceEstimate?.protectedValue || 0) + (priceEstimate?.stagingValue || 0)
-  const displaySavings = totalSavings > 0
-    ? totalSavings
-    : priceEstimate?.currentEstimate
+  const displaySavings = priceEstimate?.currentEstimate
     ? Math.round(priceEstimate.currentEstimate * 0.03)
     : null
 
