@@ -25,10 +25,10 @@ export default function Layout({ children }) {
 
   const totalSavings =
     (priceEstimate?.protectedValue || 0) + (priceEstimate?.stagingValue || 0)
-  const rightValue = totalSavings > 0
-    ? { label: '💰 saved', amount: totalSavings }
+  const displaySavings = totalSavings > 0
+    ? totalSavings
     : priceEstimate?.currentEstimate
-    ? { label: '🏠 est. value', amount: priceEstimate.currentEstimate }
+    ? Math.round(priceEstimate.currentEstimate * 0.03)
     : null
 
   return (
@@ -64,7 +64,7 @@ export default function Layout({ children }) {
           {/* Main column */}
           <div className="flex-1 flex flex-col h-full overflow-hidden">
             {/* Sticky cockpit header */}
-            {(homeAddress || rightValue) && (
+            {(homeAddress || displaySavings) && (
               <div
                 className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-gray-100 z-10"
                 style={{ backgroundColor: '#f0fdf4' }}
@@ -72,9 +72,9 @@ export default function Layout({ children }) {
                 <span className="text-xs text-gray-500 truncate max-w-[55%]">
                   📍 {homeAddress || 'No address set'}
                 </span>
-                {rightValue && (
+                {displaySavings && (
                   <span className="text-xs font-semibold" style={{ color: ACCENT }}>
-                    ${rightValue.amount.toLocaleString()} {rightValue.label}
+                    💰 ${displaySavings.toLocaleString()} potential savings
                   </span>
                 )}
               </div>
