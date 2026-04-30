@@ -583,7 +583,8 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
       )}
 
       {/* ── CARDS 2 & 3 (temporary combined — split in Stage 3) ── */}
-      {activeSubStep !== 1 && (
+      {/* ── CARD 2: Market Comps ── */}
+      {activeSubStep === 2 && (
       <div>
         <button
           type="button"
@@ -802,6 +803,38 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
           </button>
         )}
       </section>
+
+        {/* Card 2 → Next */}
+        <div className="mt-8 flex justify-between">
+          <button
+            type="button"
+            onClick={() => goTo(1)}
+            className="px-5 py-2.5 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            ← Back
+          </button>
+          <button
+            type="button"
+            onClick={() => goTo(3)}
+            className="px-6 py-3 rounded-lg text-sm font-semibold text-white flex items-center gap-2 transition-opacity hover:opacity-90"
+            style={{ backgroundColor: ACCENT }}
+          >
+            Continue: Value Additions →
+          </button>
+        </div>
+      </div>
+      )}
+
+      {/* ── CARD 3: Value Additions ── */}
+      {activeSubStep === 3 && (
+      <div>
+        <button
+          type="button"
+          onClick={() => goTo(2)}
+          className="mb-6 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1"
+        >
+          ← Back to Market Comps
+        </button>
 
       {/* Section 1: Renovation checklist */}
       <section className="mb-10">
@@ -1058,6 +1091,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
 
         </motion.div>
       </AnimatePresence>
+
 
       <SourceDrawer
         isOpen={drawerOpen}
