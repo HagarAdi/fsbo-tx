@@ -25,6 +25,11 @@ export default function Layout({ children }) {
 
   const totalSavings =
     (priceEstimate?.protectedValue || 0) + (priceEstimate?.stagingValue || 0)
+  const rightValue = totalSavings > 0
+    ? { label: '💰 saved', amount: totalSavings }
+    : priceEstimate?.currentEstimate
+    ? { label: '🏠 est. value', amount: priceEstimate.currentEstimate }
+    : null
 
   return (
     <PasswordGate>
@@ -59,7 +64,7 @@ export default function Layout({ children }) {
           {/* Main column */}
           <div className="flex-1 flex flex-col h-full overflow-hidden">
             {/* Sticky cockpit header */}
-            {(homeAddress || totalSavings > 0) && (
+            {(homeAddress || rightValue) && (
               <div
                 className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-gray-100 z-10"
                 style={{ backgroundColor: '#f0fdf4' }}
@@ -67,9 +72,9 @@ export default function Layout({ children }) {
                 <span className="text-xs text-gray-500 truncate max-w-[55%]">
                   📍 {homeAddress || 'No address set'}
                 </span>
-                {totalSavings > 0 && (
+                {rightValue && (
                   <span className="text-xs font-semibold" style={{ color: ACCENT }}>
-                    💰 ${totalSavings.toLocaleString()} saved
+                    ${rightValue.amount.toLocaleString()} {rightValue.label}
                   </span>
                 )}
               </div>
