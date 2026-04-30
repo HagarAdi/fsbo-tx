@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -18,13 +18,18 @@ const pageVariants = {
 export default function Layout({ children }) {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const { homeAddress, showOnboarding, completed, priceEstimate, handleAddressSave } =
     useAppStateContext()
 
+  useEffect(() => setMounted(true), [])
+
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
-  const totalSavings =
-    (priceEstimate?.protectedValue || 0) + (priceEstimate?.stagingValue || 0)
+  // Only computed after client hydration so localStorage values are available
+  const displaySavings = mounted && priceEstimate?.currentEstimate
+    ? Math.round(priceEstimate.currentEstimate * 0.03)
+    : null
 
   return (
     <PasswordGate>
@@ -59,7 +64,7 @@ export default function Layout({ children }) {
           {/* Main column */}
           <div className="flex-1 flex flex-col h-full overflow-hidden">
             {/* Sticky cockpit header */}
-            {(homeAddress || totalSavings > 0) && (
+            {(homeAddress || displaySavings) && (
               <div
                 className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-gray-100 z-10"
                 style={{ backgroundColor: '#f0fdf4' }}
@@ -67,9 +72,9 @@ export default function Layout({ children }) {
                 <span className="text-xs text-gray-500 truncate max-w-[55%]">
                   📍 {homeAddress || 'No address set'}
                 </span>
-                {totalSavings > 0 && (
+                {displaySavings && (
                   <span className="text-xs font-semibold" style={{ color: ACCENT }}>
-                    💰 ${totalSavings.toLocaleString()} saved
+                    💰 ${displaySavings.toLocaleString()} potential savings
                   </span>
                 )}
               </div>

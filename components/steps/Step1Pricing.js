@@ -1,4 +1,5 @@
 import { useState, useEffect, Fragment } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import SourceDrawer from '../SourceDrawer'
 
 const ACCENT = '#16a34a'
@@ -40,6 +41,18 @@ const RENOVATIONS = [
 ]
 
 const CONDITION_PCT = { Excellent: 0.04, Good: 0, Average: -0.03, Fair: -0.06 }
+
+const SUB_STEPS = [
+  { id: 1, label: 'Property Details' },
+  { id: 2, label: 'Market Comps' },
+  { id: 3, label: 'Value Additions' },
+]
+
+const slideVariants = {
+  initial: (dir) => ({ opacity: 0, x: dir * 40 }),
+  animate: { opacity: 1, x: 0, transition: { duration: 0.22, ease: 'easeOut' } },
+  exit: (dir) => ({ opacity: 0, x: dir * -40, transition: { duration: 0.16, ease: 'easeIn' } }),
+}
 
 function getDomNote(domNum) {
   if (domNum < 14) return { text: '✓ Sold fast — strong reliable comp', color: '#16a34a' }
@@ -105,6 +118,13 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
   ])
   const [renovations, setRenovations] = useState({})
   const [estimateSaved, setEstimateSaved] = useState(false)
+  const [activeSubStep, setActiveSubStep] = useState(1)
+  const [direction, setDirection] = useState(1)
+
+  const goTo = (step) => {
+    setDirection(step > activeSubStep ? 1 : -1)
+    setActiveSubStep(step)
+  }
 
   useEffect(() => {
     try {
@@ -244,9 +264,19 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
     setEstimateSaved(true)
   }
 
+  const PRO_TIPS = [
+    { tip: 'Homes priced correctly sell 50% faster than overpriced ones', source: 'Zillow Research 2023' },
+    { tip: 'After 21 days on market, buyers assume something is wrong with the home', source: 'NAR Profile of Home Buyers' },
+    { tip: 'A $400 pre-listing appraisal gives you a defensible price to show buyers', source: 'HomeLight Agent Survey' },
+    { tip: 'Price reductions signal desperation — better to price right the first time', source: 'Industry best practice' },
+  ]
+
   return (
-    <div className="px-4 py-8 md:px-10 md:py-12 max-w-3xl">
-      {/* Header */}
+    <div className="px-4 py-8 md:px-10 md:py-12">
+      <div className="flex gap-8 items-start max-w-5xl">
+      {/* Left: wizard content */}
+      <div className="flex-1 min-w-0 max-w-2xl">
+      {/* Static header */}
       <div className="mb-3">
         <span
           className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide"
@@ -256,13 +286,61 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
         </span>
       </div>
       <h2 className="text-3xl font-bold text-gray-900 mb-3">Price Your Home Correctly</h2>
-      <p className="text-gray-600 leading-relaxed mb-10">
+      <p className="text-gray-600 leading-relaxed mb-8">
         <span className="font-semibold text-gray-800">Why it matters:</span> Pricing is the single
         most important decision you&apos;ll make. Homes priced right sell in days — overpriced homes
         sit and get stigmatized. Texas buyers are data-savvy and know the comps.
       </p>
 
-      {/* Your home details */}
+      {/* Sub-step progress indicator */}
+      <div className="flex items-center mb-8">
+        {SUB_STEPS.map((s, i) => (
+          <div key={s.id} className="flex items-center">
+            <button
+              type="button"
+              onClick={() => s.id < activeSubStep && goTo(s.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                s.id === activeSubStep
+                  ? 'text-white'
+                  : s.id < activeSubStep
+                  ? 'text-green-700 hover:bg-green-50 cursor-pointer'
+                  : 'text-gray-400 cursor-default'
+              }`}
+              style={s.id === activeSubStep ? { backgroundColor: ACCENT } : {}}
+            >
+              <span
+                className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                  s.id < activeSubStep
+                    ? 'bg-green-500 text-white'
+                    : s.id === activeSubStep
+                    ? 'bg-white/30 text-white'
+                    : 'bg-gray-200 text-gray-500'
+                }`}
+              >
+                {s.id < activeSubStep ? '✓' : s.id}
+              </span>
+              {s.label}
+            </button>
+            {i < SUB_STEPS.length - 1 && (
+              <div className={`w-5 h-px mx-1 ${activeSubStep > s.id ? 'bg-green-400' : 'bg-gray-200'}`} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Animated card content */}
+      <AnimatePresence mode="wait" custom={direction}>
+        <motion.div
+          key={activeSubStep}
+          custom={direction}
+          variants={slideVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+        >
+
+      {/* ── CARD 1: Property Details ── */}
+      {activeSubStep === 1 && (
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Your home details</h3>
 
@@ -499,7 +577,32 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
             </div>
           </div>
         </div>
+
+        {/* Card 1 → Next */}
+        <div className="mt-8 flex justify-end">
+          <button
+            type="button"
+            onClick={() => goTo(2)}
+            className="px-6 py-3 rounded-lg text-sm font-semibold text-white flex items-center gap-2 transition-opacity hover:opacity-90"
+            style={{ backgroundColor: ACCENT }}
+          >
+            Continue: Market Comps →
+          </button>
+        </div>
       </section>
+      )}
+
+      {/* ── CARDS 2 & 3 (temporary combined — split in Stage 3) ── */}
+      {/* ── CARD 2: Market Comps ── */}
+      {activeSubStep === 2 && (
+      <div>
+        <button
+          type="button"
+          onClick={() => goTo(1)}
+          className="mb-6 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1"
+        >
+          ← Back to Property Details
+        </button>
 
       {/* How to find your comps */}
       <section className="mb-10">
@@ -539,6 +642,27 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
         <p className="text-sm text-gray-500 mb-4">
           Enter 3–5 recent nearby sales to establish your price baseline.
         </p>
+
+        {/* Quick-access data links */}
+        <div className="flex flex-wrap gap-2 mb-5">
+          {[
+            { label: 'Redfin', href: 'https://redfin.com' },
+            { label: 'HAR.com', href: 'https://har.com' },
+            { label: 'Zillow', href: 'https://zillow.com' },
+            { label: 'Williamson CAD', href: 'https://wcad.org' },
+            { label: 'Travis CAD', href: 'https://traviscad.org' },
+          ].map(({ label, href }) => (
+            <a
+              key={label}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            >
+              {label} ↗
+            </a>
+          ))}
+        </div>
 
         <p className="mb-4 text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded px-3 py-2">
           ℹ️ Texas is a non-disclosure state. Enter prices from publicly available listing data (Redfin, HAR.com, Zillow). Displayed prices may not reflect final sold prices.
@@ -711,6 +835,38 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
         )}
       </section>
 
+        {/* Card 2 → Next */}
+        <div className="mt-8 flex justify-between">
+          <button
+            type="button"
+            onClick={() => goTo(1)}
+            className="px-5 py-2.5 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            ← Back
+          </button>
+          <button
+            type="button"
+            onClick={() => goTo(3)}
+            className="px-6 py-3 rounded-lg text-sm font-semibold text-white flex items-center gap-2 transition-opacity hover:opacity-90"
+            style={{ backgroundColor: ACCENT }}
+          >
+            Continue: Value Additions →
+          </button>
+        </div>
+      </div>
+      )}
+
+      {/* ── CARD 3: Value Additions ── */}
+      {activeSubStep === 3 && (
+      <div>
+        <button
+          type="button"
+          onClick={() => goTo(2)}
+          className="mb-6 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1"
+        >
+          ← Back to Market Comps
+        </button>
+
       {/* Section 1: Renovation checklist */}
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">What have you updated?</h3>
@@ -869,48 +1025,6 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
         </section>
       )}
 
-      {/* Pro tips */}
-      <section className="mb-10">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Pro tips</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[
-            { tip: 'Homes priced correctly sell 50% faster than overpriced ones', source: 'Zillow Research 2023' },
-            { tip: 'After 21 days on market, buyers assume something is wrong with the home', source: 'NAR Profile of Home Buyers' },
-            { tip: 'A $400 pre-listing appraisal gives you a defensible price to show buyers', source: 'HomeLight Agent Survey' },
-            { tip: 'Price reductions signal desperation — better to price right the first time', source: 'Industry best practice' },
-          ].map(({ tip, source }, i) => (
-            <div key={i} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-4">
-              <p className="text-sm text-gray-800 leading-relaxed mb-2">{tip}</p>
-              <p className="text-xs text-gray-400">— {source}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Tools & resources */}
-      <section className="mb-10">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Where to find your data</h3>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { label: 'Redfin', href: 'https://redfin.com' },
-            { label: 'HAR.com', href: 'https://har.com' },
-            { label: 'Zillow', href: 'https://zillow.com' },
-            { label: 'Williamson CAD', href: 'https://wcad.org' },
-            { label: 'Travis CAD', href: 'https://traviscad.org' },
-          ].map(({ label, href }) => (
-            <a
-              key={label}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-            >
-              {label}
-            </a>
-          ))}
-        </div>
-      </section>
-
       {/* Mark complete */}
       <div className="pt-6 border-t border-gray-100">
         {isCompleted ? (
@@ -961,11 +1075,36 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
         )}
       </div>
 
+      </div>
+      )}
+
+        </motion.div>
+      </AnimatePresence>
+
+
       <SourceDrawer
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         source={drawerSource}
       />
+      </div>{/* end left column */}
+
+      {/* Right: sticky Pro tips panel */}
+      <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-4">
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
+          <div className="space-y-3">
+            {PRO_TIPS.map(({ tip, source }, i) => (
+              <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
+                <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
+                <p className="text-xs text-gray-400">— {source}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      </div>{/* end flex row */}
     </div>
   )
 }
