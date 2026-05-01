@@ -1,269 +1,21 @@
 import { useState, useEffect, useCallback } from 'react'
-
-const ACCENT = '#16a34a'
-const PURPLE = '#7c3aed'
-
-const DRAWERS = [
-  { id: 'terms',    emoji: '📋', label: 'Offer Terms' },
-  { id: 'trec',     emoji: '⚖️', label: 'TREC Guide' },
-  { id: 'counter',  emoji: '💬', label: 'How to Counter' },
-  { id: 'decision', emoji: '✅', label: 'Decision Guide' },
-]
-
-const OFFER_TERMS = [
-  {
-    title: 'Purchase Price',
-    explanation: 'The amount the buyer is offering to pay.',
-    whyItMatters: 'This is your starting point for negotiation — not necessarily your ending point.',
-  },
-  {
-    title: 'Down Payment',
-    explanation: 'How much cash the buyer is putting down.',
-    whyItMatters: 'Higher down payment = stronger buyer. 20%+ means no PMI and a serious buyer. Under 5% = higher risk of financing falling through.',
-  },
-  {
-    title: 'Financing Type',
-    explanation: 'How the buyer is paying.',
-    whyItMatters: 'Cash is king — no appraisal risk, faster close. Conventional is solid. FHA/VA have more requirements and take longer.',
-  },
-  {
-    title: 'Option Period',
-    explanation: 'A set number of days (typically 5–10) where the buyer can back out for any reason.',
-    whyItMatters: 'Shorter option period = more committed buyer. The buyer pays you an option fee — typically $100–500 — which you keep if they walk.',
-    trecInfo: {
-      termName: 'Termination Option / Option Period',
-      whatItSays: 'For a negotiated number of days and fee, the buyer has the unrestricted right to terminate the contract for any reason.',
-      whatItMeans: 'You are giving the buyer a specific number of days to change their mind for ANY reason in exchange for a small fee. No explanation needed — they can just walk.',
-      moneyTrail: 'Option Fee → paid directly to SELLER within 3 days of contract execution. Yours to keep regardless of outcome. Earnest Money stays at title company during this period.',
-      txSellerTip: 'Negotiate the shortest option period possible — 5 days is reasonable, 10 is standard. The option fee is yours either way — make it worth your time off market.',
-    },
-  },
-  {
-    title: 'Option Fee',
-    explanation: 'Money paid by buyer for the option period.',
-    whyItMatters: 'Non-refundable if buyer cancels. Negotiate for as much as possible.',
-  },
-  {
-    title: 'Closing Date',
-    explanation: 'When ownership transfers.',
-    whyItMatters: '30–45 days is standard in Texas. Shorter close can be a negotiating chip.',
-    trecInfo: {
-      termName: 'Closing Date',
-      whatItSays: 'The date by which the transaction must be completed and ownership transferred.',
-      whatItMeans: "The deadline for everything — financing, inspections, title work — to be done. If closing doesn't happen by this date, either party may have grounds to terminate.",
-      moneyTrail: 'On closing day: title company distributes funds. Your mortgage payoff goes to your lender. Your net proceeds wire to your bank account — same day or next morning.',
-      txSellerTip: '30-45 days is standard in Texas. A buyer offering a shorter close (21-28 days) is often more serious — especially cash buyers. Use closing date as a negotiating chip.',
-    },
-  },
-  {
-    title: 'Earnest Money',
-    explanation: 'Good faith deposit held by title company.',
-    whyItMatters: 'Typically 1% of purchase price. If buyer backs out outside the option period, you may keep this.',
-    trecInfo: {
-      termName: 'Earnest Money',
-      whatItSays: 'A deposit made by the buyer as evidence of good faith, held by the title company until closing or termination.',
-      whatItMeans: "The buyer puts skin in the game. This money is held by the title company — not you — and protects you if the buyer backs out outside the option period.",
-      moneyTrail: "Earnest Money → Title Company escrow. If buyer defaults outside option period → may be released to Seller. If deal closes → applied to buyer's closing costs.",
-      txSellerTip: '1% of purchase price is standard in Texas. On a $500K home that\'s $5,000. Higher earnest money = more committed buyer — you can negotiate for more.',
-    },
-  },
-  {
-    title: 'Inclusions',
-    explanation: 'What stays with the home.',
-    whyItMatters: "Appliances, fixtures, shelving — get clear on what's included to avoid surprises at closing.",
-  },
-  {
-    title: "Property Condition / Seller's Disclosure",
-    explanation: "Seller's known defects and condition disclosures.",
-    whyItMatters: 'You are legally required to disclose everything you know. When in doubt, disclose.',
-    trecInfo: {
-      termName: "Property Condition / Seller's Disclosure",
-      whatItSays: "Seller's representations about the property's condition and any known defects, as detailed in the Seller's Disclosure Notice.",
-      whatItMeans: "You are legally required to disclose everything you KNOW about your home's condition. What you don't know — you don't have to disclose. What you DO know — you must.",
-      moneyTrail: 'No money involved — but non-disclosure can cost you everything. Buyers who discover undisclosed defects after closing can sue for damages or rescission.',
-      txSellerTip: "When in doubt, disclose. A disclosed issue rarely kills a deal — a hidden one discovered later can end in litigation. Fill out the TREC Seller's Disclosure Notice completely and honestly.",
-    },
-  },
-  {
-    title: 'Title Policy & Survey',
-    explanation: "Who pays for title insurance and survey.",
-    whyItMatters: "In Texas it's customary for the seller to pay the owner's title policy — factor this into your net proceeds.",
-    trecInfo: {
-      termName: 'Title Policy & Survey',
-      whatItSays: "Provisions covering who pays for title insurance and property survey, and what type of title policy will be delivered at closing.",
-      whatItMeans: "Title insurance protects the owner if someone later claims they have a right to the property. In Texas, it's customary for the seller to pay for the owner's title policy — but this is negotiable.",
-      moneyTrail: "Owner's Title Policy → typically paid by Seller in Texas ($1,000-2,500). Lender's Title Policy → paid by Buyer. Survey → negotiable, typically $400-600.",
-      txSellerTip: 'Factor the owner\'s title policy into your net proceeds calculation in Step 8. It\'s a significant cost many FSBO sellers forget to account for.',
-    },
-  },
-  {
-    title: 'Appraisal Contingency',
-    explanation: 'Buyer can back out if home appraises below purchase price.',
-    whyItMatters: 'Common with financed offers. Can negotiate appraisal gap coverage.',
-  },
-  {
-    title: 'Inspection Contingency',
-    explanation: 'Buyer can request repairs after inspection.',
-    whyItMatters: 'Handled during option period in Texas — not a separate contingency.',
-  },
-]
-
-const TREC_TERMS = OFFER_TERMS.filter(t => t.trecInfo).map(t => t.trecInfo)
-
-const FINANCING_OPTIONS = ['Cash', 'Conventional', 'FHA', 'VA', 'Other']
-
-const OFFER_STATUS_OPTIONS = ['Received', 'Countered', 'Accepted', 'Rejected']
-
-const OFFER_STATUS_COLORS = {
-  Received:  { bg: '#dbeafe', text: '#1d4ed8' },
-  Countered: { bg: '#fef3c7', text: '#92400e' },
-  Accepted:  { bg: '#dcfce7', text: '#15803d' },
-  Rejected:  { bg: '#f3f4f6', text: '#6b7280' },
-}
-
-const RED_FLAG_CHECKS = [
-  {
-    check: (o) => { const d = parseFloat(o.optionDays); return !isNaN(d) && d > 10 },
-    message: 'Option period is long — buyer has more time to back out fee-free',
-  },
-  {
-    check: (o) => {
-      const price = parseFloat(o.price), em = parseFloat(o.earnestMoney)
-      return price > 0 && !isNaN(em) && em < price * 0.01
-    },
-    message: 'Earnest money is under 1% of purchase price — low buyer commitment',
-  },
-  {
-    check: (o) => {
-      if (o.financing !== 'FHA' && o.financing !== 'VA') return false
-      if (!o.closingDate) return false
-      const diff = Math.round((new Date(o.closingDate) - new Date()) / 86400000)
-      return diff < 45
-    },
-    message: 'FHA/VA loans typically need 45+ days to close — closing date may be too tight',
-  },
-  {
-    check: (o) => {
-      const dp = parseFloat(o.downPayment)
-      return o.financing !== 'Cash' && !isNaN(dp) && dp < 10
-    },
-    message: 'Low down payment may indicate higher financing risk',
-  },
-]
-
-const TX_TIPS = [
-  'Option fee is negotiable — $100–500 is typical in the Austin area',
-  'Counter within 24 hours to keep momentum — buyers get nervous with silence',
-  'Cash closes in 2–3 weeks; financed offers need 30–45 days',
-  'Multiple offers? Ask all buyers for their "highest and best" by a deadline',
-]
-
-const SCORE_BANDS = [
-  { min: 90, label: 'Exceptional' },
-  { min: 75, label: 'Strong' },
-  { min: 60, label: 'Average' },
-  { min: 0,  label: 'Weak' },
-]
-
-function getScoreBand(score) {
-  return SCORE_BANDS.find(b => score >= b.min) || SCORE_BANDS[SCORE_BANDS.length - 1]
-}
-
-function makeEmptyOffer(label) {
-  return {
-    id: Date.now() + Math.random(),
-    nickname: label,
-    status: 'Received',
-    price: '',
-    financing: 'Conventional',
-    downPayment: '',
-    optionDays: '',
-    optionFee: '',
-    earnestMoney: '',
-    closingDate: '',
-    notes: '',
-  }
-}
-
-function scoreBreakdown(offer, maxPrice) {
-  const dp = parseFloat(offer.downPayment) || 0
-  const optVal = parseFloat(offer.optionDays)
-  const price = parseFloat(offer.price) || 0
-
-  let financing = 0
-  if (offer.financing === 'Cash') financing = 30
-  else if (offer.financing === 'Conventional') financing = 20
-  else if (offer.financing === 'FHA' || offer.financing === 'VA') financing = 10
-
-  let downPts = 0
-  if (dp > 20) downPts = 20
-  else if (dp >= 10) downPts = 10
-
-  let optPts = 5
-  if (!isNaN(optVal)) {
-    if (optVal < 5) optPts = 15
-    else if (optVal <= 7) optPts = 10
-  }
-
-  let closingPts = 0
-  if (offer.closingDate) {
-    const diff = Math.round((new Date(offer.closingDate) - new Date()) / 86400000)
-    if (diff <= 30) closingPts = 10
-    else if (diff <= 45) closingPts = 5
-  }
-
-  let pricePts = 0
-  if (maxPrice > 0 && price > 0) pricePts = Math.round((price / maxPrice) * 25)
-
-  return [
-    { label: 'Financing type', points: financing, max: 30 },
-    { label: 'Down payment',   points: downPts,   max: 20 },
-    { label: 'Option period',  points: optPts,    max: 15 },
-    { label: 'Closing speed',  points: closingPts, max: 10 },
-    { label: 'Price vs. highest', points: pricePts, max: 25 },
-  ]
-}
-
-function calcScore(offer, maxPrice) {
-  return Math.min(scoreBreakdown(offer, maxPrice).reduce((s, r) => s + r.points, 0), 100)
-}
-
-function getRedFlags(offer) {
-  return RED_FLAG_CHECKS.filter(r => r.check(offer)).map(r => r.message)
-}
-
-function loadStep6() {
-  try {
-    const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
-    return all.step6 || {}
-  } catch { return {} }
-}
-
-function saveStep6(data) {
-  try {
-    const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
-    localStorage.setItem('fsbo_stepData', JSON.stringify({ ...all, step6: data }))
-  } catch {}
-}
-
-function fmtCurrency(val) {
-  const n = parseFloat(val)
-  return (!val || isNaN(n)) ? '—' : '$' + n.toLocaleString()
-}
-
-function fmtDate(val) {
-  if (!val) return '—'
-  return new Date(val + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
-const inputCls = 'w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition'
+import TRECDrawer from '../TRECDrawer'
+import {
+  ACCENT, PURPLE, DRAWERS, OFFER_TERMS, FINANCING_OPTIONS,
+  OFFER_STATUS_OPTIONS, OFFER_STATUS_COLORS, TX_TIPS,
+  makeEmptyOffer, calcScore, scoreBreakdown, getRedFlags, getScoreBand,
+  fmtCurrency, fmtDate, loadStep6, saveStep6, inputCls,
+} from './Step6Offers.data'
 
 export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
-  const [trecReturnTo, setTrecReturnTo] = useState(null)
+  const [trecDrawer, setTrecDrawer] = useState({ isOpen: false, info: null })
   const [expandedOffer, setExpandedOffer] = useState(null)
   const [openTerms, setOpenTerms] = useState({})
   const [offers, setOffers] = useState([])
+  const [proceedsPrice, setProceedsPrice] = useState('')
+  const [proceedsCommission, setProceedsCommission] = useState('2.5')
+  const [proceedsClosingCosts, setProceedsClosingCosts] = useState('3000')
 
   useEffect(() => {
     const saved = loadStep6()
@@ -277,10 +29,7 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
     if (offers.length > 0) saveStep6({ offers })
   }, [offers])
 
-  const closeDrawer = useCallback(() => {
-    setActiveDrawer(null)
-    setTrecReturnTo(null)
-  }, [])
+  const closeDrawer = useCallback(() => setActiveDrawer(null), [])
 
   useEffect(() => {
     if (!activeDrawer) return
@@ -289,10 +38,13 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
     return () => document.removeEventListener('keydown', handler)
   }, [activeDrawer, closeDrawer])
 
-  const openTrecFromTerms = () => {
-    setTrecReturnTo('terms')
-    setActiveDrawer('trec')
-  }
+  const openTrecDrawer = (info) => setTrecDrawer({ isOpen: true, info })
+  const closeTrecDrawer = () => setTrecDrawer(prev => ({ ...prev, isOpen: false }))
+
+  useEffect(() => {
+    const accepted = offers.find(o => o.status === 'Accepted')
+    if (accepted && accepted.price) setProceedsPrice(accepted.price)
+  }, [offers])
 
   const updateOffer = (id, field, value) =>
     setOffers(prev => prev.map(o => o.id === id ? { ...o, [field]: value } : o))
@@ -490,7 +242,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                 const score = offerScores[offer.id]
                 const flags = getRedFlags(offer)
                 const breakdown = scoreBreakdown(offer, maxPrice)
-                const statusColors = OFFER_STATUS_COLORS[offer.status] || OFFER_STATUS_COLORS['Received']
                 const isHighestPrice = offer.price && parseFloat(offer.price) === maxPrice && filledOffers.length > 1
 
                 return (
@@ -595,7 +346,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                     {/* Expanded form */}
                     {isExpanded && (
                       <div className="border-t border-gray-100 px-5 py-5 space-y-5">
-                        {/* Form fields */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="sm:col-span-2">
                             <label className="block text-xs font-semibold text-gray-700 mb-1">Offer nickname</label>
@@ -790,7 +540,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
         <aside className="hidden lg:block w-56 shrink-0 pt-8 pr-6">
           <div className="sticky top-8 space-y-6">
 
-            {/* Strength guide */}
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Strength Score</p>
               <div className="space-y-1.5">
@@ -808,7 +557,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
               </div>
             </div>
 
-            {/* Quick stats */}
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Quick Stats</p>
               <div className="space-y-2 text-xs">
@@ -824,7 +572,7 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                 </div>
                 <div className="flex items-start gap-1.5">
                   <span className="text-gray-500">Strongest:</span>
-                  <span className={offers.length > 0 && filledOffers.length > 0 ? 'text-gray-800 font-medium' : 'text-gray-300'}>
+                  <span className={filledOffers.length > 0 ? 'text-gray-800 font-medium' : 'text-gray-300'}>
                     {filledOffers.length > 0
                       ? (() => {
                           const best = filledOffers.reduce((a, b) => offerScores[a.id] >= offerScores[b.id] ? a : b)
@@ -836,7 +584,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
               </div>
             </div>
 
-            {/* Texas tips */}
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Texas Tips</p>
               <ul className="space-y-2.5">
@@ -862,23 +609,11 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
             className="fixed right-0 top-0 h-full z-50 bg-white shadow-2xl overflow-y-auto"
             style={{ width: 'min(420px, calc(100vw - 40px))', transition: 'transform 300ms ease' }}
           >
-            {/* Drawer header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                {activeDrawer === 'trec' && trecReturnTo === 'terms' && (
-                  <button
-                    type="button"
-                    onClick={() => { setActiveDrawer('terms'); setTrecReturnTo(null) }}
-                    className="text-sm text-gray-400 hover:text-gray-700 transition-colors mr-1"
-                  >
-                    ← Back
-                  </button>
-                )}
-                <h3 className="text-base font-bold text-gray-900">
-                  {DRAWERS.find(d => d.id === activeDrawer)?.emoji}{' '}
-                  {DRAWERS.find(d => d.id === activeDrawer)?.label}
-                </h3>
-              </div>
+              <h3 className="text-base font-bold text-gray-900">
+                {DRAWERS.find(d => d.id === activeDrawer)?.emoji}{' '}
+                {DRAWERS.find(d => d.id === activeDrawer)?.label}
+              </h3>
               <button type="button" onClick={closeDrawer} className="text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close">
                 <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -888,7 +623,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
 
             <div className="px-6 py-6 space-y-5">
 
-              {/* ===== OFFER TERMS ===== */}
               {activeDrawer === 'terms' && (
                 <>
                   <p className="text-sm text-gray-600">Texas uses the TREC contract. Here&apos;s what each part means for you.</p>
@@ -904,7 +638,7 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                             {term.trecInfo && (
                               <button
                                 type="button"
-                                onClick={(e) => { e.stopPropagation(); openTrecFromTerms() }}
+                                onClick={(e) => { e.stopPropagation(); openTrecDrawer(term.trecInfo) }}
                                 className="text-xs font-semibold px-1.5 py-0.5 rounded border transition-colors hover:bg-purple-50"
                                 style={{ borderColor: '#c4b5fd', color: PURPLE }}
                               >
@@ -935,37 +669,83 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                 </>
               )}
 
-              {/* ===== TREC GUIDE ===== */}
-              {activeDrawer === 'trec' && (
-                <>
-                  <p className="text-sm text-gray-600">Detailed legal breakdown of the 5 TREC contract sections that most affect FSBO sellers in Texas.</p>
-                  <div className="space-y-4">
-                    {TREC_TERMS.map((t, i) => (
-                      <div key={i} className="rounded-xl border border-gray-200 px-4 py-4 space-y-3">
-                        <p className="text-sm font-bold text-gray-900">{t.termName}</p>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">What it says</p>
-                          <p className="text-xs text-gray-700">{t.whatItSays}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">What it means for you</p>
-                          <p className="text-xs text-gray-700">{t.whatItMeans}</p>
-                        </div>
-                        <div className="rounded-lg px-3 py-2" style={{ backgroundColor: '#f0fdf4' }}>
-                          <p className="text-xs font-semibold mb-0.5" style={{ color: ACCENT }}>Money trail</p>
-                          <p className="text-xs text-green-800">{t.moneyTrail}</p>
-                        </div>
-                        <div className="rounded-lg px-3 py-2" style={{ backgroundColor: '#ede9fe' }}>
-                          <p className="text-xs font-semibold mb-0.5" style={{ color: PURPLE }}>Texas seller tip</p>
-                          <p className="text-xs" style={{ color: '#5b21b6' }}>{t.txSellerTip}</p>
+              {activeDrawer === 'proceeds' && (() => {
+                const price = parseFloat(proceedsPrice) || 0
+                const commission = parseFloat(proceedsCommission) || 0
+                const closing = parseFloat(proceedsClosingCosts) || 0
+                const commissionAmt = price * (commission / 100)
+                const net = price - commissionAmt - closing
+                return (
+                  <>
+                    <p className="text-sm text-gray-600">Quick estimate of what you&apos;ll walk away with. Full calculation in Step 8.</p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Accepted sale price ($)</label>
+                        <input
+                          type="number"
+                          value={proceedsPrice}
+                          onChange={e => setProceedsPrice(e.target.value)}
+                          placeholder="e.g. 450000"
+                          className={inputCls}
+                        />
+                        {offers.some(o => o.status === 'Accepted') && (
+                          <p className="text-xs text-green-600 mt-1">Auto-filled from your accepted offer.</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Buyer&apos;s agent commission (%)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          max="10"
+                          value={proceedsCommission}
+                          onChange={e => setProceedsCommission(e.target.value)}
+                          className={inputCls}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">FSBO sellers often offer 2–3% to attract buyer agents. Enter 0 if none.</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Estimated closing costs ($)</label>
+                        <input
+                          type="number"
+                          value={proceedsClosingCosts}
+                          onChange={e => setProceedsClosingCosts(e.target.value)}
+                          className={inputCls}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Includes owner&apos;s title policy (~$1,500), taxes, HOA fees. Adjust as needed.</p>
+                      </div>
+                    </div>
+
+                    {price > 0 && (
+                      <div className="rounded-xl border border-gray-200 divide-y divide-gray-100 mt-2">
+                        {[
+                          { label: 'Sale price', value: fmtCurrency(String(price)), color: '#374151' },
+                          { label: `Buyer's agent (${commission}%)`, value: `− ${fmtCurrency(String(Math.round(commissionAmt)))}`, color: '#dc2626' },
+                          { label: 'Closing costs', value: `− ${fmtCurrency(String(closing))}`, color: '#dc2626' },
+                        ].map(row => (
+                          <div key={row.label} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                            <span className="text-gray-600">{row.label}</span>
+                            <span className="font-semibold" style={{ color: row.color }}>{row.value}</span>
+                          </div>
+                        ))}
+                        <div className="flex items-center justify-between px-4 py-3 bg-gray-50">
+                          <span className="text-sm font-bold text-gray-900">Est. net proceeds</span>
+                          <span className="text-base font-bold" style={{ color: net >= 0 ? ACCENT : '#dc2626' }}>
+                            {fmtCurrency(String(Math.round(net)))}
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </>
-              )}
+                    )}
 
-              {/* ===== HOW TO COUNTER ===== */}
+                    <div className="rounded-xl px-4 py-3" style={{ backgroundColor: '#ede9fe' }}>
+                      <p className="text-xs font-semibold mb-0.5" style={{ color: PURPLE }}>Doesn&apos;t include mortgage payoff</p>
+                      <p className="text-xs" style={{ color: '#5b21b6' }}>Your net proceeds minus your remaining loan balance = your actual cash at closing. Add your payoff amount in Step 8 for the full picture.</p>
+                    </div>
+                  </>
+                )
+              })()}
+
               {activeDrawer === 'counter' && (
                 <>
                   <div>
@@ -978,14 +758,12 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                       ))}
                     </ul>
                   </div>
-
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Counter script</p>
                     <div className="rounded-xl border border-gray-200 px-4 py-4 text-sm text-gray-700 italic leading-relaxed">
                       &ldquo;We&apos;ve reviewed your offer and would like to counter at [price] with a [X]-day option period and [earnest money] in earnest money, closing on [date].&rdquo;
                     </div>
                   </div>
-
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">The process</p>
                     <div className="space-y-2">
@@ -1004,7 +782,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                       ))}
                     </div>
                   </div>
-
                   <div className="rounded-xl px-4 py-3" style={{ backgroundColor: '#fffbeb', border: '1px solid #fcd34d' }}>
                     <p className="font-semibold text-amber-800 text-sm mb-1">⚠️ Texas law</p>
                     <p className="text-xs text-amber-700">Only written acceptance is legally binding in Texas. Use the TREC Amendment form. Your title company can help.</p>
@@ -1012,7 +789,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                 </>
               )}
 
-              {/* ===== DECISION GUIDE ===== */}
               {activeDrawer === 'decision' && (
                 <>
                   <div>
@@ -1031,7 +807,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                       ))}
                     </div>
                   </div>
-
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Red flags to watch for</p>
                     <div className="space-y-2">
@@ -1048,7 +823,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                       ))}
                     </div>
                   </div>
-
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Before you decide</p>
                     <div className="space-y-2">
@@ -1066,7 +840,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                       ))}
                     </div>
                   </div>
-
                   <div className="rounded-xl px-4 py-3" style={{ backgroundColor: '#f0fdf4', border: '1px solid #86efac' }}>
                     <p className="font-semibold text-sm mb-1" style={{ color: ACCENT }}>💡 Multiple offers?</p>
                     <p className="text-xs text-green-800">Ask all buyers to submit their &ldquo;highest and best&rdquo; offer by a specific deadline. This is common practice and completely acceptable as an FSBO seller.</p>
@@ -1078,6 +851,16 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
           </div>
         </>
       )}
+
+      <TRECDrawer
+        isOpen={trecDrawer.isOpen}
+        onClose={closeTrecDrawer}
+        termName={trecDrawer.info?.termName}
+        whatItSays={trecDrawer.info?.whatItSays}
+        whatItMeans={trecDrawer.info?.whatItMeans}
+        moneyTrail={trecDrawer.info?.moneyTrail}
+        txSellerTip={trecDrawer.info?.txSellerTip}
+      />
     </>
   )
 }
