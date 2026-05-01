@@ -1,6 +1,31 @@
 import { useState, useEffect, useRef } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 
 const ACCENT = '#16a34a'
+
+const SUB_STEPS = [
+  { id: 1, label: 'Photo Assessment' },
+  { id: 2, label: 'Repair Checklist' },
+]
+
+const CONTRACTORS = [
+  { name: 'Texas Home Services', service: 'General repairs', rating: '4.8', url: 'https://thumbtack.com' },
+  { name: 'Round Rock Handyman Pro', service: 'Handyman', rating: '4.7', url: 'https://thumbtack.com' },
+  { name: 'Austin Paint & Patch', service: 'Painting', rating: '4.9', url: 'https://thumbtack.com' },
+]
+
+const slideVariants = {
+  initial: (dir) => ({ opacity: 0, x: dir * 40 }),
+  animate: { opacity: 1, x: 0, transition: { duration: 0.22, ease: 'easeOut' } },
+  exit: (dir) => ({ opacity: 0, x: dir * -40, transition: { duration: 0.16, ease: 'easeIn' } }),
+}
+
+const PRO_TIPS = [
+  { tip: 'Buyers negotiate 1–3% of purchase price for repairs found at inspection', source: 'HomeLight Agent Survey' },
+  { tip: 'Homes with pre-listing inspections sell faster and with fewer surprises', source: 'NAR Profile of Home Buyers' },
+  { tip: 'A $20 caulk job can prevent a $500 negotiation', source: 'Industry best practice' },
+  { tip: 'Having HVAC service receipts ready increases buyer confidence in Texas', source: 'HomeLight Agent Survey' },
+]
 
 const WIZARD_STAGES = [
   {
@@ -194,6 +219,9 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
   const [photos, setPhotos] = useState({ bathrooms: [], kitchen: [], front: [], other: [] })
   const [analyzing, setAnalyzing] = useState(false)
   const [analyzeError, setAnalyzeError] = useState(null)
+  const [activeSubStep, setActiveSubStep] = useState(1)
+  const [direction, setDirection] = useState(1)
+  const [expandedCategories, setExpandedCategories] = useState(new Set())
   const [aiFindings, setAiFindings] = useState(() => {
     if (typeof window === 'undefined') return null
     try {
@@ -208,22 +236,22 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
   })
 
   const toBase64Compressed = (file) => new Promise(resolve => {
-    const canvas = document.createElement('canvas');
-    const img = new Image();
-    const url = URL.createObjectURL(file);
+    const canvas = document.createElement('canvas')
+    const img = new Image()
+    const url = URL.createObjectURL(file)
     img.onload = () => {
-      const maxW = 800;
-      const scale = Math.min(1, maxW / img.width);
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
-      URL.revokeObjectURL(url);
-      resolve(base64);
-    };
-    img.src = url;
-  });
+      const maxW = 800
+      const scale = Math.min(1, maxW / img.width)
+      canvas.width = img.width * scale
+      canvas.height = img.height * scale
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1]
+      URL.revokeObjectURL(url)
+      resolve(base64)
+    }
+    img.src = url
+  })
 
   const handleAnalyze = async () => {
     const allFiles = Object.values(photos).flat().map(p => p.file).filter(Boolean)
@@ -356,9 +384,22 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
     ? Math.round(priceEstimate.currentEstimate * 0.01)
     : null
 
+  const goTo = (step) => {
+    setDirection(step > activeSubStep ? 1 : -1)
+    setActiveSubStep(step)
+  }
+  const toggleCategory = (label) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(label)) next.delete(label)
+      else next.add(label)
+      return next
+    })
+  }
+
   return (
-    <div className="px-4 py-8 md:px-10 md:py-12 max-w-3xl">
-      {/* Header */}
+    <div className="px-4 py-8 md:px-10 md:py-12">
+      {/* Static header */}
       <div className="mb-3">
         <span
           className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide"
@@ -368,347 +409,422 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
         </span>
       </div>
       <h2 className="text-3xl font-bold text-gray-900 mb-3">Repairs &amp; Pre-Listing Fixes</h2>
-      <p className="text-gray-600 leading-relaxed mb-10">
+      <p className="text-gray-600 leading-relaxed mb-8">
         <span className="font-semibold text-gray-800">Why it matters:</span> Small fixes = big
-        protection. Every unfixed item gives buyers a reason to negotiate your price down. The good
-        news? Most of these are quick and cheap.
+        protection. Every unfixed item gives buyers a reason to negotiate your price down.
       </p>
 
-      {/* Photo wizard */}
-      <section className="mb-12">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Let&apos;s see what your home needs</h3>
-        <p className="text-sm text-gray-500 mb-6">
-          We&apos;ll guide you room by room. Upload a photo or skip — your choice.
-        </p>
-
-        {!wizardDone ? (
-          <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-            {/* Progress bar */}
-            <div className="px-6 pt-5 pb-4 border-b border-gray-100">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Room {wizardStage + 1} of {WIZARD_STAGES.length}
-                </span>
-                <div className="flex gap-1.5">
-                  {WIZARD_STAGES.map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-1.5 w-8 rounded-full transition-colors"
-                      style={{ backgroundColor: i <= wizardStage ? ACCENT : '#e5e7eb' }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{currentStage.emoji}</span>
-                <h4 className="text-base font-semibold text-gray-900">{currentStage.label}</h4>
-              </div>
-              <p className="mt-1.5 text-sm text-gray-500">{currentStage.tip}</p>
-            </div>
-
-            <div className="px-6 py-5">
-              <UploadZone
-                photos={photos[currentStage.id]}
-                onAdd={(newPhotos) => addPhotos(currentStage.id, newPhotos)}
-                maxPhotos={currentStage.maxPhotos}
-              />
-
-              <div className="flex gap-3 mt-5">
-                <button
-                  type="button"
-                  onClick={advanceWizard}
-                  className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  {currentStage.nextLabel}
-                </button>
-                <button
-                  type="button"
-                  onClick={advanceWizard}
-                  className="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors"
-                >
-                  Skip
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-xl border border-gray-200 bg-white p-6">
-            <p className="text-sm font-medium text-gray-700 mb-5">
-              {totalPhotos > 0
-                ? `You uploaded ${totalPhotos} photo${totalPhotos !== 1 ? 's' : ''} across ${roomsWithPhotos} room${roomsWithPhotos !== 1 ? 's' : ''}`
-                : 'No photos uploaded — that\'s okay, you can still use the checklist below.'}
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-              <div>
-                <button
-                  type="button"
-                  onClick={handleAnalyze}
-                  disabled={analyzing}
-                  className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  {analyzing ? 'Analyzing your photos... 🔍' : 'Analyze my photos →'}
-                </button>
-                {analyzeError && (
-                  <p className="mt-2 text-sm text-gray-500">{analyzeError}</p>
-                )}
-              </div>
-
+      {/* Sub-step progress indicator */}
+      <div className="flex items-center gap-2 mb-8">
+        {SUB_STEPS.map((step, i) => {
+          const done = step.id < activeSubStep
+          const active = step.id === activeSubStep
+          return (
+            <div key={step.id} className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  const el = document.getElementById('repair-checklist')
-                  if (el) el.scrollIntoView({ behavior: 'smooth' })
+                onClick={() => goTo(step.id)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                style={{
+                  backgroundColor: active ? ACCENT : done ? '#dcfce7' : '#f3f4f6',
+                  color: active ? '#fff' : done ? '#166534' : '#6b7280',
                 }}
-                className="text-sm text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors"
               >
-                Skip photo analysis — go straight to checklist
+                {done ? '✓ ' : ''}{step.label}
               </button>
+              {i < SUB_STEPS.length - 1 && (
+                <div className="h-px w-4 bg-gray-200 flex-shrink-0" />
+              )}
             </div>
-          </div>
-        )}
-      </section>
+          )
+        })}
+      </div>
 
-      {/* AI findings */}
-      {aiFindings && aiFindings.length > 0 && (
-        <section className="mb-10">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">📷 AI spotted these in your photos:</h3>
-          <div className="space-y-3">
-            {aiFindings.map((finding, i) => {
-              const style = AI_PRIORITY_STYLE[finding.priority] || AI_PRIORITY_STYLE['Optional']
-              return (
-                <div key={i} className="rounded-lg border p-4" style={{ borderColor: style.border, backgroundColor: style.bg }}>
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="text-sm font-semibold text-gray-900">{finding.issue}</span>
-                    <span
-                      className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                      style={{ backgroundColor: style.bg, color: style.text, border: `1px solid ${style.border}` }}
-                    >
-                      {finding.priority}
-                    </span>
-                    <span className="text-xs text-gray-400 ml-auto">{finding.room}</span>
-                  </div>
-                  <p className="text-xs font-medium text-gray-600 mb-0.5">{finding.costRange}</p>
-                  <p className="text-xs text-gray-500 italic">&ldquo;{finding.whyItMatters}&rdquo;</p>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
+      {/* Two-column layout */}
+      <div className="flex gap-8 items-start">
+        {/* Wizard cards */}
+        <div className="flex-1 min-w-0">
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={activeSubStep}
+              custom={direction}
+              variants={slideVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              {/* Card 1: Photo Assessment */}
+              {activeSubStep === 1 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Let&apos;s see what your home needs</h3>
+                  <p className="text-sm text-gray-500 mb-6">
+                    We&apos;ll guide you room by room. Upload a photo or skip — your choice.
+                  </p>
 
-      {/* Repair checklist */}
-      <section id="repair-checklist" className="mb-10">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Your pre-listing checklist</h3>
-        <p className="text-sm text-gray-500 mb-8">
-          Focus on <span className="font-semibold text-red-600">Must Fix</span> items first — they protect your asking price.
-        </p>
-
-        <div className="space-y-8">
-          {CHECKLIST_CATEGORIES.map((category) => (
-            <div key={category.label}>
-              <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                {category.label}
-              </h4>
-              <div className="space-y-2">
-                {category.items.map((item) => (
-                  <label
-                    key={item.id}
-                    className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:border-gray-200 hover:bg-gray-50/50 cursor-pointer transition-colors group"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checkedItems.has(item.id)}
-                      onChange={(e) => handleCheck(item.id, e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer flex-shrink-0"
-                      style={{ accentColor: ACCENT }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span
-                          className="text-sm font-medium text-gray-800"
-                          style={checkedItems.has(item.id) ? { textDecoration: 'line-through', color: '#9ca3af' } : {}}
-                        >
-                          {item.name}
-                        </span>
-                        <PriorityBadge priority={item.priority} />
+                  {!wizardDone ? (
+                    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden mb-6">
+                      <div className="px-6 pt-5 pb-4 border-b border-gray-100">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Room {wizardStage + 1} of {WIZARD_STAGES.length}
+                          </span>
+                          <div className="flex gap-1.5">
+                            {WIZARD_STAGES.map((_, i) => (
+                              <div
+                                key={i}
+                                className="h-1.5 w-8 rounded-full transition-colors"
+                                style={{ backgroundColor: i <= wizardStage ? ACCENT : '#e5e7eb' }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{currentStage.emoji}</span>
+                          <h4 className="text-base font-semibold text-gray-900">{currentStage.label}</h4>
+                        </div>
+                        <p className="mt-1.5 text-sm text-gray-500">{currentStage.tip}</p>
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                        <span className="text-xs text-gray-500 font-medium">{item.cost}</span>
-                        <span className="text-xs text-gray-400">—</span>
-                        <span className="text-xs text-gray-500 italic">
-                          &ldquo;{item.impact}&rdquo;
-                          {item.source && (
-                            <span className="not-italic text-gray-400"> — {item.source}</span>
-                          )}
-                        </span>
+                      <div className="px-6 py-5">
+                        <UploadZone
+                          photos={photos[currentStage.id]}
+                          onAdd={(newPhotos) => addPhotos(currentStage.id, newPhotos)}
+                          maxPhotos={currentStage.maxPhotos}
+                        />
+                        <div className="flex gap-3 mt-5">
+                          <button
+                            type="button"
+                            onClick={advanceWizard}
+                            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                            style={{ backgroundColor: ACCENT }}
+                          >
+                            {currentStage.nextLabel}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={advanceWizard}
+                            className="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors"
+                          >
+                            Skip
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </label>
+                  ) : (
+                    <div className="rounded-xl border border-gray-200 bg-white p-6 mb-6">
+                      <p className="text-sm font-medium text-gray-700 mb-5">
+                        {totalPhotos > 0
+                          ? `You uploaded ${totalPhotos} photo${totalPhotos !== 1 ? 's' : ''} across ${roomsWithPhotos} room${roomsWithPhotos !== 1 ? 's' : ''}`
+                          : "No photos uploaded — that's okay, you can still use the checklist."}
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                        <div>
+                          <button
+                            type="button"
+                            onClick={handleAnalyze}
+                            disabled={analyzing}
+                            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ backgroundColor: ACCENT }}
+                          >
+                            {analyzing ? 'Analyzing your photos... 🔍' : 'Analyze my photos →'}
+                          </button>
+                          {analyzeError && (
+                            <p className="mt-2 text-sm text-gray-500">{analyzeError}</p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => goTo(2)}
+                          className="text-sm text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors"
+                        >
+                          Skip — go straight to checklist
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI findings */}
+                  {aiFindings && aiFindings.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-base font-semibold text-gray-900 mb-4">📷 AI spotted these in your photos:</h3>
+                      <div className="space-y-3">
+                        {aiFindings.map((finding, i) => {
+                          const style = AI_PRIORITY_STYLE[finding.priority] || AI_PRIORITY_STYLE['Optional']
+                          return (
+                            <div key={i} className="rounded-lg border p-4" style={{ borderColor: style.border, backgroundColor: style.bg }}>
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <span className="text-sm font-semibold text-gray-900">{finding.issue}</span>
+                                <span
+                                  className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                                  style={{ backgroundColor: style.bg, color: style.text, border: `1px solid ${style.border}` }}
+                                >
+                                  {finding.priority}
+                                </span>
+                                <span className="text-xs text-gray-400 ml-auto">{finding.room}</span>
+                              </div>
+                              <p className="text-xs font-medium text-gray-600 mb-0.5">{finding.costRange}</p>
+                              <p className="text-xs text-gray-500 italic">&ldquo;{finding.whyItMatters}&rdquo;</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="button"
+                      onClick={() => goTo(2)}
+                      className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                      style={{ backgroundColor: ACCENT }}
+                    >
+                      Continue to Repair Checklist →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Card 2: Repair Checklist */}
+              {activeSubStep === 2 && (
+                <div>
+                  {/* Must-Fix progress pill */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-lg font-semibold text-gray-900">Your pre-listing checklist</span>
+                    <span
+                      className="px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                      style={{
+                        backgroundColor: allMustFixDone ? '#dcfce7' : '#fef3c7',
+                        color: allMustFixDone ? '#15803d' : '#92400e',
+                      }}
+                    >
+                      {mustFixDone} of {mustFixItems.length} Must-Fixes checked
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-6">
+                    Focus on <span className="font-semibold text-red-600">Must Fix</span> items first — they protect your asking price. Tap a category to expand.
+                  </p>
+
+                  {/* Accordion checklist */}
+                  <div className="space-y-2 mb-6">
+                    {CHECKLIST_CATEGORIES.map((category) => {
+                      const isOpen = expandedCategories.has(category.label)
+                      const catMustFix = category.items.filter(i => i.priority === 'must')
+                      const catChecked = category.items.filter(i => checkedItems.has(i.id)).length
+                      const catMustDone = catMustFix.filter(i => checkedItems.has(i.id)).length
+                      return (
+                        <div key={category.label} className="rounded-xl border border-gray-200 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => toggleCategory(category.label)}
+                            className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm font-semibold text-gray-800">{category.label}</span>
+                              {catMustFix.length > 0 && (
+                                <span
+                                  className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                                  style={{
+                                    backgroundColor: catMustDone === catMustFix.length ? '#dcfce7' : '#fef2f2',
+                                    color: catMustDone === catMustFix.length ? '#15803d' : '#dc2626',
+                                  }}
+                                >
+                                  {catMustDone}/{catMustFix.length} must-fix
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-xs text-gray-400">{catChecked}/{category.items.length} checked</span>
+                              <span className="text-gray-400 text-xs">{isOpen ? '▲' : '▼'}</span>
+                            </div>
+                          </button>
+                          {isOpen && (
+                            <div className="border-t border-gray-100 divide-y divide-gray-50">
+                              {category.items.map((item) => (
+                                <label
+                                  key={item.id}
+                                  className="flex items-start gap-3 px-4 py-3 bg-white hover:bg-gray-50/50 cursor-pointer transition-colors"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checkedItems.has(item.id)}
+                                    onChange={(e) => handleCheck(item.id, e.target.checked)}
+                                    className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer flex-shrink-0"
+                                    style={{ accentColor: ACCENT }}
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                                      <span
+                                        className="text-sm font-medium text-gray-800"
+                                        style={checkedItems.has(item.id) ? { textDecoration: 'line-through', color: '#9ca3af' } : {}}
+                                      >
+                                        {item.name}
+                                      </span>
+                                      <PriorityBadge priority={item.priority} />
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                                      <span className="text-xs text-gray-500 font-medium">{item.cost}</span>
+                                      <span className="text-xs text-gray-400">—</span>
+                                      <span className="text-xs text-gray-500 italic">
+                                        &ldquo;{item.impact}&rdquo;
+                                        {item.source && (
+                                          <span className="not-italic text-gray-400"> — {item.source}</span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Progress summary */}
+                  <div className="rounded-xl border border-gray-200 bg-white p-4 mb-6">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">
+                          {mustFixDone}<span className="text-sm font-normal text-gray-400">/{mustFixItems.length}</span>
+                        </p>
+                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#dc2626' }}>Must Fix</p>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">
+                          {recommendedDone}<span className="text-sm font-normal text-gray-400">/{recommendedItems.length}</span>
+                        </p>
+                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#ca8a04' }}>Recommended</p>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">${estimatedCost.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Est. DIY cost</p>
+                      </div>
+                    </div>
+                    <p className="text-xs font-medium mt-3" style={{ color: motivatingColor }}>{motivatingMessage}</p>
+                  </div>
+
+                  {/* Price protection alert */}
+                  {protectedValue && (
+                    <div className={`p-4 rounded-lg text-sm font-medium mb-6 ${
+                      allMustFixDone
+                        ? 'bg-green-50 text-green-800 border border-green-200'
+                        : 'bg-amber-50 text-amber-800 border border-amber-200'
+                    }`}>
+                      {allMustFixDone ? (
+                        <span>🎉 You&apos;ve protected <strong>${protectedValue.toLocaleString()}</strong> of your asking price from buyer negotiation.</span>
+                      ) : (
+                        <span>🛡️ Complete all Must Fix items to protect an estimated <strong>${protectedValue.toLocaleString()}</strong> of your asking price.
+                          <span className="ml-1 cursor-pointer group relative inline-block">
+                            ⓘ
+                            <span className="hidden group-hover:block absolute bottom-full left-0 w-64 p-2 bg-gray-800 text-white text-xs rounded z-10">
+                              Buyers negotiate an average of $7,200 off asking price using inspection findings. Completing Must Fix repairs removes their leverage. Source: NAR Home Buyer &amp; Seller Report.
+                            </span>
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mark complete */}
+                  <div className="pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => goTo(1)}
+                        className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors"
+                      >
+                        ← Back
+                      </button>
+                      {isCompleted ? (
+                        <div className="flex items-center gap-4">
+                          <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ACCENT }}>
+                            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+                              <circle cx="8" cy="8" r="7" fill={ACCENT} />
+                              <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Done!
+                          </span>
+                          <button type="button" onClick={() => onComplete(false)} className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors">Undo</button>
+                          <button
+                            type="button"
+                            onClick={() => onSelectStep && onSelectStep(3)}
+                            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                            style={{ backgroundColor: ACCENT }}
+                          >
+                            Next up: Staging &amp; Curb Appeal →
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onComplete(true)}
+                          className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                          style={{ backgroundColor: ACCENT }}
+                        >
+                          Mark this step complete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Sticky right panel — context-aware */}
+        <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-4 space-y-4">
+          {activeSubStep === 1 ? (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
+              <div className="space-y-3">
+                {PRO_TIPS.map(({ tip, source }, i) => (
+                  <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
+                    <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
+                    <p className="text-xs text-gray-400">— {source}</p>
+                  </div>
                 ))}
               </div>
             </div>
-          ))}
-        </div>
-
-        {checkedItems.size > 0 && (
-          <div
-            className="mt-6 rounded-lg px-4 py-3"
-            style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}
-          >
-            <p className="text-sm" style={{ color: '#166534' }}>
-              <span className="font-semibold">{checkedItems.size} item{checkedItems.size !== 1 ? 's' : ''} checked.</span>{' '}
-              Great work — every completed item strengthens your asking price.
-            </p>
-          </div>
-        )}
-      </section>
-
-      {/* Repair summary card */}
-      <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
-        <h3 className="text-base font-semibold text-gray-900 mb-4">Your repair progress</h3>
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="rounded-lg bg-gray-50 px-4 py-3">
-            <p className="text-2xl font-bold text-gray-900">
-              {mustFixDone} <span className="text-base font-normal text-gray-400">of {mustFixItems.length}</span>
-            </p>
-            <p className="text-xs font-semibold mt-0.5" style={{ color: '#dc2626' }}>Must Fix done</p>
-          </div>
-          <div className="rounded-lg bg-gray-50 px-4 py-3">
-            <p className="text-2xl font-bold text-gray-900">
-              {recommendedDone} <span className="text-base font-normal text-gray-400">of {recommendedItems.length}</span>
-            </p>
-            <p className="text-xs font-semibold mt-0.5" style={{ color: '#ca8a04' }}>Recommended done</p>
-          </div>
-        </div>
-        <div className="rounded-lg bg-gray-50 px-4 py-3 mb-4">
-          <p className="text-xs text-gray-500 font-medium mb-0.5">Estimated cost of checked items (low-end DIY)</p>
-          <p className="text-xl font-bold text-gray-900">${estimatedCost.toLocaleString()}</p>
-        </div>
-        <p className="text-sm font-medium" style={{ color: motivatingColor }}>{motivatingMessage}</p>
-      </div>
-
-      {/* Pro tips */}
-      <div className="mb-8">
-        <h3 className="text-base font-semibold text-gray-900 mb-4">Pro tips</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[
-            { tip: 'Buyers negotiate 1–3% of purchase price for repairs found at inspection', source: 'HomeLight Agent Survey' },
-            { tip: 'Homes with pre-listing inspections sell faster and with fewer surprises', source: 'NAR Profile of Home Buyers' },
-            { tip: 'A $20 caulk job can prevent a $500 negotiation', source: 'Industry best practice' },
-            { tip: 'Having HVAC service receipts ready increases buyer confidence in Texas', source: 'HomeLight Agent Survey' },
-          ].map(({ tip, source }) => (
-            <div key={tip} className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-4">
-              <p className="text-sm text-gray-800 mb-2">&ldquo;{tip}&rdquo;</p>
-              <p className="text-xs text-gray-400">{source}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Contractor cards */}
-      <div className="mb-8">
-        <h3 className="text-base font-semibold text-gray-900 mb-1">Need help? Get a quote</h3>
-        <p className="text-sm text-gray-400 mb-4">
-          We&apos;ll personalize these to your address soon. For now, these are trusted starting points.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[
-            { name: 'Texas Home Services', service: 'General repairs', rating: '4.8', url: 'https://thumbtack.com' },
-            { name: 'Round Rock Handyman Pro', service: 'Handyman', rating: '4.7', url: 'https://thumbtack.com' },
-            { name: 'Austin Paint & Patch', service: 'Painting', rating: '4.9', url: 'https://thumbtack.com' },
-          ].map(({ name, service, rating, url }) => (
-            <div key={name} className="rounded-lg border border-gray-200 bg-white px-4 py-4 flex flex-col gap-2">
-              <p className="text-sm font-semibold text-gray-900">{name}</p>
-              <p className="text-xs text-gray-500">{service}</p>
-              <p className="text-xs text-gray-500">⭐ {rating}</p>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-auto inline-block text-center px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: ACCENT }}
-              >
-                Get quote
-              </a>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Must Fix status message */}
-      {protectedValue && (
-        <div className={`p-4 rounded-lg text-sm font-medium mb-4 ${
-          allMustFixDone
-            ? 'bg-green-50 text-green-800 border border-green-200'
-            : 'bg-amber-50 text-amber-800 border border-amber-200'
-        }`}>
-          {allMustFixDone ? (
-            <span>🎉 You&apos;ve protected <strong>${protectedValue.toLocaleString()}</strong> of your asking price from buyer negotiation.</span>
           ) : (
-            <span>🛡️ Complete all Must Fix items to protect an estimated <strong>${protectedValue.toLocaleString()}</strong> of your asking price from buyer negotiation.
-              <span className="ml-1 cursor-pointer group relative inline-block">
-                ⓘ
-                <span className="hidden group-hover:block absolute bottom-full left-0 w-64 p-2 bg-gray-800 text-white text-xs rounded z-10">
-                  Buyers negotiate an average of $7,200 off asking price using inspection findings. Completing Must Fix repairs removes their leverage. We estimate this protects ~1% of your asking price. Source: NAR Home Buyer &amp; Seller Report.
-                </span>
-              </span>
-            </span>
+            <>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Need Help?</h4>
+                <p className="text-xs text-gray-500 mb-3">Trusted contractors — personalized to your address soon.</p>
+                <div className="space-y-2">
+                  {CONTRACTORS.map(({ name, service, rating, url }) => (
+                    <div key={name} className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-gray-900 truncate">{name}</p>
+                        <p className="text-xs text-gray-400">{service} · ⭐ {rating}</p>
+                      </div>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-shrink-0 text-center px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                        style={{ backgroundColor: ACCENT }}
+                      >
+                        Quote
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
+                <div className="space-y-3">
+                  {PRO_TIPS.slice(0, 2).map(({ tip, source }, i) => (
+                    <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
+                      <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
+                      <p className="text-xs text-gray-400">— {source}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
-        </div>
-      )}
-
-      {/* Mark complete */}
-      <div className="pt-6 border-t border-gray-100">
-        {isCompleted ? (
-          <>
-            <div className="flex items-center gap-4 mb-4">
-              <span
-                className="inline-flex items-center gap-1.5 text-sm font-semibold"
-                style={{ color: ACCENT }}
-              >
-                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="7" fill={ACCENT} />
-                  <path
-                    d="M5 8l2.5 2.5L11 5.5"
-                    stroke="white"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Done!
-              </span>
-              <button
-                type="button"
-                onClick={() => onComplete(false)}
-                className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors"
-              >
-                Undo
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => onSelectStep && onSelectStep(3)}
-              className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
-              style={{ backgroundColor: ACCENT }}
-            >
-              Next up: Staging &amp; Curb Appeal →
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => onComplete(true)}
-            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            style={{ backgroundColor: ACCENT }}
-          >
-            Mark this step complete
-          </button>
-        )}
+        </aside>
       </div>
     </div>
   )
