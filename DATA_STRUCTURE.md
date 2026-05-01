@@ -64,8 +64,16 @@ Example:
     "listingDetails": {}
   },
   "step5": {
-    "showingPrepChecked": [],
-    "showingMethod": "",
+    "yardSignPhone": "",
+    "virtualTourUrl": "",
+    "virtualTourType": "",
+    "safetyChecked": [],
+    "showingRules": {
+      "noticeHours": "",
+      "availableHours": "",
+      "method": "",
+      "specialInstructions": ""
+    },
     "showings": []
   },
   "step6": {
