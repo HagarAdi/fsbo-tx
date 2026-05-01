@@ -89,17 +89,11 @@ Example:
     ]
   },
   "step7": {
+    "optionPeriod": { "startDate": "", "endDate": "" },
     "repairRequests": [],
-    "bottomLine": {
-      "minPrice": null,
-      "maxCredit": null,
-      "dealBreakers": ""
-    },
-    "optionPeriod": {
-      "startDate": "",
-      "endDate": ""
-    },
-    "contractorNotes": ""
+    "bottomLine": { "minPrice": "", "maxCredit": "", "dealBreakers": "" },
+    "contractorNotes": "",
+    "sdnChecked": []
   },
   "step8": {
     "titleOpened": false,
