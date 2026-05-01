@@ -279,6 +279,13 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
     setEstimateSaved(true)
   }
 
+  const PRO_TIPS = [
+    { tip: 'Homes priced correctly sell 50% faster than overpriced ones', source: 'Zillow Research 2023' },
+    { tip: 'After 21 days on market, buyers assume something is wrong with the home', source: 'NAR Profile of Home Buyers' },
+    { tip: 'A $400 pre-listing appraisal gives you a defensible price to show buyers', source: 'HomeLight Agent Survey' },
+    { tip: 'Price reductions signal desperation — better to price right the first time', source: 'Industry best practice' },
+  ]
+
   return (
     <div className="px-4 py-8 md:px-10 md:py-12">
       <div className="flex gap-8 items-start max-w-5xl">
@@ -649,6 +656,27 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
         <p className="text-sm text-gray-500 mb-4">
           Enter 3–5 recent nearby sales to establish your price baseline.
         </p>
+
+        {/* Quick-access data links */}
+        <div className="flex flex-wrap gap-2 mb-5">
+          {[
+            { label: 'Redfin', href: 'https://redfin.com' },
+            { label: 'HAR.com', href: 'https://har.com' },
+            { label: 'Zillow', href: 'https://zillow.com' },
+            { label: 'Williamson CAD', href: 'https://wcad.org' },
+            { label: 'Travis CAD', href: 'https://traviscad.org' },
+          ].map(({ label, href }) => (
+            <a
+              key={label}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            >
+              {label} ↗
+            </a>
+          ))}
+        </div>
 
         <p className="mb-4 text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded px-3 py-2">
           ℹ️ Texas is a non-disclosure state. Enter prices from publicly available listing data (Redfin, HAR.com, Zillow). Displayed prices may not reflect final sold prices.

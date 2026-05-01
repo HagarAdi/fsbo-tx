@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 
 const ACCENT = '#16a34a'
 
@@ -50,12 +51,23 @@ const LISTING_PLATFORMS = [
   { name: 'Flat Fee MLS TX',      cost: '$300-500', description: 'Lists you directly on the TX MLS — the same database agents use. Maximum exposure.',                 url: 'https://texasflatfeemls.com' },
 ]
 
-const LISTING_PRO_TIPS = [
+const PRO_TIPS = [
   { text: 'Homes with professional photos sell 32% faster',                                        source: 'Zillow Research' },
   { text: 'Listings with 20+ photos get 2× more views than listings with fewer',                   source: 'HAR.com data' },
   { text: 'The first photo determines if buyers click — always lead with the best exterior shot',  source: 'Industry best practice' },
   { text: 'Natural light is everything — never shoot on a cloudy or rainy day',                    source: 'Professional RE photographer standard' },
 ]
+
+const SUB_STEPS = [
+  { id: 1, label: 'Photography' },
+  { id: 2, label: 'Your Listing' },
+]
+
+const slideVariants = {
+  initial: (dir) => ({ opacity: 0, x: dir * 40 }),
+  animate: { opacity: 1, x: 0, transition: { duration: 0.22, ease: 'easeOut' } },
+  exit: (dir) => ({ opacity: 0, x: dir * -40, transition: { duration: 0.16, ease: 'easeIn' } }),
+}
 
 const PHOTO_SERVICES = [
   { name: 'Austin RE Photography', specialty: 'Real estate photography', rating: '4.9', price: '$200-400', url: 'https://thumbtack.com' },
@@ -199,12 +211,18 @@ function PhotoWizard({ stages, stageIndex, photos, onAdd, onAdvance, label }) {
 }
 
 export default function Step4Listing({ onComplete, isCompleted, onSelectStep }) {
+  const [activeSubStep, setActiveSubStep] = useState(1)
+  const [direction, setDirection] = useState(1)
+  const goTo = (step) => {
+    setDirection(step > activeSubStep ? 1 : -1)
+    setActiveSubStep(step)
+  }
+
   // Before wizard
   const [wizardStage, setWizardStage] = useState(0)
   const [wizardDone, setWizardDone] = useState(false)
   const [photos, setPhotos] = useState({ living: [], kitchen: [], bathrooms: [], exterior: [] })
   const [showAiTooltip, setShowAiTooltip] = useState(false)
-
   const [beforeWizardComplete, setBeforeWizardComplete] = useState(false)
 
   // After wizard
@@ -244,8 +262,6 @@ export default function Step4Listing({ onComplete, isCompleted, onSelectStep }) 
   })
   const [copied, setCopied] = useState(false)
 
-  const completeRef = useRef(null)
-  const beforeSectionRef = useRef(null)
   const descriptionInitialized = useRef(false)
 
   // Derived — before wizard
@@ -358,381 +374,273 @@ export default function Step4Listing({ onComplete, isCompleted, onSelectStep }) 
   if (step1Data?.yearBuilt) pills.push(`Built ${step1Data.yearBuilt}`)
 
   return (
-    <div className="px-4 py-8 md:px-10 md:py-12 max-w-3xl">
-
-      {/* Header */}
+    <div className="px-4 py-8 md:px-10 md:py-12">
+      {/* Static header */}
       <div className="mb-3">
-        <span
-          className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide"
-          style={{ backgroundColor: '#dbeafe', color: '#1d4ed8' }}
-        >
+        <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide" style={{ backgroundColor: '#dbeafe', color: '#1d4ed8' }}>
           Market
         </span>
       </div>
       <h2 className="text-3xl font-bold text-gray-900 mb-3">Photography &amp; Listing</h2>
-      <p className="text-gray-600 leading-relaxed mb-10">
-        <span className="font-semibold text-gray-800">Why it matters:</span>{' '}
-        95% of buyers start their search online. Your photos are your first showing — bad photos
-        cost you offers before buyers ever walk through the door.
+      <p className="text-gray-600 leading-relaxed mb-8">
+        <span className="font-semibold text-gray-800">Why it matters:</span> 95% of buyers start their search online. Your photos are your first showing — bad photos cost you offers before buyers ever walk through the door.
       </p>
 
-      {/* Photography guidelines */}
-      <section className="mb-12">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Before you pick up your phone 📸</h3>
-        <p className="text-sm text-gray-500 mb-6">
-          These make the difference between photos that get clicks and photos that get skipped.
-        </p>
-        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden divide-y divide-gray-100">
-          {PHOTO_TIPS.map(({ emoji, text }) => (
-            <div key={text} className="flex items-start gap-4 px-5 py-4">
-              <span className="text-xl flex-shrink-0 mt-0.5">{emoji}</span>
-              <p className="text-sm text-gray-700">{text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Before photo wizard */}
-      <section ref={beforeSectionRef} className="mb-12">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Upload your practice shots</h3>
-        <p className="text-sm text-gray-500 mb-6">
-          We&apos;ll give you feedback on what to fix before the real shoot.
-        </p>
-
-        {!wizardDone ? (
-          <PhotoWizard
-            stages={BEFORE_STAGES}
-            stageIndex={wizardStage}
-            photos={photos}
-            onAdd={addBeforePhotos}
-            onAdvance={advanceBeforeWizard}
-            label="Room"
-          />
-        ) : (
-          <div className="rounded-xl border border-gray-200 bg-white p-6">
-            <p className="text-sm font-medium text-gray-700 mb-5">
-              {totalBeforePhotos > 0
-                ? `You uploaded ${totalBeforePhotos} photo${totalBeforePhotos !== 1 ? 's' : ''} across ${uploadedRooms.length} room${uploadedRooms.length !== 1 ? 's' : ''}`
-                : "No photos uploaded — that's okay, you can still move forward."}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-              <div className="relative">
-                <button
-                  type="button"
-                  disabled
-                  onMouseEnter={() => setShowAiTooltip(true)}
-                  onMouseLeave={() => setShowAiTooltip(false)}
-                  className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white cursor-not-allowed opacity-60"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  Get AI feedback →
-                </button>
-                {showAiTooltip && (
-                  <div className="absolute bottom-full left-0 mb-2 w-52 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg z-10 pointer-events-none">
-                    AI feedback coming soon
-                    <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-800" />
-                  </div>
-                )}
-              </div>
+      {/* Sub-step progress pills */}
+      <div className="flex items-center gap-2 mb-8">
+        {SUB_STEPS.map((step, i) => {
+          const done = step.id < activeSubStep
+          const active = step.id === activeSubStep
+          return (
+            <div key={step.id} className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => completeRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-sm text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors"
+                onClick={() => goTo(step.id)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                style={{ backgroundColor: active ? ACCENT : done ? '#dcfce7' : '#f3f4f6', color: active ? '#fff' : done ? '#166534' : '#6b7280' }}
               >
-                Skip AI feedback — continue
+                {done ? '✓ ' : ''}{step.label}
               </button>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* After photo wizard — only visible after before wizard is complete */}
-      {beforeWizardComplete && (
-        <section className="mb-12">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">Now let&apos;s see the real thing 📸</h3>
-          <p className="text-sm text-gray-500 mb-6">
-            Upload your final listing photos — same rooms as before so we can compare.
-          </p>
-
-          {savedUploadedRooms.length === 0 ? (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 px-6 py-8 text-center">
-              <p className="text-sm text-gray-600 mb-4">
-                Upload your before photos first to enable room-by-room comparison
-              </p>
-              <button
-                type="button"
-                onClick={() => beforeSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-white transition-colors"
-              >
-                Go back to before photos
-              </button>
-            </div>
-          ) : !afterWizardDone ? (
-            <PhotoWizard
-              stages={afterStages}
-              stageIndex={afterWizardStage}
-              photos={afterPhotos}
-              onAdd={addAfterPhotos}
-              onAdvance={advanceAfterWizard}
-              label="Room"
-            />
-          ) : (
-            <div className="rounded-xl border border-gray-200 bg-white p-6">
-              <p className="text-sm font-medium text-gray-700 mb-5">
-                {totalAfterPhotos > 0
-                  ? `You uploaded ${totalAfterPhotos} final photo${totalAfterPhotos !== 1 ? 's' : ''} across ${afterUploadedRooms.length} room${afterUploadedRooms.length !== 1 ? 's' : ''}`
-                  : "No final photos uploaded — that's okay, you can still move forward."}
-              </p>
-              <div className="relative inline-block">
-                <button
-                  type="button"
-                  disabled
-                  onMouseEnter={() => setShowCompareTooltip(true)}
-                  onMouseLeave={() => setShowCompareTooltip(false)}
-                  className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white cursor-not-allowed opacity-60"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  Compare before &amp; after →
-                </button>
-                {showCompareTooltip && (
-                  <div className="absolute bottom-full left-0 mb-2 w-52 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg z-10 pointer-events-none">
-                    AI comparison coming soon
-                    <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-800" />
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Listing description wizard */}
-      <section className="mb-12">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Write your listing description ✍️</h3>
-        <p className="text-sm text-gray-500 mb-6">
-          A great description sells the lifestyle, not just the specs.
-        </p>
-
-        {/* Home details pills / step1 gate */}
-        {step1Data ? (
-          pills.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-6">
-              {pills.map(pill => (
-                <span
-                  key={pill}
-                  className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700"
-                >
-                  {pill}
-                </span>
-              ))}
+              {i < SUB_STEPS.length - 1 && <div className="h-px w-4 bg-gray-200 flex-shrink-0" />}
             </div>
           )
-        ) : (
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-center justify-between gap-4">
-            <p className="text-sm text-amber-800">
-              Complete Step 1 first to auto-fill your home details
-            </p>
-            <button
-              type="button"
-              onClick={() => onSelectStep && onSelectStep(1)}
-              className="flex-shrink-0 text-sm font-semibold underline underline-offset-2 text-amber-700 hover:text-amber-900 transition-colors"
-            >
-              Go to Step 1 →
-            </button>
-          </div>
-        )}
+        })}
+      </div>
 
-        <div className="space-y-5">
-          {/* Top 3 features */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Top 3 features</label>
-            <div className="space-y-2">
-              {[0, 1, 2].map(i => (
-                <input
-                  key={i}
-                  type="text"
-                  value={features[i]}
-                  onChange={e => updateFeature(i, e.target.value)}
-                  placeholder={FEATURE_PLACEHOLDERS[i]}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition"
-                  style={{ '--tw-ring-color': ACCENT }}
-                />
-              ))}
-            </div>
-          </div>
+      {/* Two-column layout */}
+      <div className="flex gap-8 items-start">
+        <div className="flex-1 min-w-0">
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div key={activeSubStep} custom={direction} variants={slideVariants} initial="initial" animate="animate" exit="exit">
 
-          {/* Neighborhood highlight */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Neighborhood highlight</label>
-            <input
-              type="text"
-              value={neighborhood}
-              onChange={e => setNeighborhood(e.target.value)}
-              placeholder="e.g. Walking distance to Round Rock ISD"
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition"
-            />
-          </div>
+              {/* Card 1: Photography */}
+              {activeSubStep === 1 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Upload your practice shots</h3>
+                  <p className="text-sm text-gray-500 mb-6">We&apos;ll give you feedback on what to fix before the real shoot.</p>
 
-          {/* Vibe */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Vibe</label>
-            <select
-              value={vibe}
-              onChange={e => setVibe(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:border-transparent transition"
-            >
-              {VIBE_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
+                  {!wizardDone ? (
+                    <div className="mb-8">
+                      <PhotoWizard stages={BEFORE_STAGES} stageIndex={wizardStage} photos={photos} onAdd={addBeforePhotos} onAdvance={advanceBeforeWizard} label="Room" />
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-gray-200 bg-white p-6 mb-8">
+                      <p className="text-sm font-medium text-gray-700 mb-5">
+                        {totalBeforePhotos > 0
+                          ? `You uploaded ${totalBeforePhotos} photo${totalBeforePhotos !== 1 ? 's' : ''} across ${uploadedRooms.length} room${uploadedRooms.length !== 1 ? 's' : ''}`
+                          : "No photos uploaded — that's okay, you can still move forward."}
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                        <div className="relative">
+                          <button type="button" disabled onMouseEnter={() => setShowAiTooltip(true)} onMouseLeave={() => setShowAiTooltip(false)} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white cursor-not-allowed opacity-60" style={{ backgroundColor: ACCENT }}>
+                            Get AI feedback →
+                          </button>
+                          {showAiTooltip && (
+                            <div className="absolute bottom-full left-0 mb-2 w-52 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg z-10 pointer-events-none">
+                              AI feedback coming soon
+                              <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-800" />
+                            </div>
+                          )}
+                        </div>
+                        <button type="button" onClick={() => goTo(2)} className="text-sm text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors">
+                          Skip — go to Your Listing
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
-          {/* Description textarea */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Your listing description</label>
-            <textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              rows={6}
-              maxLength={2000}
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-800 leading-relaxed focus:outline-none focus:ring-2 focus:border-transparent transition resize-none"
-            />
-            <div className="flex items-center justify-between mt-2">
-              <span className={`text-xs ${description.length > 1900 ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>
-                {description.length} / 2,000 characters
-              </span>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: copied ? '#6b7280' : ACCENT }}
-              >
-                {copied ? '✓ Copied!' : 'Copy description'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+                  {/* After photo wizard — visible once before wizard complete */}
+                  {beforeWizardComplete && (
+                    <div className="mb-8">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">Now let&apos;s see the real thing 📸</h3>
+                      <p className="text-sm text-gray-500 mb-6">Upload your final listing photos — same rooms as before so we can compare.</p>
 
-      {/* Where to list */}
-      <section className="mb-12">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Where to list your home</h3>
-        <p className="text-sm text-gray-500 mb-6">
-          List on as many free platforms as possible — more exposure = more offers.
-        </p>
-        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden divide-y divide-gray-100">
-          {LISTING_PLATFORMS.map(({ name, cost, description, url }) => (
-            <div key={name} className="flex items-start gap-4 px-5 py-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-semibold text-gray-900">{name}</span>
-                  <span
-                    className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                    style={cost === 'Free'
-                      ? { backgroundColor: '#dcfce7', color: '#15803d' }
-                      : { backgroundColor: '#fef3c7', color: '#92400e' }}
-                  >
-                    {cost}
-                  </span>
+                      {savedUploadedRooms.length === 0 ? (
+                        <div className="rounded-xl border border-gray-200 bg-gray-50 px-6 py-8 text-center">
+                          <p className="text-sm text-gray-600">Upload before photos above to enable room-by-room comparison</p>
+                        </div>
+                      ) : !afterWizardDone ? (
+                        <PhotoWizard stages={afterStages} stageIndex={afterWizardStage} photos={afterPhotos} onAdd={addAfterPhotos} onAdvance={advanceAfterWizard} label="Room" />
+                      ) : (
+                        <div className="rounded-xl border border-gray-200 bg-white p-6">
+                          <p className="text-sm font-medium text-gray-700 mb-5">
+                            {totalAfterPhotos > 0
+                              ? `You uploaded ${totalAfterPhotos} final photo${totalAfterPhotos !== 1 ? 's' : ''} across ${afterUploadedRooms.length} room${afterUploadedRooms.length !== 1 ? 's' : ''}`
+                              : "No final photos uploaded — that's okay, you can still move forward."}
+                          </p>
+                          <div className="relative inline-block">
+                            <button type="button" disabled onMouseEnter={() => setShowCompareTooltip(true)} onMouseLeave={() => setShowCompareTooltip(false)} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white cursor-not-allowed opacity-60" style={{ backgroundColor: ACCENT }}>
+                              Compare before &amp; after →
+                            </button>
+                            {showCompareTooltip && (
+                              <div className="absolute bottom-full left-0 mb-2 w-52 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg z-10 pointer-events-none">
+                                AI comparison coming soon
+                                <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-800" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex justify-end pt-2">
+                    <button type="button" onClick={() => goTo(2)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                      Continue to Your Listing →
+                    </button>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-500">{description}</p>
-              </div>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-shrink-0 text-sm font-semibold transition-opacity hover:opacity-80 whitespace-nowrap"
-                style={{ color: ACCENT }}
-              >
-                Get started →
-              </a>
-            </div>
-          ))}
-        </div>
-      </section>
+              )}
 
-      {/* Pro tips */}
-      <section className="mb-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {LISTING_PRO_TIPS.map(({ text, source }) => (
-            <div key={source} className="rounded-xl border border-gray-200 bg-white px-5 py-4">
-              <p className="text-sm font-medium text-gray-800 mb-2">&ldquo;{text}&rdquo;</p>
-              <p className="text-xs text-gray-400">{source}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+              {/* Card 2: Your Listing */}
+              {activeSubStep === 2 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Write your listing description ✍️</h3>
+                  <p className="text-sm text-gray-500 mb-6">A great description sells the lifestyle, not just the specs.</p>
 
-      {/* Photography services */}
-      <section className="mb-12">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Want professional photos? Get a quote</h3>
-        <p className="text-sm text-gray-500 mb-6">
-          Professional photos typically cost $200-500 and pay for themselves many times over.
-        </p>
-        <div className="space-y-3">
-          {PHOTO_SERVICES.map(({ name, specialty, rating, price, url }) => (
-            <div key={name} className="rounded-xl border border-gray-200 bg-white px-5 py-4 flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-gray-900 mb-0.5">{name}</p>
-                <p className="text-xs text-gray-500">{specialty}</p>
-                <div className="flex items-center gap-3 mt-1.5">
-                  <span className="text-xs text-gray-500">⭐ {rating}</span>
-                  <span className="text-xs font-medium text-gray-700">{price}</span>
+                  {/* Step 1 gate / pills */}
+                  {step1Data ? (
+                    pills.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        {pills.map(pill => (
+                          <span key={pill} className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">{pill}</span>
+                        ))}
+                      </div>
+                    )
+                  ) : (
+                    <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-center justify-between gap-4">
+                      <p className="text-sm text-amber-800">Complete Step 1 first to auto-fill your home details</p>
+                      <button type="button" onClick={() => onSelectStep && onSelectStep(1)} className="flex-shrink-0 text-sm font-semibold underline underline-offset-2 text-amber-700 hover:text-amber-900 transition-colors">
+                        Go to Step 1 →
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="space-y-5 mb-8">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">Top 3 features</label>
+                      <div className="space-y-2">
+                        {[0, 1, 2].map(i => (
+                          <input key={i} type="text" value={features[i]} onChange={e => updateFeature(i, e.target.value)} placeholder={FEATURE_PLACEHOLDERS[i]} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition" style={{ '--tw-ring-color': ACCENT }} />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">Neighborhood highlight</label>
+                      <input type="text" value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="e.g. Walking distance to Round Rock ISD" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">Vibe</label>
+                      <select value={vibe} onChange={e => setVibe(e.target.value)} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:border-transparent transition">
+                        {VIBE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">Your listing description</label>
+                      <textarea value={description} onChange={e => setDescription(e.target.value)} rows={6} maxLength={2000} className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-800 leading-relaxed focus:outline-none focus:ring-2 focus:border-transparent transition resize-none" />
+                      <div className="flex items-center justify-between mt-2">
+                        <span className={`text-xs ${description.length > 1900 ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>{description.length} / 2,000 characters</span>
+                        <button type="button" onClick={handleCopy} className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: copied ? '#6b7280' : ACCENT }}>
+                          {copied ? '✓ Copied!' : 'Copy description'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mark complete */}
+                  <div className="pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <button type="button" onClick={() => goTo(1)} className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors">
+                        ← Back
+                      </button>
+                      {isCompleted ? (
+                        <div className="flex items-center gap-4">
+                          <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ACCENT }}>
+                            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+                              <circle cx="8" cy="8" r="7" fill={ACCENT} />
+                              <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Done!
+                          </span>
+                          <button type="button" onClick={() => onComplete(false)} className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors">Undo</button>
+                          <button type="button" onClick={() => onSelectStep && onSelectStep(5)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                            Next up: Showings &amp; Open Houses →
+                          </button>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => onComplete(true)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                          Mark this step complete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Context-aware sidebar */}
+        <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-4 space-y-4">
+          {activeSubStep === 1 ? (
+            <>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Before You Shoot 📸</h4>
+                <div className="space-y-2">
+                  {PHOTO_TIPS.map(({ emoji, text }) => (
+                    <div key={text} className="flex items-start gap-2">
+                      <span className="text-sm flex-shrink-0">{emoji}</span>
+                      <p className="text-xs text-gray-700 leading-relaxed">{text}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: ACCENT }}
-              >
-                Get quote →
-              </a>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Mark complete */}
-      <div ref={completeRef} className="pt-6 border-t border-gray-100">
-        {isCompleted ? (
-          <>
-            <div className="flex items-center gap-4 mb-4">
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ACCENT }}>
-                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="7" fill={ACCENT} />
-                  <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                Done!
-              </span>
-              <button
-                type="button"
-                onClick={() => onComplete(false)}
-                className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors"
-              >
-                Undo
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => onSelectStep && onSelectStep(5)}
-              className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
-              style={{ backgroundColor: ACCENT }}
-            >
-              Next up: Showings &amp; Open Houses →
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => onComplete(true)}
-            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            style={{ backgroundColor: ACCENT }}
-          >
-            Mark this step complete
-          </button>
-        )}
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
+                <div className="space-y-3">
+                  {PRO_TIPS.slice(0, 2).map(({ text, source }, i) => (
+                    <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
+                      <p className="text-xs text-gray-700 leading-relaxed mb-1">{text}</p>
+                      <p className="text-xs text-gray-400">— {source}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Where to List</h4>
+                <div className="space-y-2">
+                  {LISTING_PLATFORMS.map(({ name, cost, url }) => (
+                    <a key={name} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors gap-2">
+                      <span className="text-xs font-medium text-gray-800 truncate">{name}</span>
+                      <span className="flex-shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded-full" style={cost === 'Free' ? { backgroundColor: '#dcfce7', color: '#15803d' } : { backgroundColor: '#fef3c7', color: '#92400e' }}>{cost}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Need a Pro?</h4>
+                <p className="text-xs text-gray-500 mb-3">Professional photos pay for themselves many times over.</p>
+                <div className="space-y-2">
+                  {PHOTO_SERVICES.map(({ name, specialty, rating, price, url }) => (
+                    <div key={name} className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-gray-900 truncate">{name}</p>
+                        <p className="text-xs text-gray-400">{specialty} · ⭐ {rating} · {price}</p>
+                      </div>
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                        Quote
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </aside>
       </div>
     </div>
   )
