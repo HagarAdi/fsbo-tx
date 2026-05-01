@@ -164,7 +164,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                 key={d.id}
                 type="button"
                 onClick={() => {
-                  setTrecReturnTo(null)
                   setActiveDrawer(prev => prev === d.id ? null : d.id)
                 }}
                 className="rounded-xl border px-4 py-3 text-sm font-semibold text-left hover:bg-gray-50 transition-colors"
