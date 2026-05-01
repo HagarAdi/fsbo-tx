@@ -72,7 +72,21 @@ Example:
     "showings": []
   },
   "step6": {
-    "offers": []
+    "offers": [
+      {
+        "id": 1234567890,
+        "nickname": "Smith Family",
+        "status": "Received",
+        "price": "425000",
+        "financing": "Conventional",
+        "downPayment": "20",
+        "optionDays": "7",
+        "optionFee": "200",
+        "earnestMoney": "5000",
+        "closingDate": "2026-06-15",
+        "notes": ""
+      }
+    ]
   },
   "step7": {
     "repairRequests": [],
