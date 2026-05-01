@@ -763,8 +763,12 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
     {/* TRECDrawer */}
     <TRECDrawer
       isOpen={trecDrawer.isOpen}
-      info={trecDrawer.info}
       onClose={() => setTrecDrawer({ isOpen: false, info: null })}
+      termName={trecDrawer.info?.termName}
+      whatItSays={trecDrawer.info?.whatItSays}
+      whatItMeans={trecDrawer.info?.whatItMeans}
+      moneyTrail={trecDrawer.info?.moneyTrail}
+      txSellerTip={trecDrawer.info?.txSellerTip}
     />
     </>
   )
