@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
+import TRECDrawer from '../TRECDrawer'
 import {
-  ACCENT, PURPLE, DRAWERS, OFFER_TERMS, TREC_TERMS, FINANCING_OPTIONS,
+  ACCENT, PURPLE, DRAWERS, OFFER_TERMS, FINANCING_OPTIONS,
   OFFER_STATUS_OPTIONS, OFFER_STATUS_COLORS, TX_TIPS,
   makeEmptyOffer, calcScore, scoreBreakdown, getRedFlags, getScoreBand,
   fmtCurrency, fmtDate, loadStep6, saveStep6, inputCls,
@@ -8,10 +9,13 @@ import {
 
 export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
-  const [trecReturnTo, setTrecReturnTo] = useState(null)
+  const [trecDrawer, setTrecDrawer] = useState({ isOpen: false, info: null })
   const [expandedOffer, setExpandedOffer] = useState(null)
   const [openTerms, setOpenTerms] = useState({})
   const [offers, setOffers] = useState([])
+  const [proceedsPrice, setProceedsPrice] = useState('')
+  const [proceedsCommission, setProceedsCommission] = useState('2.5')
+  const [proceedsClosingCosts, setProceedsClosingCosts] = useState('3000')
 
   useEffect(() => {
     const saved = loadStep6()
@@ -25,10 +29,7 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
     if (offers.length > 0) saveStep6({ offers })
   }, [offers])
 
-  const closeDrawer = useCallback(() => {
-    setActiveDrawer(null)
-    setTrecReturnTo(null)
-  }, [])
+  const closeDrawer = useCallback(() => setActiveDrawer(null), [])
 
   useEffect(() => {
     if (!activeDrawer) return
@@ -37,10 +38,13 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
     return () => document.removeEventListener('keydown', handler)
   }, [activeDrawer, closeDrawer])
 
-  const openTrecFromTerms = () => {
-    setTrecReturnTo('terms')
-    setActiveDrawer('trec')
-  }
+  const openTrecDrawer = (info) => setTrecDrawer({ isOpen: true, info })
+  const closeTrecDrawer = () => setTrecDrawer(prev => ({ ...prev, isOpen: false }))
+
+  useEffect(() => {
+    const accepted = offers.find(o => o.status === 'Accepted')
+    if (accepted && accepted.price) setProceedsPrice(accepted.price)
+  }, [offers])
 
   const updateOffer = (id, field, value) =>
     setOffers(prev => prev.map(o => o.id === id ? { ...o, [field]: value } : o))
@@ -606,21 +610,10 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
             style={{ width: 'min(420px, calc(100vw - 40px))', transition: 'transform 300ms ease' }}
           >
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                {activeDrawer === 'trec' && trecReturnTo === 'terms' && (
-                  <button
-                    type="button"
-                    onClick={() => { setActiveDrawer('terms'); setTrecReturnTo(null) }}
-                    className="text-sm text-gray-400 hover:text-gray-700 transition-colors mr-1"
-                  >
-                    ← Back
-                  </button>
-                )}
-                <h3 className="text-base font-bold text-gray-900">
-                  {DRAWERS.find(d => d.id === activeDrawer)?.emoji}{' '}
-                  {DRAWERS.find(d => d.id === activeDrawer)?.label}
-                </h3>
-              </div>
+              <h3 className="text-base font-bold text-gray-900">
+                {DRAWERS.find(d => d.id === activeDrawer)?.emoji}{' '}
+                {DRAWERS.find(d => d.id === activeDrawer)?.label}
+              </h3>
               <button type="button" onClick={closeDrawer} className="text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close">
                 <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -645,7 +638,7 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                             {term.trecInfo && (
                               <button
                                 type="button"
-                                onClick={(e) => { e.stopPropagation(); openTrecFromTerms() }}
+                                onClick={(e) => { e.stopPropagation(); openTrecDrawer(term.trecInfo) }}
                                 className="text-xs font-semibold px-1.5 py-0.5 rounded border transition-colors hover:bg-purple-50"
                                 style={{ borderColor: '#c4b5fd', color: PURPLE }}
                               >
@@ -676,34 +669,82 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                 </>
               )}
 
-              {activeDrawer === 'trec' && (
-                <>
-                  <p className="text-sm text-gray-600">Detailed legal breakdown of the 5 TREC contract sections that most affect FSBO sellers in Texas.</p>
-                  <div className="space-y-4">
-                    {TREC_TERMS.map((t, i) => (
-                      <div key={i} className="rounded-xl border border-gray-200 px-4 py-4 space-y-3">
-                        <p className="text-sm font-bold text-gray-900">{t.termName}</p>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">What it says</p>
-                          <p className="text-xs text-gray-700">{t.whatItSays}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">What it means for you</p>
-                          <p className="text-xs text-gray-700">{t.whatItMeans}</p>
-                        </div>
-                        <div className="rounded-lg px-3 py-2" style={{ backgroundColor: '#f0fdf4' }}>
-                          <p className="text-xs font-semibold mb-0.5" style={{ color: ACCENT }}>Money trail</p>
-                          <p className="text-xs text-green-800">{t.moneyTrail}</p>
-                        </div>
-                        <div className="rounded-lg px-3 py-2" style={{ backgroundColor: '#ede9fe' }}>
-                          <p className="text-xs font-semibold mb-0.5" style={{ color: PURPLE }}>Texas seller tip</p>
-                          <p className="text-xs" style={{ color: '#5b21b6' }}>{t.txSellerTip}</p>
+              {activeDrawer === 'proceeds' && (() => {
+                const price = parseFloat(proceedsPrice) || 0
+                const commission = parseFloat(proceedsCommission) || 0
+                const closing = parseFloat(proceedsClosingCosts) || 0
+                const commissionAmt = price * (commission / 100)
+                const net = price - commissionAmt - closing
+                return (
+                  <>
+                    <p className="text-sm text-gray-600">Quick estimate of what you&apos;ll walk away with. Full calculation in Step 8.</p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Accepted sale price ($)</label>
+                        <input
+                          type="number"
+                          value={proceedsPrice}
+                          onChange={e => setProceedsPrice(e.target.value)}
+                          placeholder="e.g. 450000"
+                          className={inputCls}
+                        />
+                        {offers.some(o => o.status === 'Accepted') && (
+                          <p className="text-xs text-green-600 mt-1">Auto-filled from your accepted offer.</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Buyer&apos;s agent commission (%)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          max="10"
+                          value={proceedsCommission}
+                          onChange={e => setProceedsCommission(e.target.value)}
+                          className={inputCls}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">FSBO sellers often offer 2–3% to attract buyer agents. Enter 0 if none.</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Estimated closing costs ($)</label>
+                        <input
+                          type="number"
+                          value={proceedsClosingCosts}
+                          onChange={e => setProceedsClosingCosts(e.target.value)}
+                          className={inputCls}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Includes owner&apos;s title policy (~$1,500), taxes, HOA fees. Adjust as needed.</p>
+                      </div>
+                    </div>
+
+                    {price > 0 && (
+                      <div className="rounded-xl border border-gray-200 divide-y divide-gray-100 mt-2">
+                        {[
+                          { label: 'Sale price', value: fmtCurrency(String(price)), color: '#374151' },
+                          { label: `Buyer's agent (${commission}%)`, value: `− ${fmtCurrency(String(Math.round(commissionAmt)))}`, color: '#dc2626' },
+                          { label: 'Closing costs', value: `− ${fmtCurrency(String(closing))}`, color: '#dc2626' },
+                        ].map(row => (
+                          <div key={row.label} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                            <span className="text-gray-600">{row.label}</span>
+                            <span className="font-semibold" style={{ color: row.color }}>{row.value}</span>
+                          </div>
+                        ))}
+                        <div className="flex items-center justify-between px-4 py-3 bg-gray-50">
+                          <span className="text-sm font-bold text-gray-900">Est. net proceeds</span>
+                          <span className="text-base font-bold" style={{ color: net >= 0 ? ACCENT : '#dc2626' }}>
+                            {fmtCurrency(String(Math.round(net)))}
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </>
-              )}
+                    )}
+
+                    <div className="rounded-xl px-4 py-3" style={{ backgroundColor: '#ede9fe' }}>
+                      <p className="text-xs font-semibold mb-0.5" style={{ color: PURPLE }}>Doesn&apos;t include mortgage payoff</p>
+                      <p className="text-xs" style={{ color: '#5b21b6' }}>Your net proceeds minus your remaining loan balance = your actual cash at closing. Add your payoff amount in Step 8 for the full picture.</p>
+                    </div>
+                  </>
+                )
+              })()}
 
               {activeDrawer === 'counter' && (
                 <>
@@ -810,6 +851,16 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
           </div>
         </>
       )}
+
+      <TRECDrawer
+        isOpen={trecDrawer.isOpen}
+        onClose={closeTrecDrawer}
+        termName={trecDrawer.info?.termName}
+        whatItSays={trecDrawer.info?.whatItSays}
+        whatItMeans={trecDrawer.info?.whatItMeans}
+        moneyTrail={trecDrawer.info?.moneyTrail}
+        txSellerTip={trecDrawer.info?.txSellerTip}
+      />
     </>
   )
 }

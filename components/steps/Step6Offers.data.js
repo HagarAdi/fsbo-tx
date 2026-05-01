@@ -3,7 +3,7 @@ const PURPLE = '#7c3aed'
 
 const DRAWERS = [
   { id: 'terms',    emoji: '📋', label: 'Offer Terms' },
-  { id: 'trec',     emoji: '⚖️', label: 'TREC Guide' },
+  { id: 'proceeds', emoji: '📊', label: 'Net Proceeds' },
   { id: 'counter',  emoji: '💬', label: 'How to Counter' },
   { id: 'decision', emoji: '✅', label: 'Decision Guide' },
 ]
@@ -105,8 +105,6 @@ const OFFER_TERMS = [
     whyItMatters: 'Handled during option period in Texas — not a separate contingency.',
   },
 ]
-
-const TREC_TERMS = OFFER_TERMS.filter(t => t.trecInfo).map(t => t.trecInfo)
 
 const FINANCING_OPTIONS = ['Cash', 'Conventional', 'FHA', 'VA', 'Other']
 
@@ -257,7 +255,7 @@ function fmtDate(val) {
 const inputCls = 'w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition'
 
 export {
-  ACCENT, PURPLE, DRAWERS, OFFER_TERMS, TREC_TERMS, FINANCING_OPTIONS,
+  ACCENT, PURPLE, DRAWERS, OFFER_TERMS, FINANCING_OPTIONS,
   OFFER_STATUS_OPTIONS, OFFER_STATUS_COLORS, RED_FLAG_CHECKS, TX_TIPS,
   SCORE_BANDS, getScoreBand, makeEmptyOffer, scoreBreakdown, calcScore,
   getRedFlags, loadStep6, saveStep6, fmtCurrency, fmtDate, inputCls,
