@@ -67,13 +67,8 @@ Example:
     "yardSignPhone": "",
     "virtualTourUrl": "",
     "virtualTourType": "",
-    "safetyChecked": [],
-    "showingRules": {
-      "noticeHours": "",
-      "availableHours": "",
-      "method": "",
-      "specialInstructions": ""
-    },
+    "showingMethod": "",
+    "contacts": [],
     "showings": []
   },
   "step6": {
