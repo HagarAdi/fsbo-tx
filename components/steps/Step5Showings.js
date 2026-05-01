@@ -99,9 +99,8 @@ const PRO_TIPS = [
 ]
 
 const SUB_STEPS = [
-  { id: 1, label: 'Prep' },
-  { id: 2, label: 'Showings' },
-  { id: 3, label: 'Open House' },
+  { id: 1, label: 'Setup' },
+  { id: 2, label: 'Open House' },
 ]
 
 const slideVariants = {
@@ -239,7 +238,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
               exit="exit"
             >
 
-              {/* ── CARD 1: Prep ── */}
+              {/* ── CARD 1: Setup ── */}
               {activeSubStep === 1 && (
                 <div>
                   {/* Must-do progress pill */}
@@ -344,20 +343,45 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                     </div>
                   </section>
 
-                  <button
-                    type="button"
-                    onClick={() => goTo(2)}
-                    className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: ACCENT }}
-                  >
-                    Continue: Showings →
-                  </button>
-                </div>
-              )}
+                  {/* Virtual tour */}
+                  <section className="mb-8">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Add a virtual tour 🎥</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Buyers who take a virtual tour are 60% more likely to make an offer.
+                    </p>
+                    <div className="space-y-3">
+                      {VIRTUAL_TOUR_OPTIONS.map(({ label, cost, costPaid, description, link }) => (
+                        <div key={label} className="rounded-xl border border-gray-200 bg-white px-5 py-4 flex items-start gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <span className="text-sm font-semibold text-gray-900">{label}</span>
+                              <span
+                                className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                                style={costPaid
+                                  ? { backgroundColor: '#fef3c7', color: '#92400e' }
+                                  : { backgroundColor: '#dcfce7', color: '#15803d' }}
+                              >
+                                {cost}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600">{description}</p>
+                          </div>
+                          {link && (
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-shrink-0 text-sm font-semibold whitespace-nowrap transition-opacity hover:opacity-80"
+                              style={{ color: ACCENT }}
+                            >
+                              {link.label}
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
 
-              {/* ── CARD 2: Showings ── */}
-              {activeSubStep === 2 && (
-                <div>
                   {/* Showing method */}
                   <section className="mb-8">
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">How will you handle showings?</h3>
@@ -407,182 +431,20 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                     </div>
                   </section>
 
-                  {/* Track showings */}
-                  <section className="mb-8">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Track your showings</h3>
-                    <p className="text-sm text-gray-500 mb-4">Keep a log of who visited and when.</p>
-
-                    <div className="rounded-xl border border-gray-200 bg-white px-5 py-5 mb-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-700 mb-1">Date</label>
-                          <input
-                            type="date"
-                            value={form.date}
-                            onChange={e => handleFormChange('date', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:border-transparent transition"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-700 mb-1">Time</label>
-                          <input
-                            type="time"
-                            value={form.time}
-                            onChange={e => handleFormChange('time', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:border-transparent transition"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-700 mb-1">Buyer agent name</label>
-                          <input
-                            type="text"
-                            value={form.agent}
-                            onChange={e => handleFormChange('agent', e.target.value)}
-                            placeholder="e.g. Sarah Johnson"
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-700 mb-1">Status</label>
-                          <select
-                            value={form.status}
-                            onChange={e => handleFormChange('status', e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:border-transparent transition"
-                          >
-                            {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
-                          </select>
-                        </div>
-                      </div>
-                      <div className="mb-4">
-                        <label className="block text-xs font-semibold text-gray-700 mb-1">Notes (optional)</label>
-                        <input
-                          type="text"
-                          value={form.notes}
-                          onChange={e => handleFormChange('notes', e.target.value)}
-                          placeholder="e.g. Very interested, asked about the backyard"
-                          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={addShowing}
-                        disabled={!form.date || !form.time}
-                        className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{ backgroundColor: ACCENT }}
-                      >
-                        Add showing
-                      </button>
-                    </div>
-
-                    {showings.length > 0 ? (
-                      <div className="space-y-3">
-                        {showings.map(s => {
-                          const colors = STATUS_COLORS[s.status] || STATUS_COLORS['Scheduled']
-                          return (
-                            <div key={s.id} className="rounded-xl border border-gray-200 bg-white px-5 py-4 flex items-start gap-4">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                  <span className="text-sm font-semibold text-gray-900">
-                                    {new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                    {' '}at{' '}
-                                    {s.time ? (() => {
-                                      const [h, m] = s.time.split(':')
-                                      const hr = parseInt(h, 10)
-                                      return `${hr % 12 || 12}:${m} ${hr < 12 ? 'AM' : 'PM'}`
-                                    })() : ''}
-                                  </span>
-                                  <span
-                                    className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                                    style={{ backgroundColor: colors.bg, color: colors.text }}
-                                  >
-                                    {s.status}
-                                  </span>
-                                </div>
-                                {s.agent && <p className="text-xs text-gray-500 mb-1">Agent: {s.agent}</p>}
-                                {s.notes && <p className="text-xs text-gray-600 italic">{s.notes}</p>}
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => deleteShowing(s.id)}
-                                className="flex-shrink-0 text-gray-300 hover:text-red-400 transition-colors"
-                                aria-label="Delete showing"
-                              >
-                                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
-                                  <path d="M6 2a1 1 0 00-1 1H3a1 1 0 000 2h10a1 1 0 100-2h-2a1 1 0 00-1-1H6zM4 7a1 1 0 011 1v4a1 1 0 002 0V8a1 1 0 012 0v4a1 1 0 002 0V8a1 1 0 011-1 1 1 0 100-2H4a1 1 0 100 2z" />
-                                </svg>
-                              </button>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-400 text-center py-4">No showings logged yet.</p>
-                    )}
-                  </section>
-
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => goTo(1)}
-                      className="px-5 py-3 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-                    >
-                      ← Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => goTo(3)}
-                      className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                      style={{ backgroundColor: ACCENT }}
-                    >
-                      Continue: Open House →
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => goTo(2)}
+                    className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: ACCENT }}
+                  >
+                    Continue: Open House →
+                  </button>
                 </div>
               )}
 
-              {/* ── CARD 3: Open House ── */}
-              {activeSubStep === 3 && (
+              {/* ── CARD 2: Open House ── */}
+              {activeSubStep === 2 && (
                 <div>
-                  {/* Virtual tour */}
-                  <section className="mb-8">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Add a virtual tour 🎥</h3>
-                    <p className="text-sm text-gray-500 mb-4">
-                      Buyers who take a virtual tour are 60% more likely to make an offer.
-                    </p>
-                    <div className="space-y-3">
-                      {VIRTUAL_TOUR_OPTIONS.map(({ label, cost, costPaid, description, link }) => (
-                        <div key={label} className="rounded-xl border border-gray-200 bg-white px-5 py-4 flex items-start gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <span className="text-sm font-semibold text-gray-900">{label}</span>
-                              <span
-                                className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                                style={costPaid
-                                  ? { backgroundColor: '#fef3c7', color: '#92400e' }
-                                  : { backgroundColor: '#dcfce7', color: '#15803d' }}
-                              >
-                                {cost}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600">{description}</p>
-                          </div>
-                          {link && (
-                            <a
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-shrink-0 text-sm font-semibold whitespace-nowrap transition-opacity hover:opacity-80"
-                              style={{ color: ACCENT }}
-                            >
-                              {link.label}
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-
-                  {/* Open house checklist */}
                   <section className="mb-8">
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">Hosting an open house? 🏠</h3>
                     <p className="text-sm text-gray-500 mb-4">
@@ -617,7 +479,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                                 >
                                   Follow your full showing prep checklist
                                 </button>
-                                {' '}(see Card 1)
+                                {' '}(see Setup card)
                               </p>
                             ) : (
                               <p className="text-sm text-gray-700">{text}</p>
@@ -629,7 +491,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                   </section>
 
                   {/* Mark complete */}
-                  <div className="pt-6 border-t border-gray-100">
+                  <div className="pt-6 border-t border-gray-100 mb-4">
                     {isCompleted ? (
                       <>
                         <div className="flex items-center gap-4 mb-4">
@@ -661,7 +523,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                       <div className="flex gap-3">
                         <button
                           type="button"
-                          onClick={() => goTo(2)}
+                          onClick={() => goTo(1)}
                           className="px-5 py-3 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
                         >
                           ← Back
@@ -682,6 +544,119 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
 
             </motion.div>
           </AnimatePresence>
+
+          {/* ── Always-visible: Showing Tracker ── */}
+          <div className="mt-10 pt-8 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Your Showing Log</h3>
+            <p className="text-sm text-gray-500 mb-4">Keep a running log of who visited and when — add entries as showings happen.</p>
+
+            <div className="rounded-xl border border-gray-200 bg-white px-5 py-5 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={form.date}
+                    onChange={e => handleFormChange('date', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Time</label>
+                  <input
+                    type="time"
+                    value={form.time}
+                    onChange={e => handleFormChange('time', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Buyer agent name</label>
+                  <input
+                    type="text"
+                    value={form.agent}
+                    onChange={e => handleFormChange('agent', e.target.value)}
+                    placeholder="e.g. Sarah Johnson"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Status</label>
+                  <select
+                    value={form.status}
+                    onChange={e => handleFormChange('status', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:border-transparent transition"
+                  >
+                    {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Notes (optional)</label>
+                <input
+                  type="text"
+                  value={form.notes}
+                  onChange={e => handleFormChange('notes', e.target.value)}
+                  placeholder="e.g. Very interested, asked about the backyard"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={addShowing}
+                disabled={!form.date || !form.time}
+                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ backgroundColor: ACCENT }}
+              >
+                Add showing
+              </button>
+            </div>
+
+            {showings.length > 0 ? (
+              <div className="space-y-3">
+                {showings.map(s => {
+                  const colors = STATUS_COLORS[s.status] || STATUS_COLORS['Scheduled']
+                  return (
+                    <div key={s.id} className="rounded-xl border border-gray-200 bg-white px-5 py-4 flex items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="text-sm font-semibold text-gray-900">
+                            {new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            {' '}at{' '}
+                            {s.time ? (() => {
+                              const [h, m] = s.time.split(':')
+                              const hr = parseInt(h, 10)
+                              return `${hr % 12 || 12}:${m} ${hr < 12 ? 'AM' : 'PM'}`
+                            })() : ''}
+                          </span>
+                          <span
+                            className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                            style={{ backgroundColor: colors.bg, color: colors.text }}
+                          >
+                            {s.status}
+                          </span>
+                        </div>
+                        {s.agent && <p className="text-xs text-gray-500 mb-1">Agent: {s.agent}</p>}
+                        {s.notes && <p className="text-xs text-gray-600 italic">{s.notes}</p>}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => deleteShowing(s.id)}
+                        className="flex-shrink-0 text-gray-300 hover:text-red-400 transition-colors"
+                        aria-label="Delete showing"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M6 2a1 1 0 00-1 1H3a1 1 0 000 2h10a1 1 0 100-2h-2a1 1 0 00-1-1H6zM4 7a1 1 0 011 1v4a1 1 0 002 0V8a1 1 0 012 0v4a1 1 0 002 0V8a1 1 0 011-1 1 1 0 100-2H4a1 1 0 100 2z" />
+                        </svg>
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 text-center py-4">No showings logged yet.</p>
+            )}
+          </div>
         </div>
 
         {/* Sidebar */}
@@ -707,6 +682,8 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                   {[
                     { label: 'ShowingTime', url: 'https://showingtime.com' },
                     { label: 'Amazon yard signs', url: 'https://amazon.com/s?k=fsbo+yard+sign' },
+                    { label: 'Matterport', url: 'https://matterport.com' },
+                    { label: 'Zillow 3D Home', url: 'https://zillow.com/z3d' },
                   ].map(({ label, url }) => (
                     <a
                       key={label}
@@ -723,41 +700,8 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
             </>
           )}
 
-          {/* Card 2 sidebar: 2 pro tips + ShowingTime */}
+          {/* Card 2 sidebar: all 4 pro tips + Home Depot */}
           {activeSubStep === 2 && (
-            <>
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
-                <div className="space-y-3">
-                  {PRO_TIPS.slice(0, 2).map(({ text, source }, i) => (
-                    <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
-                      <p className="text-xs text-gray-700 leading-relaxed mb-1">&ldquo;{text}&rdquo;</p>
-                      <p className="text-xs text-gray-400">— {source}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Resources</h4>
-                <div className="space-y-1.5">
-                  {[{ label: 'ShowingTime', url: 'https://showingtime.com' }].map(({ label, url }) => (
-                    <a
-                      key={label}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 bg-white text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                    >
-                      {label} <span className="text-gray-400">↗</span>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Card 3 sidebar: all 4 pro tips + vendor chips */}
-          {activeSubStep === 3 && (
             <>
               <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                 <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
@@ -773,11 +717,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
               <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                 <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Resources</h4>
                 <div className="space-y-1.5">
-                  {[
-                    { label: 'Matterport', url: 'https://matterport.com' },
-                    { label: 'Zillow 3D Home', url: 'https://zillow.com/z3d' },
-                    { label: 'Home Depot lockbox', url: 'https://homedepot.com' },
-                  ].map(({ label, url }) => (
+                  {[{ label: 'Home Depot lockbox', url: 'https://homedepot.com' }].map(({ label, url }) => (
                     <a
                       key={label}
                       href={url}
