@@ -219,6 +219,9 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
   const [photos, setPhotos] = useState({ bathrooms: [], kitchen: [], front: [], other: [] })
   const [analyzing, setAnalyzing] = useState(false)
   const [analyzeError, setAnalyzeError] = useState(null)
+  const [activeSubStep, setActiveSubStep] = useState(1)
+  const [direction, setDirection] = useState(1)
+  const [expandedCategories, setExpandedCategories] = useState(new Set())
   const [aiFindings, setAiFindings] = useState(() => {
     if (typeof window === 'undefined') return null
     try {
@@ -233,22 +236,22 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
   })
 
   const toBase64Compressed = (file) => new Promise(resolve => {
-    const canvas = document.createElement('canvas');
-    const img = new Image();
-    const url = URL.createObjectURL(file);
+    const canvas = document.createElement('canvas')
+    const img = new Image()
+    const url = URL.createObjectURL(file)
     img.onload = () => {
-      const maxW = 800;
-      const scale = Math.min(1, maxW / img.width);
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
-      URL.revokeObjectURL(url);
-      resolve(base64);
-    };
-    img.src = url;
-  });
+      const maxW = 800
+      const scale = Math.min(1, maxW / img.width)
+      canvas.width = img.width * scale
+      canvas.height = img.height * scale
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1]
+      URL.revokeObjectURL(url)
+      resolve(base64)
+    }
+    img.src = url
+  })
 
   const handleAnalyze = async () => {
     const allFiles = Object.values(photos).flat().map(p => p.file).filter(Boolean)
@@ -381,13 +384,10 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
     ? Math.round(priceEstimate.currentEstimate * 0.01)
     : null
 
-  const [activeSubStep, setActiveSubStep] = useState(1)
-  const [direction, setDirection] = useState(1)
   const goTo = (step) => {
     setDirection(step > activeSubStep ? 1 : -1)
     setActiveSubStep(step)
   }
-  const [expandedCategories, setExpandedCategories] = useState(new Set())
   const toggleCategory = (label) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev)
