@@ -19,8 +19,8 @@ function useShowingData() {
       const raw = localStorage.getItem('fsbo_stepData')
       const parsed = raw ? JSON.parse(raw) : {}
       setData({
-        showings: parsed.step5?.showings  ?? [],
-        contacts: parsed.step5?.contacts  ?? [],
+        showings: parsed.step5?.showings ?? [],
+        contacts: parsed.step5?.contacts ?? [],
       })
     } catch {}
   }, [])
@@ -33,15 +33,6 @@ function deriveStats(showings) {
   )
   const uniqueDays = new Set(active.map((s) => s.date)).size
   return { showingCount: showings.length, activeDays: uniqueDays }
-}
-
-function derivePhaseProgress(completedSteps) {
-  const result = {}
-  for (const [phase, ids] of Object.entries(PHASE_STEPS)) {
-    const done = ids.filter((id) => completedSteps.includes(id)).length
-    result[phase] = { done, total: ids.length }
-  }
-  return result
 }
 
 function streetViewUrl(address) {
@@ -59,7 +50,8 @@ function StepRow({ step, isComplete, onClick }) {
       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left
                  hover:bg-slate-50 active:scale-[0.98] transition-all duration-100"
     >
-      <span className="w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full shrink-0"
+      <span
+        className="w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full shrink-0"
         style={{
           backgroundColor: isComplete ? EM : 'transparent',
           border: isComplete ? 'none' : '2px solid #cbd5e1',
@@ -68,7 +60,8 @@ function StepRow({ step, isComplete, onClick }) {
       >
         {isComplete ? '✓' : step.id}
       </span>
-      <span className={`text-xs leading-snug ${isComplete ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+      {/* Refinement: incomplete steps use text-slate-900 for high contrast */}
+      <span className={`text-xs leading-snug ${isComplete ? 'text-slate-400 line-through' : 'text-slate-900 font-medium'}`}>
         {step.title}
       </span>
     </button>
@@ -87,12 +80,12 @@ function StatBadge({ label, value, dim }) {
 }
 
 function PhaseCard({ phase, completedSteps, showStats, activeDays, showingCount, onSelectStep }) {
-  const ids    = PHASE_STEPS[phase]
+  const ids        = PHASE_STEPS[phase]
   const phaseSteps = steps.filter((s) => ids.includes(s.id))
-  const done   = ids.filter((id) => completedSteps.includes(id)).length
-  const total  = ids.length
-  const pct    = Math.round((done / total) * 100)
-  const locked = phase === 'Close' && !completedSteps.includes(5)
+  const done       = ids.filter((id) => completedSteps.includes(id)).length
+  const total      = ids.length
+  const pct        = Math.round((done / total) * 100)
+  const locked     = phase === 'Close' && !completedSteps.includes(5)
 
   const phaseColor = {
     Prepare: { bar: '#16a34a', badge: 'bg-emerald-100 text-emerald-700' },
@@ -101,9 +94,9 @@ function PhaseCard({ phase, completedSteps, showStats, activeDays, showingCount,
   }[phase]
 
   return (
-    <div className={`bg-white rounded-xl border border-slate-200 p-4 flex flex-col gap-3
+    // Refinement: border-slate-300 gives visible edge against slate-950 background
+    <div className={`bg-white rounded-xl border border-slate-300 p-4 flex flex-col gap-3
                      hover:shadow-md transition-shadow duration-200 ${locked ? 'opacity-50' : ''}`}>
-      {/* Header */}
       <div className="flex items-center justify-between">
         <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${phaseColor.badge}`}>
           {phase}
@@ -111,7 +104,6 @@ function PhaseCard({ phase, completedSteps, showStats, activeDays, showingCount,
         <span className="text-xs text-slate-400 font-semibold">{done}/{total}</span>
       </div>
 
-      {/* Progress bar */}
       <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500"
@@ -119,7 +111,6 @@ function PhaseCard({ phase, completedSteps, showStats, activeDays, showingCount,
         />
       </div>
 
-      {/* Steps */}
       <div className="flex flex-col gap-0.5">
         {phaseSteps.map((s) => (
           <StepRow
@@ -131,7 +122,6 @@ function PhaseCard({ phase, completedSteps, showStats, activeDays, showingCount,
         ))}
       </div>
 
-      {/* Market Pulse (Market phase only) */}
       {showStats && (
         <div className="mt-1 pt-3 border-t border-slate-100">
           <p className="text-[10px] uppercase tracking-widest text-slate-400 mb-2">Market Pulse</p>
@@ -151,17 +141,16 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
   const { showings } = useShowingData()
   const { showingCount, activeDays } = deriveStats(showings)
 
-  const nextStep   = steps.find((s) => !completedSteps.includes(s.id))
-  const allDone    = !nextStep
-  const savings    = priceEstimate?.currentEstimate
+  const nextStep = steps.find((s) => !completedSteps.includes(s.id))
+  const allDone  = !nextStep
+  const savings  = priceEstimate?.currentEstimate
     ? Math.round(priceEstimate.currentEstimate * 0.03).toLocaleString()
     : null
-  const estimate   = priceEstimate?.currentEstimate
+  const estimate = priceEstimate?.currentEstimate
     ? `$${Math.round(priceEstimate.currentEstimate).toLocaleString()}`
     : null
-  const svUrl      = streetViewUrl(homeAddress)
-
-  const inMarket   = completedSteps.includes(4) || completedSteps.includes(5)
+  const svUrl    = streetViewUrl(homeAddress)
+  const inMarket = completedSteps.includes(4) || completedSteps.includes(5)
 
   const handleReset = () => {
     if (!window.confirm('Reset all progress? This cannot be undone.')) return
@@ -174,7 +163,6 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
 
       {/* ── Sticky Header ── */}
       <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center gap-4">
-        {/* Property thumbnail */}
         <div className="w-16 h-10 rounded-lg overflow-hidden shrink-0 bg-slate-800 flex items-center justify-center">
           {svUrl
             ? <img src={svUrl} alt="Street view" className="w-full h-full object-cover" />
@@ -182,7 +170,6 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
           }
         </div>
 
-        {/* Address */}
         <div className="flex-1 min-w-0">
           <p className="text-white font-semibold text-sm truncate">{homeAddress || 'Your Property'}</p>
           <button
@@ -193,7 +180,6 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
           </button>
         </div>
 
-        {/* FSBO Savings */}
         <div className="text-right shrink-0">
           <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-0.5">FSBO Savings</p>
           {savings ? (
@@ -201,7 +187,8 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
               ${savings}
             </p>
           ) : (
-            <p className="text-sm text-slate-500 italic">Complete Step 1</p>
+            // Refinement: larger, bolder primary objective text
+            <p className="text-base font-bold text-white">Complete Step 1</p>
           )}
           {estimate && (
             <p className="text-[10px] text-slate-500">on {estimate} est.</p>
@@ -212,7 +199,6 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
       {/* ── Main Content ── */}
       <div className="flex-1 p-6 flex flex-col gap-6">
 
-        {/* Phase Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <PhaseCard
             phase="Prepare"
@@ -240,7 +226,6 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
           />
         </div>
 
-        {/* Hero Next Action */}
         {allDone ? (
           <div className="rounded-xl bg-emerald-600 p-6 text-center">
             <p className="text-3xl font-extrabold text-white mb-1">Your home is ready to list.</p>
@@ -274,9 +259,9 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
           </div>
         )}
 
-        {/* Footer */}
+        {/* Refinement: text-slate-400 — subtle but readable */}
         <div className="flex justify-center pt-2">
-          <button onClick={handleReset} className="text-xs text-slate-700 hover:text-red-400 transition-colors">
+          <button onClick={handleReset} className="text-xs text-slate-400 hover:text-red-400 transition-colors">
             ↺ Reset all data
           </button>
         </div>
