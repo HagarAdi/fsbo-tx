@@ -13,15 +13,12 @@ const PHASE_STEPS = {
 // ─── Data Layer ──────────────────────────────────────────────────────────────
 
 function useShowingData() {
-  const [data, setData] = useState({ showings: [], contacts: [] })
+  const [data, setData] = useState({ showings: [] })
   useEffect(() => {
     try {
       const raw = localStorage.getItem('fsbo_stepData')
       const parsed = raw ? JSON.parse(raw) : {}
-      setData({
-        showings: parsed.step5?.showings ?? [],
-        contacts: parsed.step5?.contacts ?? [],
-      })
+      setData({ showings: parsed.step5?.showings ?? [] })
     } catch {}
   }, [])
   return data
@@ -239,7 +236,7 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
       {/* ── Main Content ── */}
       <div className="flex-1 p-4 md:p-6 flex flex-col gap-4 md:gap-6 max-w-7xl mx-auto w-full">
 
-        {/* Mobile: Hero first so CTA is the first thing seen */}
+        {/* Mobile: Hero first — CTA is the first thing seen */}
         <div className="md:hidden">
           <HeroCard allDone={allDone} nextStep={nextStep} onSelectStep={onSelectStep} />
         </div>
@@ -272,7 +269,7 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
           />
         </div>
 
-        {/* Desktop: Hero below cards */}
+        {/* Desktop: Hero below phase cards */}
         <div className="hidden md:block">
           <HeroCard allDone={allDone} nextStep={nextStep} onSelectStep={onSelectStep} />
         </div>

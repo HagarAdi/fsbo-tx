@@ -18,6 +18,7 @@ const pageVariants = {
 export default function Layout({ children }) {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mounted, setMounted] = useState(false)
   const { homeAddress, showOnboarding, completed, priceEstimate, handleAddressSave } =
     useAppStateContext()
@@ -60,10 +61,27 @@ export default function Layout({ children }) {
 
         {/* Below-nav: sidebar + main */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Desktop sidebar — hidden on home */}
+          {/* Desktop sidebar — hidden on home, collapsible on step pages */}
           {!isHome && (
-            <div className="hidden md:flex md:w-[280px] lg:w-1/4 min-w-[220px] h-full overflow-hidden flex-shrink-0">
-              <Sidebar />
+            <div className="hidden md:flex h-full flex-shrink-0">
+              {/* Expand tab — shown when sidebar is collapsed */}
+              {!sidebarOpen && (
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  title="Show steps"
+                  className="w-9 h-full bg-gray-50 border-r border-gray-200 hover:bg-gray-100
+                             transition-colors flex flex-col items-center justify-center gap-2 text-gray-400"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor">
+                    <path d="M6 4l4 4-4 4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="text-[9px] font-semibold uppercase tracking-widest" style={{ writingMode: 'vertical-rl' }}>Steps</span>
+                </button>
+              )}
+              {/* Sidebar panel */}
+              <div className={`flex h-full overflow-hidden transition-all duration-200 ${sidebarOpen ? 'w-[280px]' : 'w-0'}`}>
+                <Sidebar onCollapse={() => setSidebarOpen(false)} />
+              </div>
             </div>
           )}
 

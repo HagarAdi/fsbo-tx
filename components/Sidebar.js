@@ -45,7 +45,7 @@ function PhaseGroup({ phase, steps, activeId, completed, onClose }) {
   )
 }
 
-export default function Sidebar({ onClose }) {
+export default function Sidebar({ onClose, onCollapse }) {
   const router = useRouter()
   const { completed, priceEstimate } = useAppStateContext()
   const activeId = router.query.id ? parseInt(router.query.id, 10) : null
@@ -70,7 +70,19 @@ export default function Sidebar({ onClose }) {
             <span className="font-bold text-gray-900 text-base leading-tight">FSBO Texas Guide</span>
           </Link>
 
-          {/* Close button — only shown in mobile overlay */}
+          {/* Desktop collapse button */}
+          {onCollapse && (
+            <button
+              type="button"
+              onClick={onCollapse}
+              title="Collapse sidebar"
+              className="hidden md:flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-200 transition-colors text-gray-400 text-sm font-bold ml-2"
+              aria-label="Collapse sidebar"
+            >
+              ‹‹
+            </button>
+          )}
+          {/* Mobile close button */}
           {onClose && (
             <button
               type="button"
