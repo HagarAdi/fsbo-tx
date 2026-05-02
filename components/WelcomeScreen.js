@@ -85,8 +85,6 @@ function PhaseCard({ phase, completedSteps, showStats, activeDays, showingCount,
   const done       = ids.filter((id) => completedSteps.includes(id)).length
   const total      = ids.length
   const pct        = Math.round((done / total) * 100)
-  const locked     = phase === 'Close' && !completedSteps.includes(5)
-
   const phaseColor = {
     Prepare: { bar: '#16a34a', badge: 'bg-emerald-100 text-emerald-700' },
     Market:  { bar: '#0891b2', badge: 'bg-cyan-100 text-cyan-700' },
@@ -94,9 +92,8 @@ function PhaseCard({ phase, completedSteps, showStats, activeDays, showingCount,
   }[phase]
 
   return (
-    // Refinement: border-slate-300 gives visible edge against slate-950 background
-    <div className={`bg-white rounded-xl border border-slate-300 p-4 flex flex-col gap-3
-                     hover:shadow-md transition-shadow duration-200 ${locked ? 'opacity-50' : ''}`}>
+    <div className="bg-white rounded-xl border border-slate-300 p-4 flex flex-col gap-3
+                    hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center justify-between">
         <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${phaseColor.badge}`}>
           {phase}
@@ -187,8 +184,13 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
               ${savings}
             </p>
           ) : (
-            // Refinement: larger, bolder primary objective text
-            <p className="text-base font-bold text-white">Complete Step 1</p>
+            <button
+              onClick={() => onSelectStep && onSelectStep(1)}
+              className="text-base font-bold text-emerald-400 hover:text-emerald-300
+                         active:scale-95 transition-all duration-100 underline underline-offset-2"
+            >
+              Complete Step 1
+            </button>
           )}
           {estimate && (
             <p className="text-[10px] text-slate-500">on {estimate} est.</p>
