@@ -1,185 +1,286 @@
+import { useState, useEffect } from 'react'
 import { steps } from '../data/steps'
 
-const ACCENT = '#16a34a'
+// ─── Constants ───────────────────────────────────────────────────────────────
 
-const phases = ['Prepare', 'Market', 'Close']
+const EM = '#16a34a'
+const PHASE_STEPS = {
+  Prepare: [1, 2, 3],
+  Market:  [4, 5],
+  Close:   [6, 7, 8, 9],
+}
 
-const HomeIcon = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-  </svg>
-)
+// ─── Data Layer ──────────────────────────────────────────────────────────────
+
+function useShowingData() {
+  const [data, setData] = useState({ showings: [], contacts: [] })
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('fsbo_stepData')
+      const parsed = raw ? JSON.parse(raw) : {}
+      setData({
+        showings: parsed.step5?.showings  ?? [],
+        contacts: parsed.step5?.contacts  ?? [],
+      })
+    } catch {}
+  }, [])
+  return data
+}
+
+function deriveStats(showings) {
+  const active = showings.filter(
+    (s) => s.status === 'Scheduled' || s.status === 'Completed'
+  )
+  const uniqueDays = new Set(active.map((s) => s.date)).size
+  return { showingCount: showings.length, activeDays: uniqueDays }
+}
+
+function derivePhaseProgress(completedSteps) {
+  const result = {}
+  for (const [phase, ids] of Object.entries(PHASE_STEPS)) {
+    const done = ids.filter((id) => completedSteps.includes(id)).length
+    result[phase] = { done, total: ids.length }
+  }
+  return result
+}
+
+function streetViewUrl(address) {
+  const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
+  if (!key || !address) return null
+  return `https://maps.googleapis.com/maps/api/streetview?size=320x180&location=${encodeURIComponent(address)}&key=${key}`
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function StepRow({ step, isComplete, onClick }) {
+  return (
+    <button
+      onClick={() => onClick(step.id)}
+      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left
+                 hover:bg-slate-50 active:scale-[0.98] transition-all duration-100"
+    >
+      <span className="w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full shrink-0"
+        style={{
+          backgroundColor: isComplete ? EM : 'transparent',
+          border: isComplete ? 'none' : '2px solid #cbd5e1',
+          color: isComplete ? '#fff' : '#94a3b8',
+        }}
+      >
+        {isComplete ? '✓' : step.id}
+      </span>
+      <span className={`text-xs leading-snug ${isComplete ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+        {step.title}
+      </span>
+    </button>
+  )
+}
+
+function StatBadge({ label, value, dim }) {
+  return (
+    <div className="flex flex-col items-center px-3 py-2 rounded-lg bg-slate-50 border border-slate-100">
+      <span className={`text-xl font-extrabold ${dim ? 'text-slate-300' : 'text-emerald-600'}`}>
+        {value}
+      </span>
+      <span className="text-[10px] uppercase tracking-widest text-slate-400 mt-0.5">{label}</span>
+    </div>
+  )
+}
+
+function PhaseCard({ phase, completedSteps, showStats, activeDays, showingCount, onSelectStep }) {
+  const ids    = PHASE_STEPS[phase]
+  const phaseSteps = steps.filter((s) => ids.includes(s.id))
+  const done   = ids.filter((id) => completedSteps.includes(id)).length
+  const total  = ids.length
+  const pct    = Math.round((done / total) * 100)
+  const locked = phase === 'Close' && !completedSteps.includes(5)
+
+  const phaseColor = {
+    Prepare: { bar: '#16a34a', badge: 'bg-emerald-100 text-emerald-700' },
+    Market:  { bar: '#0891b2', badge: 'bg-cyan-100 text-cyan-700' },
+    Close:   { bar: '#7c3aed', badge: 'bg-violet-100 text-violet-700' },
+  }[phase]
+
+  return (
+    <div className={`bg-white rounded-xl border border-slate-200 p-4 flex flex-col gap-3
+                     hover:shadow-md transition-shadow duration-200 ${locked ? 'opacity-50' : ''}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${phaseColor.badge}`}>
+          {phase}
+        </span>
+        <span className="text-xs text-slate-400 font-semibold">{done}/{total}</span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${pct}%`, backgroundColor: phaseColor.bar }}
+        />
+      </div>
+
+      {/* Steps */}
+      <div className="flex flex-col gap-0.5">
+        {phaseSteps.map((s) => (
+          <StepRow
+            key={s.id}
+            step={s}
+            isComplete={completedSteps.includes(s.id)}
+            onClick={onSelectStep}
+          />
+        ))}
+      </div>
+
+      {/* Market Pulse (Market phase only) */}
+      {showStats && (
+        <div className="mt-1 pt-3 border-t border-slate-100">
+          <p className="text-[10px] uppercase tracking-widest text-slate-400 mb-2">Market Pulse</p>
+          <div className="grid grid-cols-2 gap-2">
+            <StatBadge label="Showings" value={showingCount} dim={showingCount === 0} />
+            <StatBadge label="Active Days" value={activeDays} dim={activeDays === 0} />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, priceEstimate, completedSteps = [], onSelectStep }) {
-  const total = steps.length
+  const { showings } = useShowingData()
+  const { showingCount, activeDays } = deriveStats(showings)
 
-  const nextStep = steps.find((s) => !completedSteps.includes(s.id))
-  const allComplete = !nextStep
-  const isStart = completedSteps.length === 0
-
-  const lastAdjustment = priceEstimate?.adjustments?.length
-    ? priceEstimate.adjustments[priceEstimate.adjustments.length - 1]
+  const nextStep   = steps.find((s) => !completedSteps.includes(s.id))
+  const allDone    = !nextStep
+  const savings    = priceEstimate?.currentEstimate
+    ? Math.round(priceEstimate.currentEstimate * 0.03).toLocaleString()
     : null
-  const lastStepTitle = lastAdjustment ? steps.find((s) => s.id === lastAdjustment.step)?.title : null
+  const estimate   = priceEstimate?.currentEstimate
+    ? `$${Math.round(priceEstimate.currentEstimate).toLocaleString()}`
+    : null
+  const svUrl      = streetViewUrl(homeAddress)
+
+  const inMarket   = completedSteps.includes(4) || completedSteps.includes(5)
 
   const handleReset = () => {
-    if (!window.confirm('Are you sure? This will clear all your progress, saved address, and price estimate. This cannot be undone.')) return
-    Object.keys(localStorage)
-      .filter((k) => k.startsWith('fsbo_'))
-      .forEach((k) => localStorage.removeItem(k))
+    if (!window.confirm('Reset all progress? This cannot be undone.')) return
+    Object.keys(localStorage).filter((k) => k.startsWith('fsbo_')).forEach((k) => localStorage.removeItem(k))
     window.location.reload()
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full px-8 text-center">
-      <h1 className="text-4xl font-bold text-gray-900 mb-6 tracking-tight">
-        Let&apos;s sell your home.
-      </h1>
+    <div className="min-h-full bg-slate-950 flex flex-col">
 
-      {/* Savings banner */}
-      {(() => {
-        const estimate = priceEstimate?.currentEstimate
-        const savings = estimate ? Math.round(estimate * 0.03).toLocaleString() : null
-        const estFormatted = estimate ? `$${Math.round(estimate).toLocaleString()}` : null
-        return (
-          <div
-            className="w-full max-w-md rounded-2xl px-6 py-5 mb-8 text-center"
-            style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #86efac' }}
+      {/* ── Sticky Header ── */}
+      <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center gap-4">
+        {/* Property thumbnail */}
+        <div className="w-16 h-10 rounded-lg overflow-hidden shrink-0 bg-slate-800 flex items-center justify-center">
+          {svUrl
+            ? <img src={svUrl} alt="Street view" className="w-full h-full object-cover" />
+            : <span className="text-xl">📍</span>
+          }
+        </div>
+
+        {/* Address */}
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-semibold text-sm truncate">{homeAddress || 'Your Property'}</p>
+          <button
+            onClick={onShowOnboarding}
+            className="text-slate-400 text-xs hover:text-emerald-400 transition-colors underline underline-offset-2"
           >
-            <p className="text-xs font-bold uppercase mb-3 text-green-600" style={{ letterSpacing: '0.12em' }}>
-              Your FSBO Savings
-            </p>
-            {savings ? (
-              <>
-                <p className="text-5xl font-extrabold leading-none mb-2" style={{ color: ACCENT }}>
-                  ${savings}
-                </p>
-                <p className="text-sm text-gray-500">
-                  kept vs. paying a 3% commission on your {estFormatted} estimate
-                </p>
-              </>
-            ) : (
-              <div className="flex flex-col items-center gap-2 py-1">
-                <svg className="w-6 h-6 text-green-300" viewBox="0 0 24 24" fill="currentColor">
-                  <path fillRule="evenodd" d="M12 1a4 4 0 00-4 4v3H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-2V5a4 4 0 00-4-4zm2 7V5a2 2 0 10-4 0v3h4z" clipRule="evenodd" />
-                </svg>
-                <p className="text-base font-medium text-green-700">
-                  Complete Step 1 to reveal your potential savings
-                </p>
-              </div>
-            )}
-          </div>
-        )
-      })()}
+            Change address
+          </button>
+        </div>
 
-      {/* Price estimate banner */}
-      {priceEstimate?.currentEstimate && (
-        <div
-          className="w-full max-w-md rounded-2xl px-6 py-5 mb-8 text-left"
-          style={{ backgroundColor: '#ffffff', border: '1.5px solid #e5e7eb', boxShadow: '0 1px 4px 0 rgba(0,0,0,0.05)' }}
-        >
-          <p className="text-xs font-bold uppercase mb-2 text-gray-400" style={{ letterSpacing: '0.12em' }}>
-            Your Calculated Estimate
-          </p>
-          <p className="text-4xl font-extrabold leading-none text-gray-900">
-            ${priceEstimate.currentEstimate.toLocaleString()}
-          </p>
-          {lastAdjustment && (
-            <p className="text-xs text-gray-400 mt-2">
-              Last updated: Step {lastAdjustment.step}{lastStepTitle ? ` — ${lastStepTitle}` : ''}
+        {/* FSBO Savings */}
+        <div className="text-right shrink-0">
+          <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-0.5">FSBO Savings</p>
+          {savings ? (
+            <p className="text-2xl font-extrabold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">
+              ${savings}
             </p>
+          ) : (
+            <p className="text-sm text-slate-500 italic">Complete Step 1</p>
+          )}
+          {estimate && (
+            <p className="text-[10px] text-slate-500">on {estimate} est.</p>
           )}
         </div>
-      )}
+      </div>
 
-      {/* Address card */}
-      <div
-        className="w-full max-w-md rounded-2xl px-6 py-5 mb-8 text-left"
-        style={{ backgroundColor: '#ffffff', border: '1.5px solid #e5e7eb', boxShadow: '0 1px 4px 0 rgba(0,0,0,0.05)' }}
-      >
-        <div className="flex items-start gap-3">
-          <HomeIcon className="w-7 h-7 flex-shrink-0 mt-0.5" style={{ color: ACCENT }} />
-          <div>
-            <p className="text-xs font-bold uppercase mb-0.5 text-gray-400" style={{ letterSpacing: '0.1em' }}>Your home</p>
-            <p className="font-semibold text-gray-900 text-base">{homeAddress}</p>
+      {/* ── Main Content ── */}
+      <div className="flex-1 p-6 flex flex-col gap-6">
+
+        {/* Phase Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <PhaseCard
+            phase="Prepare"
+            completedSteps={completedSteps}
+            showStats={false}
+            activeDays={0}
+            showingCount={0}
+            onSelectStep={onSelectStep}
+          />
+          <PhaseCard
+            phase="Market"
+            completedSteps={completedSteps}
+            showStats={inMarket}
+            activeDays={activeDays}
+            showingCount={showingCount}
+            onSelectStep={onSelectStep}
+          />
+          <PhaseCard
+            phase="Close"
+            completedSteps={completedSteps}
+            showStats={false}
+            activeDays={0}
+            showingCount={0}
+            onSelectStep={onSelectStep}
+          />
+        </div>
+
+        {/* Hero Next Action */}
+        {allDone ? (
+          <div className="rounded-xl bg-emerald-600 p-6 text-center">
+            <p className="text-3xl font-extrabold text-white mb-1">Your home is ready to list.</p>
+            <p className="text-emerald-100 text-sm">All 9 steps complete — time to go live in Texas.</p>
           </div>
-        </div>
-        <button
-          onClick={onShowOnboarding}
-          className="mt-3 ml-9 text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2"
-        >
-          Change
-        </button>
-      </div>
-
-      {/* Street View placeholder */}
-      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-gray-50 mb-8 overflow-hidden">
-        <div className="flex flex-col items-center justify-center gap-2 py-8 px-6">
-          <span className="text-3xl">📍</span>
-          <p className="text-sm font-medium text-gray-700 text-center">{homeAddress}</p>
-          <p className="text-xs text-gray-400">Street view coming soon</p>
-        </div>
-      </div>
-
-      {/* Next step button */}
-      <div className="w-full max-w-md mb-8">
-        {allComplete ? (
-          <p className="text-center text-lg font-semibold" style={{ color: ACCENT }}>
-            🎉 You&apos;re ready to list your home!
-          </p>
         ) : (
-          <>
+          <div className="rounded-xl bg-slate-900 border border-slate-700 p-6 flex flex-col md:flex-row md:items-center gap-4">
+            <div className="flex-1">
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">Next Action</p>
+              <div className="flex items-center gap-3 mb-2">
+                <span
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                  style={{ backgroundColor: EM, color: '#fff' }}
+                >
+                  {nextStep.id}
+                </span>
+                <p className="text-white text-xl font-bold leading-snug">{nextStep.title}</p>
+              </div>
+              <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">
+                {nextStep.phase}
+              </span>
+            </div>
             <button
               onClick={() => onSelectStep && onSelectStep(nextStep.id)}
-              className="w-full py-4 px-6 rounded-xl text-white font-semibold text-base flex items-center justify-between transition-opacity hover:opacity-90 active:opacity-80"
-              style={{ backgroundColor: ACCENT }}
+              className="shrink-0 px-8 py-3 rounded-xl font-bold text-slate-900 text-base
+                         bg-emerald-400 hover:bg-emerald-300 active:scale-95
+                         transition-all duration-150 shadow-lg shadow-emerald-900/30"
             >
-              <span>
-                {isStart
-                  ? `Start with Step 1: ${nextStep.title}`
-                  : `Next: Step ${nextStep.id} — ${nextStep.title}`}
-              </span>
-              <span className="ml-3">→</span>
+              Start Step {nextStep.id} →
             </button>
-            <p className="text-center text-sm text-gray-400 mt-2">or select any step on the left</p>
-          </>
-        )}
-      </div>
-
-      {/* Progress summary */}
-      <p className="text-gray-500 text-base mb-8">
-        {completedSteps.length} of {total} steps complete
-      </p>
-
-      {/* Phase pills */}
-      <div className="flex items-center gap-3 mb-10">
-        {phases.map((phase, i) => (
-          <div key={phase} className="flex items-center gap-3">
-            <span
-              className="px-4 py-1.5 rounded-full text-sm font-medium border"
-              style={{ borderColor: ACCENT, color: ACCENT }}
-            >
-              {phase}
-            </span>
-            {i < phases.length - 1 && (
-              <svg className="w-4 h-4 text-gray-300" viewBox="0 0 16 16" fill="none" stroke="currentColor">
-                <path d="M6 4l4 4-4 4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
           </div>
-        ))}
+        )}
+
+        {/* Footer */}
+        <div className="flex justify-center pt-2">
+          <button onClick={handleReset} className="text-xs text-slate-700 hover:text-red-400 transition-colors">
+            ↺ Reset all data
+          </button>
+        </div>
       </div>
-
-      <p className="text-gray-400 text-sm">
-        Select a step on the left to get started
-      </p>
-
-      <button
-        onClick={handleReset}
-        className="mt-8 text-xs text-red-300 hover:text-red-500 transition-colors"
-      >
-        ↺ Reset all data
-      </button>
     </div>
   )
 }
