@@ -145,5 +145,142 @@ function PhaseCard({ phase, completedSteps, showStats, activeDays, showingCount,
   )
 }
 
-// ─── Stage 2 (default export) placeholder — replaced in next message ─────────
-export default function WelcomeScreen() { return null }
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, priceEstimate, completedSteps = [], onSelectStep }) {
+  const { showings } = useShowingData()
+  const { showingCount, activeDays } = deriveStats(showings)
+
+  const nextStep   = steps.find((s) => !completedSteps.includes(s.id))
+  const allDone    = !nextStep
+  const savings    = priceEstimate?.currentEstimate
+    ? Math.round(priceEstimate.currentEstimate * 0.03).toLocaleString()
+    : null
+  const estimate   = priceEstimate?.currentEstimate
+    ? `$${Math.round(priceEstimate.currentEstimate).toLocaleString()}`
+    : null
+  const svUrl      = streetViewUrl(homeAddress)
+
+  const inMarket   = completedSteps.includes(4) || completedSteps.includes(5)
+
+  const handleReset = () => {
+    if (!window.confirm('Reset all progress? This cannot be undone.')) return
+    Object.keys(localStorage).filter((k) => k.startsWith('fsbo_')).forEach((k) => localStorage.removeItem(k))
+    window.location.reload()
+  }
+
+  return (
+    <div className="min-h-full bg-slate-950 flex flex-col">
+
+      {/* ── Sticky Header ── */}
+      <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center gap-4">
+        {/* Property thumbnail */}
+        <div className="w-16 h-10 rounded-lg overflow-hidden shrink-0 bg-slate-800 flex items-center justify-center">
+          {svUrl
+            ? <img src={svUrl} alt="Street view" className="w-full h-full object-cover" />
+            : <span className="text-xl">📍</span>
+          }
+        </div>
+
+        {/* Address */}
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-semibold text-sm truncate">{homeAddress || 'Your Property'}</p>
+          <button
+            onClick={onShowOnboarding}
+            className="text-slate-400 text-xs hover:text-emerald-400 transition-colors underline underline-offset-2"
+          >
+            Change address
+          </button>
+        </div>
+
+        {/* FSBO Savings */}
+        <div className="text-right shrink-0">
+          <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-0.5">FSBO Savings</p>
+          {savings ? (
+            <p className="text-2xl font-extrabold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">
+              ${savings}
+            </p>
+          ) : (
+            <p className="text-sm text-slate-500 italic">Complete Step 1</p>
+          )}
+          {estimate && (
+            <p className="text-[10px] text-slate-500">on {estimate} est.</p>
+          )}
+        </div>
+      </div>
+
+      {/* ── Main Content ── */}
+      <div className="flex-1 p-6 flex flex-col gap-6">
+
+        {/* Phase Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <PhaseCard
+            phase="Prepare"
+            completedSteps={completedSteps}
+            showStats={false}
+            activeDays={0}
+            showingCount={0}
+            onSelectStep={onSelectStep}
+          />
+          <PhaseCard
+            phase="Market"
+            completedSteps={completedSteps}
+            showStats={inMarket}
+            activeDays={activeDays}
+            showingCount={showingCount}
+            onSelectStep={onSelectStep}
+          />
+          <PhaseCard
+            phase="Close"
+            completedSteps={completedSteps}
+            showStats={false}
+            activeDays={0}
+            showingCount={0}
+            onSelectStep={onSelectStep}
+          />
+        </div>
+
+        {/* Hero Next Action */}
+        {allDone ? (
+          <div className="rounded-xl bg-emerald-600 p-6 text-center">
+            <p className="text-3xl font-extrabold text-white mb-1">Your home is ready to list.</p>
+            <p className="text-emerald-100 text-sm">All 9 steps complete — time to go live in Texas.</p>
+          </div>
+        ) : (
+          <div className="rounded-xl bg-slate-900 border border-slate-700 p-6 flex flex-col md:flex-row md:items-center gap-4">
+            <div className="flex-1">
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">Next Action</p>
+              <div className="flex items-center gap-3 mb-2">
+                <span
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                  style={{ backgroundColor: EM, color: '#fff' }}
+                >
+                  {nextStep.id}
+                </span>
+                <p className="text-white text-xl font-bold leading-snug">{nextStep.title}</p>
+              </div>
+              <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">
+                {nextStep.phase}
+              </span>
+            </div>
+            <button
+              onClick={() => onSelectStep && onSelectStep(nextStep.id)}
+              className="shrink-0 px-8 py-3 rounded-xl font-bold text-slate-900 text-base
+                         bg-emerald-400 hover:bg-emerald-300 active:scale-95
+                         transition-all duration-150 shadow-lg shadow-emerald-900/30"
+            >
+              Start Step {nextStep.id} →
+            </button>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="flex justify-center pt-2">
+          <button onClick={handleReset} className="text-xs text-slate-700 hover:text-red-400 transition-colors">
+            ↺ Reset all data
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
