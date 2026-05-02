@@ -60,7 +60,6 @@ function StepRow({ step, isComplete, onClick }) {
       >
         {isComplete ? '✓' : step.id}
       </span>
-      {/* Refinement: incomplete steps use text-slate-900 for high contrast */}
       <span className={`text-xs leading-snug ${isComplete ? 'text-slate-400 line-through' : 'text-slate-900 font-medium'}`}>
         {step.title}
       </span>
@@ -85,6 +84,7 @@ function PhaseCard({ phase, completedSteps, showStats, activeDays, showingCount,
   const done       = ids.filter((id) => completedSteps.includes(id)).length
   const total      = ids.length
   const pct        = Math.round((done / total) * 100)
+
   const phaseColor = {
     Prepare: { bar: '#16a34a', badge: 'bg-emerald-100 text-emerald-700' },
     Market:  { bar: '#0891b2', badge: 'bg-cyan-100 text-cyan-700' },
@@ -128,6 +128,44 @@ function PhaseCard({ phase, completedSteps, showStats, activeDays, showingCount,
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function HeroCard({ allDone, nextStep, onSelectStep }) {
+  if (allDone) {
+    return (
+      <div className="rounded-xl bg-emerald-600 p-6 text-center">
+        <p className="text-3xl font-extrabold text-white mb-1">Your home is ready to list.</p>
+        <p className="text-emerald-100 text-sm">All 9 steps complete — time to go live in Texas.</p>
+      </div>
+    )
+  }
+  return (
+    <div className="rounded-xl bg-slate-900 border border-slate-700 p-6 flex flex-col md:flex-row md:items-center gap-4">
+      <div className="flex-1">
+        <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">Next Action</p>
+        <div className="flex items-center gap-3 mb-2">
+          <span
+            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+            style={{ backgroundColor: EM, color: '#fff' }}
+          >
+            {nextStep.id}
+          </span>
+          <p className="text-white text-xl font-bold leading-snug">{nextStep.title}</p>
+        </div>
+        <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">
+          {nextStep.phase}
+        </span>
+      </div>
+      <button
+        onClick={() => onSelectStep && onSelectStep(nextStep.id)}
+        className="shrink-0 px-8 py-3 rounded-xl font-bold text-slate-900 text-base
+                   bg-emerald-400 hover:bg-emerald-300 active:scale-95
+                   transition-all duration-150 shadow-lg shadow-emerald-900/30"
+      >
+        Start Step {nextStep.id} →
+      </button>
     </div>
   )
 }
@@ -199,8 +237,14 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
       </div>
 
       {/* ── Main Content ── */}
-      <div className="flex-1 p-6 flex flex-col gap-6">
+      <div className="flex-1 p-4 md:p-6 flex flex-col gap-4 md:gap-6 max-w-7xl mx-auto w-full">
 
+        {/* Mobile: Hero first so CTA is the first thing seen */}
+        <div className="md:hidden">
+          <HeroCard allDone={allDone} nextStep={nextStep} onSelectStep={onSelectStep} />
+        </div>
+
+        {/* Phase Cards — full width, 3-col on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <PhaseCard
             phase="Prepare"
@@ -228,42 +272,13 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
           />
         </div>
 
-        {allDone ? (
-          <div className="rounded-xl bg-emerald-600 p-6 text-center">
-            <p className="text-3xl font-extrabold text-white mb-1">Your home is ready to list.</p>
-            <p className="text-emerald-100 text-sm">All 9 steps complete — time to go live in Texas.</p>
-          </div>
-        ) : (
-          <div className="rounded-xl bg-slate-900 border border-slate-700 p-6 flex flex-col md:flex-row md:items-center gap-4">
-            <div className="flex-1">
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">Next Action</p>
-              <div className="flex items-center gap-3 mb-2">
-                <span
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-                  style={{ backgroundColor: EM, color: '#fff' }}
-                >
-                  {nextStep.id}
-                </span>
-                <p className="text-white text-xl font-bold leading-snug">{nextStep.title}</p>
-              </div>
-              <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">
-                {nextStep.phase}
-              </span>
-            </div>
-            <button
-              onClick={() => onSelectStep && onSelectStep(nextStep.id)}
-              className="shrink-0 px-8 py-3 rounded-xl font-bold text-slate-900 text-base
-                         bg-emerald-400 hover:bg-emerald-300 active:scale-95
-                         transition-all duration-150 shadow-lg shadow-emerald-900/30"
-            >
-              Start Step {nextStep.id} →
-            </button>
-          </div>
-        )}
+        {/* Desktop: Hero below cards */}
+        <div className="hidden md:block">
+          <HeroCard allDone={allDone} nextStep={nextStep} onSelectStep={onSelectStep} />
+        </div>
 
-        {/* Refinement: text-slate-400 — subtle but readable */}
-        <div className="flex justify-center pt-2">
-          <button onClick={handleReset} className="text-xs text-slate-400 hover:text-red-400 transition-colors">
+        <div className="flex justify-center pt-1 pb-2">
+          <button onClick={handleReset} className="text-xs text-slate-600 hover:text-red-400 transition-colors">
             ↺ Reset all data
           </button>
         </div>
