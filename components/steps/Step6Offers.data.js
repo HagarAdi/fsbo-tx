@@ -229,6 +229,30 @@ function getRedFlags(offer) {
   return RED_FLAG_CHECKS.filter(r => r.check(offer)).map(r => r.message)
 }
 
+function calcNetProceeds(offer, annualTaxesOverride) {
+  const price = parseFloat(offer?.price) || 0
+  if (!price) return null
+
+  const sellerContrib = parseFloat(offer.sellerContribution) || 0
+  const titlePolicy = price > 100000 ? ((price - 100000) * 0.00494) + 780 : 780
+  const escrow = 600
+  const annualTax = annualTaxesOverride ? parseFloat(annualTaxesOverride) : price * 0.022
+
+  let taxProration = annualTax / 2
+  let hasClosingDate = false
+  if (offer.closingDate) {
+    hasClosingDate = true
+    const closing = new Date(offer.closingDate + 'T00:00:00')
+    const janFirst = new Date(closing.getFullYear(), 0, 1)
+    const daysElapsed = Math.round((closing - janFirst) / 86400000)
+    taxProration = (annualTax / 365) * Math.max(0, daysElapsed)
+  }
+
+  const net = price - sellerContrib - titlePolicy - taxProration - escrow
+
+  return { price, sellerContrib, titlePolicy, taxProration, escrow, net, hasClosingDate }
+}
+
 function loadStep6() {
   try {
     const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
@@ -259,5 +283,5 @@ export {
   ACCENT, PURPLE, DRAWERS, OFFER_TERMS, FINANCING_OPTIONS,
   OFFER_STATUS_OPTIONS, OFFER_STATUS_COLORS, RED_FLAG_CHECKS, TX_TIPS,
   SCORE_BANDS, getScoreBand, makeEmptyOffer, scoreBreakdown, calcScore,
-  getRedFlags, loadStep6, saveStep6, fmtCurrency, fmtDate, inputCls,
+  getRedFlags, calcNetProceeds, loadStep6, saveStep6, fmtCurrency, fmtDate, inputCls,
 }
