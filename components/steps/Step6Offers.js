@@ -16,9 +16,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
   const [expandedOffer, setExpandedOffer] = useState(null)
   const [openTerms, setOpenTerms] = useState({})
   const [offers, setOffers] = useState([])
-  const [proceedsPrice, setProceedsPrice] = useState('')
-  const [proceedsCommission, setProceedsCommission] = useState('2.5')
-  const [proceedsClosingCosts, setProceedsClosingCosts] = useState('3000')
   const [activeTooltip, setActiveTooltip] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [annualTaxes, setAnnualTaxes] = useState('')
@@ -46,11 +43,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
 
   const openTrecDrawer = (info) => setTrecDrawer({ isOpen: true, info })
   const closeTrecDrawer = () => setTrecDrawer(prev => ({ ...prev, isOpen: false }))
-
-  useEffect(() => {
-    const accepted = offers.find(o => o.status === 'Accepted')
-    if (accepted && accepted.price) setProceedsPrice(accepted.price)
-  }, [offers])
 
   const updateOffer = (id, field, value) =>
     setOffers(prev => prev.map(o => o.id === id ? { ...o, [field]: value } : o))
@@ -440,13 +432,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
       <Step6OffersDrawers
         activeDrawer={activeDrawer}
         closeDrawer={closeDrawer}
-        offers={offers}
-        proceedsPrice={proceedsPrice}
-        setProceedsPrice={setProceedsPrice}
-        proceedsCommission={proceedsCommission}
-        setProceedsCommission={setProceedsCommission}
-        proceedsClosingCosts={proceedsClosingCosts}
-        setProceedsClosingCosts={setProceedsClosingCosts}
         openTerms={openTerms}
         toggleTerm={toggleTerm}
         openTrecDrawer={openTrecDrawer}
