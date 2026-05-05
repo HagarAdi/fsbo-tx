@@ -138,10 +138,12 @@ export default function Step6OfferCard({
               <label className="block text-xs font-semibold text-gray-700 mb-1">Offer nickname</label>
               <input type="text" value={offer.nickname} onChange={e => updateOffer(offer.id, 'nickname', e.target.value)} placeholder='e.g. "The Jones Family"' className={inputCls} />
             </div>
+
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">Purchase price ($)</label>
               <input type="number" value={offer.price} onChange={e => updateOffer(offer.id, 'price', e.target.value)} placeholder="e.g. 450000" className={inputCls} />
             </div>
+
             <div>
               <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
                 Seller Contribution to Buyer (Para 12) ($)
@@ -152,38 +154,69 @@ export default function Step6OfferCard({
               )}
               <input type="number" min="0" value={offer.sellerContribution} onChange={e => updateOffer(offer.id, 'sellerContribution', e.target.value)} placeholder="e.g. 5000" className={inputCls} />
             </div>
+
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Financing type</label>
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+                Financing type
+                <TooltipIcon id={`${offer.id}-financing`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+              </label>
+              {activeTooltip === `${offer.id}-financing` && (
+                <Tooltip>Check Paragraph 4 or the Third Party Financing Addendum. (Cash is strongest).</Tooltip>
+              )}
               <select value={offer.financing} onChange={e => updateOffer(offer.id, 'financing', e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
                 {FINANCING_OPTIONS.map(f => <option key={f}>{f}</option>)}
               </select>
             </div>
+
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">Down payment (%)</label>
               <input type="number" min="0" max="100" value={offer.downPayment} onChange={e => updateOffer(offer.id, 'downPayment', e.target.value)} placeholder="e.g. 20" className={inputCls} />
             </div>
+
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Option period (days)</label>
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+                Option period (days)
+                <TooltipIcon id={`${offer.id}-optionDays`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+              </label>
+              {activeTooltip === `${offer.id}-optionDays` && (
+                <Tooltip>The number of days for inspections and backing out. Found in Paragraph 5B.</Tooltip>
+              )}
               <input type="number" min="0" value={offer.optionDays} onChange={e => updateOffer(offer.id, 'optionDays', e.target.value)} placeholder="e.g. 7" className={inputCls} />
             </div>
+
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Option fee ($)</label>
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+                Option fee ($)
+                <TooltipIcon id={`${offer.id}-optionFee`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+              </label>
+              {activeTooltip === `${offer.id}-optionFee` && (
+                <Tooltip>The non-refundable fee for the right to terminate. Found in Paragraph 5B.</Tooltip>
+              )}
               <input type="number" min="0" value={offer.optionFee} onChange={e => updateOffer(offer.id, 'optionFee', e.target.value)} placeholder="e.g. 250" className={inputCls} />
             </div>
+
             <div>
               <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
                 Earnest money ($)
                 <TooltipIcon id={`${offer.id}-earnest`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
               </label>
               {activeTooltip === `${offer.id}-earnest` && (
-                <Tooltip>Found in Paragraph 5. Usually 1% of the purchase price.</Tooltip>
+                <Tooltip>The &apos;good faith&apos; deposit, usually ~1%. Found in Paragraph 5A.</Tooltip>
               )}
               <input type="number" min="0" value={offer.earnestMoney} onChange={e => updateOffer(offer.id, 'earnestMoney', e.target.value)} placeholder="e.g. 4500" className={inputCls} />
             </div>
+
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Closing date</label>
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+                Closing date
+                <TooltipIcon id={`${offer.id}-closingDate`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+              </label>
+              {activeTooltip === `${offer.id}-closingDate` && (
+                <Tooltip>The date you officially get paid and hand over keys. Found in Paragraph 9A.</Tooltip>
+              )}
               <input type="date" value={offer.closingDate} onChange={e => updateOffer(offer.id, 'closingDate', e.target.value)} className={inputCls} />
             </div>
+
             <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-gray-700 mb-1">Notes (optional)</label>
               <input type="text" value={offer.notes} onChange={e => updateOffer(offer.id, 'notes', e.target.value)} placeholder="e.g. Pre-approved, motivated buyer" className={inputCls} />
