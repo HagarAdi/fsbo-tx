@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import TRECDrawer from '../TRECDrawer'
 import Step6OfferCard from './Step6OfferCard'
 import Step6OffersDrawers from './Step6OffersDrawers'
+import Step6NetProceedsSidebar from './Step6NetProceedsSidebar'
 import {
   ACCENT, PURPLE, DRAWERS, FINANCING_OPTIONS,
   OFFER_STATUS_COLORS, TX_TIPS,
@@ -20,6 +21,7 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
   const [proceedsClosingCosts, setProceedsClosingCosts] = useState('3000')
   const [activeTooltip, setActiveTooltip] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [annualTaxes, setAnnualTaxes] = useState('')
 
   useEffect(() => {
     const saved = loadStep6()
@@ -72,6 +74,10 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
   const filledOffers = offers.filter(o => o.price)
   const maxPrice = filledOffers.length > 0 ? Math.max(...filledOffers.map(o => parseFloat(o.price) || 0)) : 0
   const hasAccepted = offers.some(o => o.status === 'Accepted')
+  const bestOffer = offers.find(o => o.status === 'Accepted') ||
+    (filledOffers.length > 0
+      ? filledOffers.reduce((a, b) => (parseFloat(a.price) || 0) >= (parseFloat(b.price) || 0) ? a : b)
+      : null)
 
   const offerScores = offers.reduce((acc, o) => {
     acc[o.id] = calcScore(o, maxPrice)
@@ -363,6 +369,12 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
         {/* RIGHT: sticky sidebar */}
         <aside className="hidden lg:block w-56 shrink-0 pt-8 pr-6">
           <div className="sticky top-8 space-y-6">
+
+            <Step6NetProceedsSidebar
+              offer={bestOffer}
+              annualTaxes={annualTaxes}
+              setAnnualTaxes={setAnnualTaxes}
+            />
 
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Strength Score</p>
