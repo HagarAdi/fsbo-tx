@@ -171,6 +171,7 @@ function makeEmptyOffer(label) {
     nickname: label,
     status: 'Received',
     price: '',
+    sellerContribution: '',
     financing: 'Conventional',
     downPayment: '',
     optionDays: '',
