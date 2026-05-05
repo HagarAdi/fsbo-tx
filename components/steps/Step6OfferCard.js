@@ -140,7 +140,13 @@ export default function Step6OfferCard({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Purchase price ($)</label>
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+                Purchase price ($)
+                <TooltipIcon id={`${offer.id}-price`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+              </label>
+              {activeTooltip === `${offer.id}-price` && (
+                <Tooltip>The total agreed sales price. Found in Paragraph 3C of the TREC contract.</Tooltip>
+              )}
               <input type="number" value={offer.price} onChange={e => updateOffer(offer.id, 'price', e.target.value)} placeholder="e.g. 450000" className={inputCls} />
             </div>
 
@@ -169,7 +175,13 @@ export default function Step6OfferCard({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Down payment (%)</label>
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+                Down payment (%)
+                <TooltipIcon id={`${offer.id}-downPayment`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+              </label>
+              {activeTooltip === `${offer.id}-downPayment` && (
+                <Tooltip>The cash portion of the sales price the buyer pays at closing. Found in Paragraph 3A.</Tooltip>
+              )}
               <input type="number" min="0" max="100" value={offer.downPayment} onChange={e => updateOffer(offer.id, 'downPayment', e.target.value)} placeholder="e.g. 20" className={inputCls} />
             </div>
 
