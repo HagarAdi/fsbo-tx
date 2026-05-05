@@ -60,7 +60,8 @@ export default function Step6NetProceedsSidebar({ offer, annualTaxes, setAnnualT
           >
             {fmtCurrency(String(Math.round(net)))}
           </p>
-          <p className="text-xs text-gray-500 mt-1">before mortgage payoff</p>
+
+          <p className="text-xs text-gray-500 mt-1 leading-snug">Estimated for Williamson County.<br />Does not include mortgage payoff.</p>
         </div>
 
         <div className="divide-y divide-gray-100">

@@ -3,7 +3,6 @@ const PURPLE = '#7c3aed'
 
 const DRAWERS = [
   { id: 'terms',    emoji: '📋', label: 'Offer Terms' },
-  { id: 'proceeds', emoji: '📊', label: 'Net Proceeds' },
   { id: 'counter',  emoji: '💬', label: 'How to Counter' },
   { id: 'decision', emoji: '✅', label: 'Decision Guide' },
 ]
