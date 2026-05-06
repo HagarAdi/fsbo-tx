@@ -6,7 +6,7 @@ import Step6NetProceedsSidebar from './Step6NetProceedsSidebar'
 import {
   ACCENT, PURPLE, DRAWERS, FINANCING_OPTIONS,
   OFFER_STATUS_COLORS, TX_TIPS,
-  makeEmptyOffer, calcScore, scoreBreakdown, getRedFlags,
+  makeEmptyOffer, calcScore, scoreBreakdown, getRedFlags, calcNetProceeds,
   fmtCurrency, fmtDate, loadStep6, saveStep6,
 } from './Step6Offers.data'
 
@@ -81,6 +81,15 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
       label: 'Status',
       type: 'status',
       values: filledOffers.map(o => ({ display: o.status, status: o.status })),
+    },
+    {
+      label: 'Est. Net Proceeds',
+      values: filledOffers.map(o => {
+        const r = calcNetProceeds(o, annualTaxes)
+        const net = r ? Math.round(r.net) : 0
+        return { raw: net, display: r ? fmtCurrency(String(net)) : '—' }
+      }),
+      best: 'max',
     },
     {
       label: 'Purchase Price',
@@ -248,6 +257,7 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                   toggleExpanded={toggleExpanded}
                   activeTooltip={activeTooltip}
                   setActiveTooltip={setActiveTooltip}
+                  annualTaxes={annualTaxes}
                 />
               ))}
             </div>
