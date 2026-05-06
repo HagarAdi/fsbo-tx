@@ -5,7 +5,7 @@ import Step6OffersDrawers from './Step6OffersDrawers'
 import {
   ACCENT, PURPLE, DRAWERS, FINANCING_OPTIONS,
   OFFER_STATUS_COLORS, TX_TIPS,
-  makeEmptyOffer, calcScore, scoreBreakdown, getRedFlags, calcNetProceeds,
+  makeEmptyOffer, calcScore, scoreBreakdown, getScoreReasons, getRedFlags, calcNetProceeds,
   fmtCurrency, fmtDate, loadStep6, saveStep6,
 } from './Step6Offers.data'
 
@@ -127,7 +127,11 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
     {
       label: 'Strength Score',
       type: 'score',
-      values: filledOffers.map(o => ({ raw: offerScores[o.id], display: `${offerScores[o.id]}/100` })),
+      values: filledOffers.map(o => {
+        const bd = scoreBreakdown(o, maxPrice)
+        const reasons = getScoreReasons(bd)
+        return { raw: offerScores[o.id], display: `${offerScores[o.id]}/100`, reasons }
+      }),
       best: 'max',
     },
     {
@@ -243,7 +247,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                   isExpanded={expandedOffer === offer.id}
                   score={offerScores[offer.id]}
                   flags={getRedFlags(offer)}
-                  breakdown={scoreBreakdown(offer, maxPrice)}
                   isHighestPrice={offer.price && parseFloat(offer.price) === maxPrice && filledOffers.length > 1}
                   confirmDelete={confirmDelete}
                   setConfirmDelete={setConfirmDelete}
@@ -262,7 +265,7 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
           {compareRows.length > 0 && (
             <section className="mb-12">
               <h3 className="text-lg font-semibold text-gray-900 mb-1">Side-by-Side Comparison</h3>
-              <p className="text-sm text-gray-500 mb-4">Highlights the best value in each row.</p>
+              <p className="text-xs text-gray-400 mb-4">Green = best value for seller in that row.</p>
               <div className="overflow-x-auto rounded-xl border border-gray-200">
                 <table className="w-full text-sm" style={{ minWidth: `${filledOffers.length * 140 + 140}px` }}>
                   <thead>
@@ -308,10 +311,17 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                                     : { color: '#374151' }
                                 }
                               >
-                                {row.type === 'score' && isWinner ? (
-                                  <span className="flex items-center gap-1.5 flex-wrap">
-                                    <span>{v.display}</span>
-                                    <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap" style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>✓ Strongest</span>
+                                {row.type === 'score' ? (
+                                  <span>
+                                    <span className="flex items-center gap-1.5 flex-wrap">
+                                      <span>{v.display}</span>
+                                      {isWinner && (
+                                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap" style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>✓ Strongest</span>
+                                      )}
+                                    </span>
+                                    {v.reasons?.length > 0 && (
+                                      <p className="text-xs text-gray-400 mt-0.5 leading-snug font-normal">{v.reasons.join(' · ')}</p>
+                                    )}
                                   </span>
                                 ) : v.display}
                               </td>

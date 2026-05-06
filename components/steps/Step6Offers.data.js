@@ -154,10 +154,10 @@ const TX_TIPS = [
 ]
 
 const SCORE_BANDS = [
-  { min: 90, label: 'Exceptional' },
-  { min: 75, label: 'Strong' },
-  { min: 60, label: 'Average' },
-  { min: 0,  label: 'Weak' },
+  { min: 90, label: 'Exceptional', bg: '#dcfce7', text: '#15803d' },
+  { min: 75, label: 'Strong',      bg: '#dcfce7', text: '#16a34a' },
+  { min: 60, label: 'Average',     bg: '#fef3c7', text: '#92400e' },
+  { min: 0,  label: 'Weak',        bg: '#fee2e2', text: '#dc2626' },
 ]
 
 function getScoreBand(score) {
@@ -224,6 +224,28 @@ function calcScore(offer, maxPrice) {
   return Math.min(scoreBreakdown(offer, maxPrice).reduce((s, r) => s + r.points, 0), 100)
 }
 
+function getScoreReasons(breakdown) {
+  const weak = []
+  for (const b of breakdown) {
+    if (b.label === 'Financing type' && b.points < 30) {
+      if (b.points === 0) weak.push('Unknown financing type')
+      else if (b.points === 10) weak.push('FHA/VA adds lender risk')
+      else weak.push('Conventional (not cash)')
+    }
+    if (b.label === 'Down payment' && b.points < 20)
+      weak.push(b.points === 0 ? 'Down payment under 10%' : 'Down payment 10–20%')
+    if (b.label === 'Option period' && b.points < 15)
+      weak.push('Option period gives buyer an exit window')
+    if (b.label === 'Closing speed' && b.points < 10)
+      weak.push(b.points === 0 ? 'Closing date 45+ days out' : 'Closing 31–45 days out')
+    if (b.label === 'Price vs. highest' && b.points < 25)
+      weak.push('Below the highest offer price')
+  }
+  const total = breakdown.reduce((s, b) => s + b.points, 0)
+  if (total >= 90) weak.unshift('Strong overall terms')
+  return weak
+}
+
 function getRedFlags(offer) {
   return RED_FLAG_CHECKS.filter(r => r.check(offer)).map(r => r.message)
 }
@@ -282,5 +304,6 @@ export {
   ACCENT, PURPLE, DRAWERS, OFFER_TERMS, FINANCING_OPTIONS,
   OFFER_STATUS_OPTIONS, OFFER_STATUS_COLORS, RED_FLAG_CHECKS, TX_TIPS,
   SCORE_BANDS, getScoreBand, makeEmptyOffer, scoreBreakdown, calcScore,
-  getRedFlags, calcNetProceeds, loadStep6, saveStep6, fmtCurrency, fmtDate, inputCls,
+  getScoreReasons, getRedFlags, calcNetProceeds, loadStep6, saveStep6,
+  fmtCurrency, fmtDate, inputCls,
 }
