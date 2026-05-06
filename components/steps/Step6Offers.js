@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import TRECDrawer from '../TRECDrawer'
 import Step6OfferCard from './Step6OfferCard'
 import Step6OffersDrawers from './Step6OffersDrawers'
-import Step6NetProceedsSidebar from './Step6NetProceedsSidebar'
 import {
   ACCENT, PURPLE, DRAWERS, FINANCING_OPTIONS,
   OFFER_STATUS_COLORS, TX_TIPS,
@@ -66,10 +65,6 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
   const filledOffers = offers.filter(o => o.price)
   const maxPrice = filledOffers.length > 0 ? Math.max(...filledOffers.map(o => parseFloat(o.price) || 0)) : 0
   const hasAccepted = offers.some(o => o.status === 'Accepted')
-  const bestOffer = offers.find(o => o.status === 'Accepted') ||
-    (filledOffers.length > 0
-      ? filledOffers.reduce((a, b) => (parseFloat(a.price) || 0) >= (parseFloat(b.price) || 0) ? a : b)
-      : null)
 
   const offerScores = offers.reduce((acc, o) => {
     acc[o.id] = calcScore(o, maxPrice)
@@ -372,11 +367,18 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
         <aside className="hidden lg:block w-56 shrink-0 pt-8 pr-6">
           <div className="sticky top-8 space-y-6">
 
-            <Step6NetProceedsSidebar
-              offer={bestOffer}
-              annualTaxes={annualTaxes}
-              setAnnualTaxes={setAnnualTaxes}
-            />
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Annual Taxes</p>
+              <input
+                type="number"
+                min="0"
+                value={annualTaxes}
+                onChange={e => setAnnualTaxes(e.target.value)}
+                placeholder="leave blank → 2.2% est."
+                className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+              />
+              <p className="text-xs text-gray-400 mt-0.5">Used in net check on each offer</p>
+            </div>
 
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Strength Score</p>
