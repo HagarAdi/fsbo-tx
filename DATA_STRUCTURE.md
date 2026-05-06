@@ -78,6 +78,7 @@ Example:
         "nickname": "Smith Family",
         "status": "Received",
         "price": "425000",
+        "sellerContribution": "5000",
         "financing": "Conventional",
         "downPayment": "20",
         "optionDays": "7",

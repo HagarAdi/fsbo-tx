@@ -1,6 +1,6 @@
 import {
   ACCENT, OFFER_STATUS_OPTIONS, OFFER_STATUS_COLORS, FINANCING_OPTIONS,
-  getScoreBand, fmtCurrency, fmtDate, inputCls,
+  getScoreBand, fmtCurrency, fmtDate, inputCls, calcNetProceeds,
 } from './Step6Offers.data'
 
 function TooltipIcon({ id, activeTooltip, setActiveTooltip }) {
@@ -25,7 +25,7 @@ function Tooltip({ children }) {
 export default function Step6OfferCard({
   offer, isExpanded, score, flags, breakdown, isHighestPrice,
   confirmDelete, setConfirmDelete, removeOffer, updateOffer, toggleExpanded,
-  activeTooltip, setActiveTooltip,
+  activeTooltip, setActiveTooltip, annualTaxes,
 }) {
   return (
     <div
@@ -75,6 +75,15 @@ export default function Step6OfferCard({
             <span>{offer.financing}{offer.downPayment ? ` · ${offer.downPayment}% down` : ''}</span>
           )}
           {offer.closingDate && <span>Closing {fmtDate(offer.closingDate)}</span>}
+          {offer.price && (() => {
+            const r = calcNetProceeds(offer, annualTaxes)
+            if (!r) return null
+            return (
+              <span className="text-xs font-semibold" style={{ color: r.net >= 0 ? '#15803d' : '#dc2626' }}>
+                ~{fmtCurrency(String(Math.round(r.net)))} net
+              </span>
+            )
+          })()}
         </div>
 
         {offer.price && (
