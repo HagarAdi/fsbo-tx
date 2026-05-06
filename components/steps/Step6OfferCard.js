@@ -27,46 +27,48 @@ function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
   if (!r) return null
   const isHighPara12 = r.sellerContrib > parseFloat(offer.price) * 0.02
   return (
-    <div className="hidden sm:flex flex-col shrink-0 w-52 rounded-xl border border-gray-100 overflow-hidden self-start">
-      <div className="px-3 py-2.5 text-center" style={{ backgroundColor: '#f0fdf4' }}>
-        <p className="text-lg font-bold leading-none" style={{ color: r.net >= 0 ? '#15803d' : '#dc2626' }}>
-          {fmtCurrency(String(Math.round(r.net)))}
-        </p>
-        <p className="text-xs text-gray-400 mt-0.5">Est. net check</p>
+    <div className="rounded-xl border border-gray-100 overflow-hidden">
+      <div className="flex">
+        <div className="px-4 py-4 flex flex-col items-center justify-center min-w-[120px]" style={{ backgroundColor: '#f0fdf4' }}>
+          <p className="text-xl font-bold leading-none" style={{ color: r.net >= 0 ? '#15803d' : '#dc2626' }}>
+            {fmtCurrency(String(Math.round(r.net)))}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">Est. net check</p>
+        </div>
+        <div className="flex-1 divide-y divide-gray-100">
+          <div className="flex justify-between px-3 py-1.5 text-xs">
+            <span className="text-gray-500">Gross Price</span>
+            <span className="text-gray-800 font-bold tabular-nums">{fmtCurrency(offer.price)}</span>
+          </div>
+          <div className={`flex justify-between px-3 py-1.5 text-xs ${isHighPara12 ? 'bg-red-50' : ''}`}>
+            <span className={isHighPara12 ? 'text-red-700 font-semibold' : 'text-gray-500'}>Para 12</span>
+            <span className={`font-medium tabular-nums ${isHighPara12 ? 'text-red-600' : 'text-gray-700'}`}>
+              {r.sellerContrib > 0 ? `−${fmtCurrency(String(Math.round(r.sellerContrib)))}` : '—'}
+            </span>
+          </div>
+          <div className="flex justify-between px-3 py-1.5 text-xs">
+            <span className="text-gray-500">Title Policy</span>
+            <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(r.titlePolicy)))}</span>
+          </div>
+          <div className="flex justify-between px-3 py-1.5 text-xs">
+            <span className="text-gray-500">Tax{!r.hasClosingDate ? ' (est.)' : ''}</span>
+            <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(r.taxProration)))}</span>
+          </div>
+          <div className="flex justify-between px-3 py-1.5 text-xs">
+            <span className="text-gray-500">Escrow &amp; Rec.</span>
+            <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(r.escrow))}</span>
+          </div>
+        </div>
       </div>
-      <div className="divide-y divide-gray-100">
-        <div className="flex justify-between px-2.5 py-1 text-xs">
-          <span className="text-gray-500">Gross Price</span>
-          <span className="text-gray-800 font-bold tabular-nums">{fmtCurrency(offer.price)}</span>
-        </div>
-        <div className={`flex justify-between px-2.5 py-1 text-xs ${isHighPara12 ? 'bg-red-50' : ''}`}>
-          <span className={isHighPara12 ? 'text-red-700 font-semibold' : 'text-gray-500'}>Para 12</span>
-          <span className={`font-medium tabular-nums ${isHighPara12 ? 'text-red-600' : 'text-gray-700'}`}>
-            {r.sellerContrib > 0 ? `−${fmtCurrency(String(Math.round(r.sellerContrib)))}` : '—'}
-          </span>
-        </div>
-        <div className="flex justify-between px-2.5 py-1 text-xs">
-          <span className="text-gray-500">Title Policy</span>
-          <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(r.titlePolicy)))}</span>
-        </div>
-        <div className="flex justify-between px-2.5 py-1 text-xs">
-          <span className="text-gray-500">Tax{!r.hasClosingDate ? ' (est.)' : ''}</span>
-          <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(r.taxProration)))}</span>
-        </div>
-        <div className="flex justify-between px-2.5 py-1 text-xs">
-          <span className="text-gray-500">Escrow &amp; Rec.</span>
-          <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(r.escrow))}</span>
-        </div>
-      </div>
-      <div className="px-2.5 py-2 border-t border-gray-100">
-        <label className="block text-xs text-gray-400 mb-1">Annual taxes</label>
+      <div className="border-t border-gray-100 px-4 py-2 flex items-center gap-3">
+        <label className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0">Annual taxes</label>
         <input
           type="number"
           min="0"
           value={annualTaxes}
           onChange={e => setAnnualTaxes(e.target.value)}
           placeholder="2.2% est."
-          className="w-full px-2 py-1 rounded border border-gray-200 text-xs text-gray-600 placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-green-500"
+          className="flex-1 min-w-0 px-2 py-1 rounded border border-gray-200 text-xs text-gray-600 placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-green-500"
         />
       </div>
     </div>
@@ -74,136 +76,120 @@ function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
 }
 
 export default function Step6OfferCard({
-  offer, isExpanded, score, flags, breakdown, isHighestPrice,
+  offer, isExpanded, score, flags, isHighestPrice,
   confirmDelete, setConfirmDelete, removeOffer, updateOffer, toggleExpanded,
   activeTooltip, setActiveTooltip, annualTaxes, setAnnualTaxes,
 }) {
+  const band = getScoreBand(score)
+  const netResult = offer.price ? calcNetProceeds(offer, annualTaxes) : null
+
   return (
     <div
       className="rounded-xl border bg-white overflow-hidden"
       style={{ borderColor: isExpanded ? ACCENT : '#e5e7eb' }}
     >
       {/* Collapsed header — always visible */}
-      <div className="px-5 py-4 flex gap-4 items-start">
+      <div className="px-5 py-4">
 
-        {/* LEFT: offer summary */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
-            <div className="flex items-center gap-2 flex-wrap min-w-0">
-              <span className="text-sm font-bold text-gray-900 truncate">
-                {offer.nickname || 'Unnamed Offer'}
+        {/* Row 1: nickname, badges, status buttons */}
+        <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <span className="text-sm font-bold text-gray-900 truncate">
+              {offer.nickname || 'Unnamed Offer'}
+            </span>
+            {isHighestPrice && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>
+                Highest
               </span>
-              {isHighestPrice && (
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>
-                  Highest
-                </span>
-              )}
-            </div>
-            <div className="flex gap-1 flex-shrink-0 flex-wrap">
-              {OFFER_STATUS_OPTIONS.map(s => {
-                const c = OFFER_STATUS_COLORS[s]
-                const active = offer.status === s
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => updateOffer(offer.id, 'status', s)}
-                    className="px-2 py-0.5 rounded-full text-xs font-semibold border transition-colors"
-                    style={active
-                      ? { backgroundColor: c.bg, color: c.text, borderColor: c.bg }
-                      : { backgroundColor: 'white', color: '#9ca3af', borderColor: '#e5e7eb' }
-                    }
-                  >
-                    {s}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 flex-wrap text-sm text-gray-600 mb-3">
+            )}
             {offer.price && (
-              <span className="text-base font-bold text-gray-900">{fmtCurrency(offer.price)}</span>
-            )}
-            {offer.financing && (
-              <span>{offer.financing}{offer.downPayment ? ` · ${offer.downPayment}% down` : ''}</span>
-            )}
-            {offer.closingDate && <span>Closing {fmtDate(offer.closingDate)}</span>}
-            {/* Mobile-only inline net (replaced by panel on sm+) */}
-            {offer.price && (() => {
-              const r = calcNetProceeds(offer, annualTaxes)
-              if (!r) return null
-              return (
-                <span className="text-xs font-semibold sm:hidden" style={{ color: r.net >= 0 ? '#15803d' : '#dc2626' }}>
-                  ~{fmtCurrency(String(Math.round(r.net)))} net
-                </span>
-              )
-            })()}
-          </div>
-
-          {offer.price && (
-            <div className="flex items-center gap-3 mb-2">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-gray-500">Strength</span>
-                  <span className="text-xs font-semibold text-gray-700">{score}/100 — {getScoreBand(score).label}</span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div
-                    className="h-1.5 rounded-full transition-all"
-                    style={{ width: `${score}%`, backgroundColor: ACCENT }}
-                  />
-                </div>
-              </div>
-              {flags.length > 0 && (
-                <span
-                  className="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full cursor-pointer"
-                  style={{ backgroundColor: '#fef3c7', color: '#92400e' }}
-                  onClick={() => toggleExpanded(offer.id)}
-                  title="Click to see flag details"
-                >
-                  ⚠️ {flags.length} Flag{flags.length !== 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between">
-            {confirmDelete === offer.id ? (
-              <span className="flex items-center gap-2 text-xs">
-                <span className="text-gray-500">Remove this offer?</span>
-                <button type="button" onClick={() => removeOffer(offer.id)} className="text-red-500 font-semibold hover:text-red-700 transition-colors">Yes</button>
-                <button type="button" onClick={() => setConfirmDelete(null)} className="text-gray-400 hover:text-gray-600 transition-colors">Cancel</button>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: band.bg, color: band.text }}>
+                {score} — {band.label}
               </span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(offer.id)}
-                className="text-xs text-gray-300 hover:text-red-400 transition-colors"
-              >
-                Remove
-              </button>
             )}
-            <button
-              type="button"
-              onClick={() => toggleExpanded(offer.id)}
-              className="text-xs font-semibold text-gray-400 hover:text-gray-700 transition-colors flex items-center gap-1"
-            >
-              {isExpanded ? 'Collapse ▴' : 'Edit details ▾'}
-            </button>
+          </div>
+          <div className="flex gap-1 flex-shrink-0 flex-wrap">
+            {OFFER_STATUS_OPTIONS.map(s => {
+              const c = OFFER_STATUS_COLORS[s]
+              const active = offer.status === s
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => updateOffer(offer.id, 'status', s)}
+                  className="px-2 py-0.5 rounded-full text-xs font-semibold border transition-colors"
+                  style={active
+                    ? { backgroundColor: c.bg, color: c.text, borderColor: c.bg }
+                    : { backgroundColor: 'white', color: '#9ca3af', borderColor: '#e5e7eb' }
+                  }
+                >
+                  {s}
+                </button>
+              )
+            })}
           </div>
         </div>
 
-        {/* RIGHT: net check mini-card (sm+) */}
-        {offer.price && (
-          <NetCheckPanel offer={offer} annualTaxes={annualTaxes} setAnnualTaxes={setAnnualTaxes} />
-        )}
+        {/* Row 2: price · financing · ~net · flags */}
+        <div className="flex items-center gap-3 flex-wrap text-sm text-gray-600 mb-2">
+          {offer.price && (
+            <span className="font-bold text-gray-900">{fmtCurrency(offer.price)}</span>
+          )}
+          {offer.financing && (
+            <span>{offer.financing}{offer.downPayment ? ` · ${offer.downPayment}% down` : ''}</span>
+          )}
+          {netResult && (
+            <span className="font-semibold text-xs" style={{ color: netResult.net >= 0 ? '#15803d' : '#dc2626' }}>
+              ~{fmtCurrency(String(Math.round(netResult.net)))} net
+            </span>
+          )}
+          {flags.length > 0 && (
+            <span
+              className="text-xs font-semibold px-2 py-0.5 rounded-full cursor-pointer"
+              style={{ backgroundColor: '#fef3c7', color: '#92400e' }}
+              onClick={() => toggleExpanded(offer.id)}
+              title="Click to see flag details"
+            >
+              ⚠️ {flags.length} Flag{flags.length !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
 
+        {/* Row 3: remove / edit */}
+        <div className="flex items-center justify-between">
+          {confirmDelete === offer.id ? (
+            <span className="flex items-center gap-2 text-xs">
+              <span className="text-gray-500">Remove this offer?</span>
+              <button type="button" onClick={() => removeOffer(offer.id)} className="text-red-500 font-semibold hover:text-red-700 transition-colors">Yes</button>
+              <button type="button" onClick={() => setConfirmDelete(null)} className="text-gray-400 hover:text-gray-600 transition-colors">Cancel</button>
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(offer.id)}
+              className="text-xs text-gray-300 hover:text-red-400 transition-colors"
+            >
+              Remove
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => toggleExpanded(offer.id)}
+            className="text-xs font-semibold text-gray-400 hover:text-gray-700 transition-colors flex items-center gap-1"
+          >
+            {isExpanded ? 'Collapse ▴' : 'Edit details ▾'}
+          </button>
+        </div>
       </div>
 
       {/* Expanded form */}
       {isExpanded && (
         <div className="border-t border-gray-100 px-5 py-5 space-y-5">
+
+          {offer.price && (
+            <NetCheckPanel offer={offer} annualTaxes={annualTaxes} setAnnualTaxes={setAnnualTaxes} />
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-gray-700 mb-1">Offer nickname</label>
@@ -305,28 +291,6 @@ export default function Step6OfferCard({
               <input type="text" value={offer.notes} onChange={e => updateOffer(offer.id, 'notes', e.target.value)} placeholder="e.g. Pre-approved, motivated buyer" className={inputCls} />
             </div>
           </div>
-
-          {offer.price && (
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Strength Breakdown</p>
-              <div className="space-y-2">
-                {breakdown.map(b => (
-                  <div key={b.label}>
-                    <div className="flex justify-between text-xs mb-0.5">
-                      <span className="text-gray-600">{b.label}</span>
-                      <span className="text-gray-700 font-medium">{b.points}/{b.max} pts</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-1.5">
-                      <div
-                        className="h-1.5 rounded-full transition-all"
-                        style={{ width: `${(b.points / b.max) * 100}%`, backgroundColor: ACCENT }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {flags.length > 0 && (
             <div className="space-y-2">
