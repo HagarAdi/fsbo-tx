@@ -44,7 +44,16 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
   const closeTrecDrawer = () => setTrecDrawer(prev => ({ ...prev, isOpen: false }))
 
   const updateOffer = (id, field, value) =>
-    setOffers(prev => prev.map(o => o.id === id ? { ...o, [field]: value } : o))
+    setOffers(prev => {
+      if (field === 'status' && value === 'Accepted') {
+        return prev.map(o =>
+          o.id === id
+            ? { ...o, status: 'Accepted' }
+            : { ...o, status: o.status === 'Accepted' ? 'Rejected' : o.status }
+        )
+      }
+      return prev.map(o => o.id === id ? { ...o, [field]: value } : o)
+    })
 
   const addOffer = () => {
     if (offers.length >= 4) return
