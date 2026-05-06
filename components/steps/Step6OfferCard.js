@@ -22,12 +22,12 @@ function Tooltip({ children }) {
   return <p className="mt-1 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded px-3 py-2">{children}</p>
 }
 
-function NetCheckPanel({ offer, annualTaxes }) {
+function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
   const r = calcNetProceeds(offer, annualTaxes)
   if (!r) return null
   const isHighPara12 = r.sellerContrib > parseFloat(offer.price) * 0.02
   return (
-    <div className="hidden sm:flex flex-col shrink-0 w-40 rounded-xl border border-gray-100 overflow-hidden self-start">
+    <div className="hidden sm:flex flex-col shrink-0 w-52 rounded-xl border border-gray-100 overflow-hidden self-start">
       <div className="px-3 py-2.5 text-center" style={{ backgroundColor: '#f0fdf4' }}>
         <p className="text-lg font-bold leading-none" style={{ color: r.net >= 0 ? '#15803d' : '#dc2626' }}>
           {fmtCurrency(String(Math.round(r.net)))}
@@ -35,30 +35,40 @@ function NetCheckPanel({ offer, annualTaxes }) {
         <p className="text-xs text-gray-400 mt-0.5">Est. net check</p>
       </div>
       <div className="divide-y divide-gray-100">
-        {r.sellerContrib > 0 && (
-          <div className={`flex justify-between px-2.5 py-1 text-xs ${isHighPara12 ? 'bg-red-50' : ''}`}>
-            <span className={isHighPara12 ? 'text-red-700 font-semibold' : 'text-gray-500'}>Para 12</span>
-            <span className={`font-medium tabular-nums ${isHighPara12 ? 'text-red-600' : 'text-gray-700'}`}>
-              −{fmtCurrency(String(Math.round(r.sellerContrib)))}
-            </span>
-          </div>
-        )}
         <div className="flex justify-between px-2.5 py-1 text-xs">
-          <span className="text-gray-500">Title</span>
+          <span className="text-gray-500">Gross Price</span>
+          <span className="text-gray-800 font-bold tabular-nums">{fmtCurrency(offer.price)}</span>
+        </div>
+        <div className={`flex justify-between px-2.5 py-1 text-xs ${isHighPara12 ? 'bg-red-50' : ''}`}>
+          <span className={isHighPara12 ? 'text-red-700 font-semibold' : 'text-gray-500'}>Para 12</span>
+          <span className={`font-medium tabular-nums ${isHighPara12 ? 'text-red-600' : 'text-gray-700'}`}>
+            {r.sellerContrib > 0 ? `−${fmtCurrency(String(Math.round(r.sellerContrib)))}` : '—'}
+          </span>
+        </div>
+        <div className="flex justify-between px-2.5 py-1 text-xs">
+          <span className="text-gray-500">Title Policy</span>
           <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(r.titlePolicy)))}</span>
         </div>
         <div className="flex justify-between px-2.5 py-1 text-xs">
-          <span className="text-gray-500">Tax{!r.hasClosingDate ? '*' : ''}</span>
+          <span className="text-gray-500">Tax{!r.hasClosingDate ? ' (est.)' : ''}</span>
           <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(r.taxProration)))}</span>
         </div>
         <div className="flex justify-between px-2.5 py-1 text-xs">
-          <span className="text-gray-500">Escrow</span>
+          <span className="text-gray-500">Escrow &amp; Rec.</span>
           <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(r.escrow))}</span>
         </div>
       </div>
-      {!r.hasClosingDate && (
-        <p className="text-xs text-gray-400 px-2.5 pb-1.5">*tax est. (no closing date)</p>
-      )}
+      <div className="px-2.5 py-2 border-t border-gray-100">
+        <label className="block text-xs text-gray-400 mb-1">Annual taxes</label>
+        <input
+          type="number"
+          min="0"
+          value={annualTaxes}
+          onChange={e => setAnnualTaxes(e.target.value)}
+          placeholder="2.2% est."
+          className="w-full px-2 py-1 rounded border border-gray-200 text-xs text-gray-600 placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-green-500"
+        />
+      </div>
     </div>
   )
 }
@@ -66,7 +76,7 @@ function NetCheckPanel({ offer, annualTaxes }) {
 export default function Step6OfferCard({
   offer, isExpanded, score, flags, breakdown, isHighestPrice,
   confirmDelete, setConfirmDelete, removeOffer, updateOffer, toggleExpanded,
-  activeTooltip, setActiveTooltip, annualTaxes,
+  activeTooltip, setActiveTooltip, annualTaxes, setAnnualTaxes,
 }) {
   return (
     <div
@@ -185,7 +195,9 @@ export default function Step6OfferCard({
         </div>
 
         {/* RIGHT: net check mini-card (sm+) */}
-        {offer.price && <NetCheckPanel offer={offer} annualTaxes={annualTaxes} />}
+        {offer.price && (
+          <NetCheckPanel offer={offer} annualTaxes={annualTaxes} setAnnualTaxes={setAnnualTaxes} />
+        )}
 
       </div>
 

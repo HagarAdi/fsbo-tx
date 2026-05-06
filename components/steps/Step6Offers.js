@@ -143,7 +143,7 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
 
   return (
     <>
-      <div className="flex max-w-4xl">
+      <div className="flex w-full">
 
         {/* LEFT: main content */}
         <div className="flex-1 px-4 py-8 md:px-10 md:py-12 min-w-0">
@@ -253,6 +253,7 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                   activeTooltip={activeTooltip}
                   setActiveTooltip={setActiveTooltip}
                   annualTaxes={annualTaxes}
+                  setAnnualTaxes={setAnnualTaxes}
                 />
               ))}
             </div>
@@ -364,21 +365,8 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
         </div>
 
         {/* RIGHT: sticky sidebar */}
-        <aside className="hidden lg:block w-56 shrink-0 pt-8 pr-6">
+        <aside className="hidden lg:block w-44 shrink-0 pt-8 pr-4">
           <div className="sticky top-8 space-y-6">
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Annual Taxes</p>
-              <input
-                type="number"
-                min="0"
-                value={annualTaxes}
-                onChange={e => setAnnualTaxes(e.target.value)}
-                placeholder="leave blank → 2.2% est."
-                className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-              />
-              <p className="text-xs text-gray-400 mt-0.5">Used in net check on each offer</p>
-            </div>
 
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Strength Score</p>
