@@ -108,26 +108,18 @@ export default function Step6OfferCard({
               </span>
             )}
           </div>
-          <div className="flex gap-1 flex-shrink-0 flex-wrap">
-            {OFFER_STATUS_OPTIONS.map(s => {
-              const c = OFFER_STATUS_COLORS[s]
-              const active = offer.status === s
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => updateOffer(offer.id, 'status', s)}
-                  className="px-2 py-0.5 rounded-full text-xs font-semibold border transition-colors"
-                  style={active
-                    ? { backgroundColor: c.bg, color: c.text, borderColor: c.bg }
-                    : { backgroundColor: 'white', color: '#9ca3af', borderColor: '#e5e7eb' }
-                  }
-                >
-                  {s}
-                </button>
-              )
-            })}
-          </div>
+          <select
+            value={offer.status}
+            onChange={e => updateOffer(offer.id, 'status', e.target.value)}
+            className="px-2 py-1 rounded-lg text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors"
+            style={{
+              backgroundColor: OFFER_STATUS_COLORS[offer.status]?.bg || '#f3f4f6',
+              color: OFFER_STATUS_COLORS[offer.status]?.text || '#6b7280',
+              borderColor: OFFER_STATUS_COLORS[offer.status]?.bg || '#e5e7eb',
+            }}
+          >
+            {OFFER_STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
         </div>
 
         {/* Row 2: price · financing · ~net · flags */}
