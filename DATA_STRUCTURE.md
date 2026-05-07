@@ -69,7 +69,8 @@ Example:
     "virtualTourType": "",
     "showingMethod": "",
     "contacts": [],
-    "showings": []
+    "showings": [],
+    "titleCompany": { "name": "", "escrow": "", "email": "", "phone": "" }
   },
   "step6": {
     "offers": [

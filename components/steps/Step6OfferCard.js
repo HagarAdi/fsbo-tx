@@ -75,16 +75,24 @@ function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
   )
 }
 
+function getTitleCo() {
+  try {
+    const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
+    return all.step5?.titleCompany || null
+  } catch { return null }
+}
+
 export default function Step6OfferCard({
   offer, isExpanded, score, flags, isHighestPrice,
   confirmDelete, setConfirmDelete, removeOffer, updateOffer, toggleExpanded,
-  activeTooltip, setActiveTooltip, annualTaxes, setAnnualTaxes,
+  activeTooltip, setActiveTooltip, annualTaxes, setAnnualTaxes, onSelectStep,
 }) {
   const band = getScoreBand(score)
   const netResult = offer.price ? calcNetProceeds(offer, annualTaxes) : null
   const missingForStep7 = offer.status === 'Accepted'
     ? [!offer.closingDate && 'closing date', !offer.optionDays && 'option days'].filter(Boolean)
     : []
+  const titleCo = isExpanded ? getTitleCo() : null
 
   return (
     <div
@@ -291,6 +299,40 @@ export default function Step6OfferCard({
               <input type="text" value={offer.notes} onChange={e => updateOffer(offer.id, 'notes', e.target.value)} placeholder="e.g. Pre-approved, motivated buyer" className={inputCls} />
             </div>
           </div>
+
+          {/* Escrow Agent — Para 5C */}
+          {titleCo?.name ? (
+            <div className="px-4 py-3 rounded-xl text-sm"
+              style={{ backgroundColor: '#f0fdf4', border: '1px solid #86efac' }}>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Escrow Agent · Para 5C</p>
+              <p className="font-semibold text-gray-900">{titleCo.name}</p>
+              {titleCo.escrow && <p className="text-gray-600 text-xs mt-0.5">{titleCo.escrow}</p>}
+              <div className="flex flex-wrap gap-4 mt-1 text-xs text-gray-500">
+                {titleCo.email && <span>{titleCo.email}</span>}
+                {titleCo.phone && <span>{titleCo.phone}</span>}
+              </div>
+              <button
+                type="button"
+                onClick={() => onSelectStep?.(5)}
+                className="mt-1.5 text-xs font-semibold transition-opacity hover:opacity-80"
+                style={{ color: ACCENT }}
+              >
+                ← Edit in Step 5
+              </button>
+            </div>
+          ) : (
+            <div className="px-4 py-2.5 rounded-xl text-xs text-amber-700"
+              style={{ backgroundColor: '#fffbeb', border: '1px solid #fcd34d' }}>
+              ⚠️ No title company set — earnest money destination (Para 5C) is unknown.{' '}
+              <button
+                type="button"
+                onClick={() => onSelectStep?.(5)}
+                className="font-semibold underline hover:no-underline"
+              >
+                Add one in Step 5
+              </button>
+            </div>
+          )}
 
           {flags.length > 0 && (
             <div className="space-y-2">
