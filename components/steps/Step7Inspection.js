@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import TRECDrawer from '../TRECDrawer'
 import {
   ACCENT, PURPLE, DRAWERS, SDN_ITEMS, SDN_TREC_INFO,
-  TIMELINE, INFO_NOTES, FINDINGS, REQUEST_TYPES, RESPONSE_TYPES, RESPONSE_STYLE,
+  INFO_NOTES, FINDINGS, REQUEST_TYPES, RESPONSE_TYPES, RESPONSE_STYLE,
   PRO_TIPS, VENDORS, makeEmptyRequest, loadStep7, saveStep7, getAcceptedOffer,
   getAcceptedOptionDays, inputCls,
 } from './Step7Inspection.data'
@@ -13,6 +13,11 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
   const [openFindings, setOpenFindings] = useState({})
   const [form, setForm] = useState(makeEmptyRequest())
   const [trecDrawer, setTrecDrawer] = useState({ isOpen: false, info: null })
+
+  const [isLocked, setIsLocked] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return loadStep7().isLocked || false
+  })
 
   const [optionPeriod, setOptionPeriod] = useState(() => {
     if (typeof window === 'undefined') return { startDate: '', endDate: '' }
@@ -59,43 +64,43 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
 
   const acceptedOffer = typeof window !== 'undefined' ? getAcceptedOffer() : null
 
-  const saveAll = (updates) => {
-    saveStep7({
-      optionPeriod: updates.optionPeriod ?? optionPeriod,
-      repairRequests: updates.repairRequests ?? repairRequests,
-      bottomLine: updates.bottomLine ?? bottomLine,
-      contractorNotes: updates.contractorNotes ?? contractorNotes,
-      sdnChecked: updates.sdnChecked ?? sdnChecked,
-    })
-  }
+  const buildSavePayload = (overrides = {}) => ({
+    optionPeriod,
+    repairRequests,
+    bottomLine,
+    contractorNotes,
+    sdnChecked,
+    isLocked,
+    ...overrides,
+  })
 
   const setAndSaveOptionPeriod = (val) => {
     const next = typeof val === 'function' ? val(optionPeriod) : val
     setOptionPeriod(next)
-    saveStep7({ optionPeriod: next, repairRequests, bottomLine, contractorNotes, sdnChecked })
+    saveStep7(buildSavePayload({ optionPeriod: next }))
   }
 
   const setAndSaveRepairRequests = (val) => {
     const next = typeof val === 'function' ? val(repairRequests) : val
     setRepairRequests(next)
-    saveStep7({ optionPeriod, repairRequests: next, bottomLine, contractorNotes, sdnChecked })
+    saveStep7(buildSavePayload({ repairRequests: next }))
   }
 
   const setAndSaveBottomLine = (val) => {
     const next = typeof val === 'function' ? val(bottomLine) : val
     setBottomLine(next)
-    saveStep7({ optionPeriod, repairRequests, bottomLine: next, contractorNotes, sdnChecked })
+    saveStep7(buildSavePayload({ bottomLine: next }))
   }
 
   const setAndSaveContractorNotes = (val) => {
     setContractorNotes(val)
-    saveStep7({ optionPeriod, repairRequests, bottomLine, contractorNotes: val, sdnChecked })
+    saveStep7(buildSavePayload({ contractorNotes: val }))
   }
 
   const setAndSaveSdnChecked = (val) => {
     const next = typeof val === 'function' ? val(sdnChecked) : val
     setSdnChecked(next)
-    saveStep7({ optionPeriod, repairRequests, bottomLine, contractorNotes, sdnChecked: next })
+    saveStep7(buildSavePayload({ sdnChecked: next }))
   }
 
   const closeDrawer = useCallback(() => setActiveDrawer(null), [])
@@ -124,25 +129,43 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
   const maxCreditNum = parseFloat(bottomLine.maxCredit) || 0
   const overCeiling = maxCreditNum > 0 && totalConcessions > maxCreditNum
 
+  const finalizeAmendments = () => {
+    const netCheckResult = acceptedOffer?.price ? calcNetProceeds(acceptedOffer, '') : null
+    const finalNet = netCheckResult ? Math.round(netCheckResult.net - totalConcessions) : null
+    setIsLocked(true)
+    saveStep7(buildSavePayload({ isLocked: true, finalNetProceeds: finalNet }))
+  }
+
+  const unlockAmendments = () => {
+    setIsLocked(false)
+    saveStep7(buildSavePayload({ isLocked: false, finalNetProceeds: null }))
+  }
+
   const { startDate, endDate } = optionPeriod
   let daysRemaining = null
+  let hoursRemaining = null
   let pctElapsed = 0
   let isExpired = false
+  let isLastDayBeforeFive = false
 
   if (startDate && endDate) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const now = new Date()
     const start = new Date(startDate + 'T00:00:00')
-    const end   = new Date(endDate   + 'T00:00:00')
-    const totalDays = Math.round((end - start) / 86400000)
-    const elapsed   = Math.round((today - start) / 86400000)
-    daysRemaining   = Math.round((end - today)   / 86400000)
-    isExpired       = daysRemaining <= 0
-    pctElapsed      = totalDays > 0 ? Math.min(100, Math.max(0, (elapsed / totalDays) * 100)) : 0
+    const endAt5PM = new Date(endDate + 'T17:00:00')
+    const totalMs = endAt5PM - start
+    const elapsedMs = now - start
+    isExpired = now >= endAt5PM
+    pctElapsed = totalMs > 0 ? Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100)) : 0
+
+    if (!isExpired) {
+      const msLeft = endAt5PM - now
+      daysRemaining = Math.floor(msLeft / 86400000)
+      hoursRemaining = Math.floor((msLeft % 86400000) / 3600000)
+      isLastDayBeforeFive = daysRemaining === 0
+    }
   }
 
   const sidebarDaysColor = isExpired ? ACCENT
-    : daysRemaining !== null && daysRemaining <= 1 ? '#dc2626'
     : daysRemaining !== null && daysRemaining <= 5 ? '#ca8a04'
     : ACCENT
 
@@ -253,29 +276,46 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
                     className="h-full rounded-full transition-all"
                     style={{
                       width: `${pctElapsed}%`,
-                      backgroundColor: isExpired ? '#dc2626' : daysRemaining <= 2 ? '#ca8a04' : ACCENT,
+                      backgroundColor: isExpired
+                        ? (isLocked ? ACCENT : '#dc2626')
+                        : isLastDayBeforeFive ? '#ca8a04'
+                        : daysRemaining !== null && daysRemaining <= 2 ? '#ca8a04'
+                        : ACCENT,
                     }}
                   />
                 </div>
                 {isExpired ? (
+                  isLocked ? (
+                    <div className="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold"
+                      style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>
+                      <span>✅ Option period complete — your buyer is committed. Time to close.</span>
+                      <button
+                        type="button"
+                        onClick={() => onSelectStep && onSelectStep(8)}
+                        className="ml-4 px-3 py-1.5 rounded-lg text-xs font-bold text-white flex-shrink-0"
+                        style={{ backgroundColor: ACCENT }}
+                      >
+                        → Step 8
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="px-4 py-3 rounded-xl text-sm font-semibold"
+                      style={{ backgroundColor: '#fee2e2', color: '#dc2626' }}>
+                      ⛔ Option Period has expired. The buyer no longer has an unrestricted right to terminate.
+                    </div>
+                  )
+                ) : isLastDayBeforeFive ? (
                   <div className="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold"
-                    style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>
-                    <span>✅ Option period complete — your buyer is committed. Time to close.</span>
-                    <button
-                      type="button"
-                      onClick={() => onSelectStep && onSelectStep(8)}
-                      className="ml-4 px-3 py-1.5 rounded-lg text-xs font-bold text-white flex-shrink-0"
-                      style={{ backgroundColor: ACCENT }}
-                    >
-                      → Step 8
-                    </button>
+                    style={{ backgroundColor: '#fef9c3', color: '#854d0e' }}>
+                    <span>Option period ends TODAY at 5 PM</span>
+                    <span>{hoursRemaining}h remaining</span>
                   </div>
                 ) : (
                   <div
                     className="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold"
                     style={{
-                      backgroundColor: daysRemaining <= 1 ? '#fee2e2' : daysRemaining <= 5 ? '#fef9c3' : '#f0fdf4',
-                      color: daysRemaining <= 1 ? '#dc2626' : daysRemaining <= 5 ? '#854d0e' : '#15803d',
+                      backgroundColor: daysRemaining <= 2 ? '#fee2e2' : daysRemaining <= 5 ? '#fef9c3' : '#f0fdf4',
+                      color: daysRemaining <= 2 ? '#dc2626' : daysRemaining <= 5 ? '#854d0e' : '#15803d',
                     }}
                   >
                     <span>
@@ -295,133 +335,184 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
           <h3 className="text-lg font-bold text-gray-900 mb-1">Repair &amp; Credit Tracker</h3>
           <p className="text-sm text-gray-500 mb-4">Log each buyer request and decide how to respond.</p>
 
-          <div className="rounded-xl border border-gray-200 bg-white px-5 py-5 mb-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="text"
-                value={form.description}
-                onChange={e => handleFormChange('description', e.target.value)}
-                placeholder="Item description (e.g. HVAC not cooling)"
-                className={inputCls + ' flex-1'}
-              />
-              <select
-                value={form.requestType}
-                onChange={e => handleFormChange('requestType', e.target.value)}
-                className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-              >
-                {REQUEST_TYPES.map(t => <option key={t}>{t}</option>)}
-              </select>
-              <input
-                type="number"
-                min="0"
-                value={form.requestedAmount}
-                onChange={e => handleFormChange('requestedAmount', e.target.value)}
-                placeholder="Amount ($)"
-                className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition w-32"
-              />
-              <button
-                type="button"
-                onClick={addRequest}
-                disabled={!form.description.trim()}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                style={{ backgroundColor: ACCENT }}
-              >
-                + Add
-              </button>
+          {isLocked ? (
+            <div className="rounded-xl px-5 py-6 text-center"
+              style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #86efac' }}>
+              <p className="text-lg font-bold text-green-800 mb-1">🎉 Repair amendments finalized.</p>
+              <p className="text-sm text-green-700 mb-4">Option Period Complete. Moving to Title &amp; Escrow.</p>
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => onSelectStep && onSelectStep(8)}
+                  className="px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: ACCENT }}
+                >
+                  → Go to Step 8
+                </button>
+                <button
+                  type="button"
+                  onClick={unlockAmendments}
+                  className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  Unlock
+                </button>
+              </div>
             </div>
-          </div>
-
-          {repairRequests.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-6">No repair requests logged yet — add one above.</p>
           ) : (
-            <div className="space-y-3 mb-4">
-              {repairRequests.map(r => {
-                return (
-                  <div key={r.id} className="rounded-xl border border-gray-200 bg-white px-5 py-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-2">
-                          <span className="text-sm font-semibold text-gray-900">{r.description}</span>
-                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                            style={{ backgroundColor: '#f1f5f9', color: '#475569' }}>
-                            {r.requestType}
-                          </span>
-                          {r.requestedAmount && (
-                            <span className="text-xs text-gray-500">
-                              ${parseFloat(r.requestedAmount).toLocaleString()} requested
+            <>
+              {overCeiling && (
+                <div className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm mb-4"
+                  style={{ backgroundColor: '#fef9c3', border: '1px solid #fcd34d', color: '#854d0e' }}>
+                  <span className="flex-shrink-0 mt-0.5">⚠️</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-semibold">Ceiling Exceeded: </span>
+                    Current concessions (${totalConcessions.toLocaleString()}) exceed your pre-set limit of ${parseFloat(bottomLine.maxCredit).toLocaleString()}. Consider reviewing your backup offers in Step 6 before agreeing to further terms.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onSelectStep && onSelectStep(6)}
+                    className="text-xs font-semibold flex-shrink-0 underline transition-opacity hover:opacity-80"
+                    style={{ color: '#854d0e' }}
+                  >
+                    ← Step 6
+                  </button>
+                </div>
+              )}
+
+              <div className="rounded-xl border border-gray-200 bg-white px-5 py-5 mb-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    value={form.description}
+                    onChange={e => handleFormChange('description', e.target.value)}
+                    placeholder="Item description (e.g. HVAC not cooling)"
+                    className={inputCls + ' flex-1'}
+                  />
+                  <select
+                    value={form.requestType}
+                    onChange={e => handleFormChange('requestType', e.target.value)}
+                    className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                  >
+                    {REQUEST_TYPES.map(t => <option key={t}>{t}</option>)}
+                  </select>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.requestedAmount}
+                    onChange={e => handleFormChange('requestedAmount', e.target.value)}
+                    placeholder="Amount ($)"
+                    className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition w-32"
+                  />
+                  <button
+                    type="button"
+                    onClick={addRequest}
+                    disabled={!form.description.trim()}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                    style={{ backgroundColor: ACCENT }}
+                  >
+                    + Add
+                  </button>
+                </div>
+              </div>
+
+              {repairRequests.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-6">No repair requests logged yet — add one above.</p>
+              ) : (
+                <div className="space-y-3 mb-4">
+                  {repairRequests.map(r => (
+                    <div key={r.id} className="rounded-xl border border-gray-200 bg-white px-5 py-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-2">
+                            <span className="text-sm font-semibold text-gray-900">{r.description}</span>
+                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                              style={{ backgroundColor: '#f1f5f9', color: '#475569' }}>
+                              {r.requestType}
                             </span>
+                            {r.requestedAmount && (
+                              <span className="text-xs text-gray-500">
+                                ${parseFloat(r.requestedAmount).toLocaleString()} requested
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {RESPONSE_TYPES.map(rt => (
+                              <button
+                                key={rt}
+                                type="button"
+                                onClick={() => updateRequest(r.id, 'response', rt)}
+                                className="px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
+                                style={r.response === rt
+                                  ? { backgroundColor: RESPONSE_STYLE[rt].bg, color: RESPONSE_STYLE[rt].text }
+                                  : { backgroundColor: '#f9fafb', color: '#6b7280' }
+                                }
+                              >
+                                {rt}
+                              </button>
+                            ))}
+                          </div>
+                          {r.response === 'Counter' && (
+                            <div className="flex gap-3 mt-3">
+                              <div className="w-36">
+                                <label className="block text-xs font-semibold text-gray-600 mb-1">Counter amount ($)</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={r.counterAmount}
+                                  onChange={e => updateRequest(r.id, 'counterAmount', e.target.value)}
+                                  placeholder="e.g. 1000"
+                                  className={inputCls}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <label className="block text-xs font-semibold text-gray-600 mb-1">Notes</label>
+                                <input
+                                  type="text"
+                                  value={r.notes}
+                                  onChange={e => updateRequest(r.id, 'notes', e.target.value)}
+                                  placeholder="e.g. Will get 3 quotes first"
+                                  className={inputCls}
+                                />
+                              </div>
+                            </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {RESPONSE_TYPES.map(rt => (
-                            <button
-                              key={rt}
-                              type="button"
-                              onClick={() => updateRequest(r.id, 'response', rt)}
-                              className="px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
-                              style={r.response === rt
-                                ? { backgroundColor: RESPONSE_STYLE[rt].bg, color: RESPONSE_STYLE[rt].text }
-                                : { backgroundColor: '#f9fafb', color: '#6b7280' }
-                              }
-                            >
-                              {rt}
-                            </button>
-                          ))}
-                        </div>
-                        {r.response === 'Counter' && (
-                          <div className="flex gap-3 mt-3">
-                            <div className="w-36">
-                              <label className="block text-xs font-semibold text-gray-600 mb-1">Counter amount ($)</label>
-                              <input
-                                type="number"
-                                min="0"
-                                value={r.counterAmount}
-                                onChange={e => updateRequest(r.id, 'counterAmount', e.target.value)}
-                                placeholder="e.g. 1000"
-                                className={inputCls}
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <label className="block text-xs font-semibold text-gray-600 mb-1">Notes</label>
-                              <input
-                                type="text"
-                                value={r.notes}
-                                onChange={e => updateRequest(r.id, 'notes', e.target.value)}
-                                placeholder="e.g. Will get 3 quotes first"
-                                className={inputCls}
-                              />
-                            </div>
-                          </div>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeRequest(r.id)}
+                          className="flex-shrink-0 text-gray-300 hover:text-red-400 transition-colors mt-0.5"
+                          aria-label="Remove"
+                        >
+                          <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M6 2a1 1 0 00-1 1H3a1 1 0 000 2h10a1 1 0 100-2h-2a1 1 0 00-1-1H6zM4 7a1 1 0 011 1v4a1 1 0 002 0V8a1 1 0 012 0v4a1 1 0 002 0V8a1 1 0 011-1 1 1 0 100-2H4a1 1 0 100 2z" />
+                          </svg>
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeRequest(r.id)}
-                        className="flex-shrink-0 text-gray-300 hover:text-red-400 transition-colors mt-0.5"
-                        aria-label="Remove"
-                      >
-                        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
-                          <path d="M6 2a1 1 0 00-1 1H3a1 1 0 000 2h10a1 1 0 100-2h-2a1 1 0 00-1-1H6zM4 7a1 1 0 011 1v4a1 1 0 002 0V8a1 1 0 012 0v4a1 1 0 002 0V8a1 1 0 011-1 1 1 0 100-2H4a1 1 0 100 2z" />
-                        </svg>
-                      </button>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+                  ))}
+                </div>
+              )}
 
-          {repairRequests.length > 0 && (
-            <div
-              className="flex items-center justify-between px-5 py-3 rounded-xl text-sm font-semibold"
-              style={{ backgroundColor: overCeiling ? '#fef9c3' : '#f0fdf4', color: overCeiling ? '#854d0e' : ACCENT }}
-            >
-              <span>Total Concessions</span>
-              <span>
-                ${totalConcessions.toLocaleString()}
-                {overCeiling && <span className="ml-2 text-xs font-normal">⚠️ Over your ceiling</span>}
-              </span>
-            </div>
+              {repairRequests.length > 0 && (
+                <>
+                  <div
+                    className="flex items-center justify-between px-5 py-3 rounded-xl text-sm font-semibold mb-3"
+                    style={{ backgroundColor: overCeiling ? '#fef9c3' : '#f0fdf4', color: overCeiling ? '#854d0e' : ACCENT }}
+                  >
+                    <span>Total Concessions</span>
+                    <span>${totalConcessions.toLocaleString()}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={finalizeAmendments}
+                    className="w-full px-5 py-3 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: ACCENT }}
+                  >
+                    ✅ Finalize Repair Amendments
+                  </button>
+                </>
+              )}
+            </>
           )}
         </div>
 
@@ -532,6 +623,11 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
                 <div style={{ color: ACCENT }}>
                   <span className="text-3xl">✅</span>
                   <p className="text-xs text-gray-500 mt-1">Option expired</p>
+                </div>
+              ) : isLastDayBeforeFive ? (
+                <div>
+                  <span className="text-2xl font-bold" style={{ color: '#ca8a04' }}>Today</span>
+                  <p className="text-xs text-gray-500 mt-1">{hoursRemaining}h left · 5 PM</p>
                 </div>
               ) : (
                 <div>
@@ -819,7 +915,7 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
+                <div className="flex items-start gap-3 px-4 py-4 rounded-xl text-sm"
                   style={{ backgroundColor: '#fefce8', color: '#713f12' }}>
                   <span className="text-lg flex-shrink-0">💡</span>
                   <p>A closing credit keeps you in control of cost — you don&apos;t manage contractors or worry about quality.</p>

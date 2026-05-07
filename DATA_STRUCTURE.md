@@ -94,7 +94,9 @@ Example:
     "repairRequests": [],
     "bottomLine": { "minPrice": "", "maxCredit": "", "dealBreakers": "" },
     "contractorNotes": "",
-    "sdnChecked": []
+    "sdnChecked": [],
+    "isLocked": false,
+    "finalNetProceeds": null
   },
   "step8": {
     "titleOpened": false,
