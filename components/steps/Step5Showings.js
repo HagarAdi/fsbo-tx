@@ -100,6 +100,14 @@ const TITLE_COMPANIES = [
   { name: 'Independence Title',  coverage: 'Austin & Central TX',        url: 'https://independencetitle.com' },
 ]
 
+const TITLE_TIMELINE = [
+  { period: 'Week 1',      label: 'Title search',                      detail: 'Checks for liens, judgments, ownership disputes on your property' },
+  { period: 'Week 1–2',    label: 'HOA estoppel letter',               detail: 'If you have an HOA, they request a clearance letter (takes 1–2 weeks, costs $200–400)' },
+  { period: 'Week 2–3',    label: 'Lien clearance',                    detail: 'Pays off any liens from your proceeds at closing' },
+  { period: 'Week 3',      label: 'Closing disclosure',                 detail: 'You receive a document showing exact costs and net proceeds 3 days before closing' },
+  { period: 'Closing day', label: 'Deed transfer, funds distribution',  detail: 'You get paid' },
+]
+
 function loadStep5() {
   try {
     const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
@@ -123,6 +131,7 @@ const pillStyle = (active) =>
 
 export default function Step5Showings({ onComplete, isCompleted, onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
+  const [timelineOpen, setTimelineOpen] = useState(false)
 
   const [yardSignPhone, setYardSignPhone]       = useState('')
   const [virtualTourUrl, setVirtualTourUrl]     = useState('')
@@ -384,6 +393,8 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                   ✓ Will appear automatically in your Step 6 offer cards (Para 5C — Escrow Agent)
                 </p>
               )}
+
+              {/* Popular title companies */}
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Popular title companies in Texas</p>
                 <div className="flex flex-wrap gap-2">
@@ -400,6 +411,37 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                     </a>
                   ))}
                 </div>
+              </div>
+
+              {/* Title process timeline */}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setTimelineOpen(o => !o)}
+                  className="w-full flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700 transition-colors"
+                >
+                  <span>What happens after you open title?</span>
+                  <span>{timelineOpen ? '▲' : '▼'}</span>
+                </button>
+                {timelineOpen && (
+                  <div className="mt-3 space-y-2">
+                    {TITLE_TIMELINE.map(({ period, label, detail }, i) => (
+                      <div key={i} className="flex gap-3">
+                        <div
+                          className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white mt-0.5"
+                          style={{ backgroundColor: ACCENT, fontSize: '10px' }}
+                        >
+                          {i + 1}
+                        </div>
+                        <div className="rounded-lg border border-gray-100 px-3 py-2 flex-1">
+                          <p className="text-xs font-bold uppercase tracking-wide mb-0.5 text-gray-400">{period}</p>
+                          <p className="text-xs font-semibold text-gray-800">{label}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{detail}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </section>

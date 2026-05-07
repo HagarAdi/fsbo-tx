@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   ACCENT, PURPLE, DRAWERS,
-  TITLE_COMPANIES, TITLE_TIMELINE, PAYOFF_CARDS, SURVEY_OPTIONS,
+  PAYOFF_CARDS, SURVEY_OPTIONS,
   PRO_TIPS_CLOSE, VENDORS_CLOSE, WIRE_FRAUD_SOURCE,
   UTILITIES, CLOSING_DAY_ITEMS, DOCUMENTS,
   NET_PROCEEDS_FIELDS, CLOSING_DATE_FIELDS,
@@ -16,8 +16,7 @@ function getTitleCo() {
 }
 
 export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
-  const [activeDrawer, setActiveDrawer]   = useState(null)
-  const [timelineOpen, setTimelineOpen]   = useState(false)
+  const [activeDrawer, setActiveDrawer] = useState(null)
 
   const [titleCo] = useState(() => typeof window !== 'undefined' ? getTitleCo() : null)
 
@@ -89,9 +88,9 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
           In Texas, the title company handles everything legal. Your job is to open title immediately, stay organized, and respond quickly.
         </p>
 
-        {/* 4 Action Buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-          {DRAWERS.map(({ id, emoji, label }) => (
+        {/* 3 Action Buttons (Title Setup removed — selection lives in Step 5) */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          {DRAWERS.filter(d => d.id !== 'title').map(({ id, emoji, label }) => (
             <button
               key={id}
               type="button"
@@ -188,10 +187,19 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
           <div className="border-t border-gray-100" />
 
           {/* Payoff */}
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" checked={payoffRequested} onChange={e => setPayoffRequested(e.target.checked)} className="h-4 w-4 rounded border-gray-300 flex-shrink-0" style={{ accentColor: ACCENT }} />
-            <span className={`text-sm font-medium ${payoffRequested ? 'line-through text-gray-400' : 'text-gray-800'}`}>Payoff statement requested from lender</span>
-          </label>
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" checked={payoffRequested} onChange={e => setPayoffRequested(e.target.checked)} className="h-4 w-4 rounded border-gray-300 flex-shrink-0" style={{ accentColor: ACCENT }} />
+              <span className={`text-sm font-medium ${payoffRequested ? 'line-through text-gray-400' : 'text-gray-800'}`}>Payoff statement requested from lender</span>
+            </label>
+            {!payoffRequested && (
+              <div className="ml-7 mt-2 space-y-1.5">
+                {PAYOFF_CARDS.map((card, i) => (
+                  <p key={i} className="text-xs text-gray-500 leading-snug">{card}</p>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="border-t border-gray-100" />
 
@@ -379,7 +387,7 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
         </div>
       </aside>
 
-      {/* ── Drawers ── */}
+      {/* ── Drawers (Doc Prep, Wire Fraud, Closing Day) ── */}
       {activeDrawer && (
         <>
           <div className="fixed inset-0 z-40 bg-black/30" onClick={() => setActiveDrawer(null)} />
@@ -394,70 +402,6 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
             </div>
 
             <div className="overflow-y-auto flex-1 px-5 py-6 space-y-6">
-
-              {/* Title Setup */}
-              {activeDrawer === 'title' && (
-                <>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Title Companies</p>
-                    <div className="space-y-3">
-                      {TITLE_COMPANIES.map(co => (
-                        <div key={co.name} className="rounded-xl border border-gray-200 px-4 py-3 flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-bold text-gray-900">{co.name}</p>
-                            <p className="text-xs text-gray-500">{co.description} · {co.coverage}</p>
-                            <p className="text-xs text-gray-400">⭐ {co.rating}</p>
-                          </div>
-                          <a href={co.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-white" style={{ backgroundColor: PURPLE }}>Quote →</a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => setTimelineOpen(o => !o)}
-                      className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors"
-                    >
-                      <span>Title process timeline</span>
-                      <span>{timelineOpen ? '▲' : '▼'}</span>
-                    </button>
-                    {timelineOpen && (
-                      <div className="mt-3 space-y-2 pl-2">
-                        {TITLE_TIMELINE.map(({ period, label, detail }, i) => (
-                          <div key={i} className="flex gap-3">
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white mt-0.5" style={{ backgroundColor: PURPLE }}>{i + 1}</div>
-                            <div className="rounded-lg border border-gray-200 px-3 py-2 flex-1">
-                              <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: PURPLE }}>{period}</p>
-                              <p className="text-sm font-semibold text-gray-900">{label}</p>
-                              <p className="text-xs text-gray-500 mt-0.5">{detail}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Payoff Statement</p>
-                    <div className="space-y-2">
-                      {PAYOFF_CARDS.map((card, i) => (
-                        <div key={i} className="rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700">{card}</div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Survey Options</p>
-                    <div className="space-y-2 text-sm text-gray-700">
-                      <p><span className="font-semibold">I have a survey</span> — your title company will review it; have it ready.</p>
-                      <p><span className="font-semibold">I need a new survey</span> — budget $400–600; your title company can refer a surveyor.</p>
-                      <p><span className="font-semibold">Not sure</span> — ask your title company; requirements vary by county.</p>
-                    </div>
-                  </div>
-                </>
-              )}
 
               {/* Doc Prep */}
               {activeDrawer === 'docs' && (
