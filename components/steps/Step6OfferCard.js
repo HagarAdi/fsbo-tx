@@ -82,6 +82,9 @@ export default function Step6OfferCard({
 }) {
   const band = getScoreBand(score)
   const netResult = offer.price ? calcNetProceeds(offer, annualTaxes) : null
+  const missingForStep7 = offer.status === 'Accepted'
+    ? [!offer.closingDate && 'closing date', !offer.optionDays && 'option days'].filter(Boolean)
+    : []
 
   return (
     <div
@@ -91,7 +94,7 @@ export default function Step6OfferCard({
       {/* Collapsed header — always visible */}
       <div className="px-5 py-4">
 
-        {/* Row 1: nickname, badges, status buttons */}
+        {/* Row 1: nickname, badges, status dropdown */}
         <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <span className="text-sm font-bold text-gray-900 truncate">
@@ -122,7 +125,7 @@ export default function Step6OfferCard({
           </select>
         </div>
 
-        {/* Row 2: price · financing · ~net · flags */}
+        {/* Row 2: price · financing · ~net · flags · Step 7 warning */}
         <div className="flex items-center gap-3 flex-wrap text-sm text-gray-600 mb-2">
           {offer.price && (
             <span className="font-bold text-gray-900">{fmtCurrency(offer.price)}</span>
@@ -143,6 +146,11 @@ export default function Step6OfferCard({
               title="Click to see flag details"
             >
               ⚠️ {flags.length} Flag{flags.length !== 1 ? 's' : ''}
+            </span>
+          )}
+          {missingForStep7.length > 0 && (
+            <span className="text-xs text-amber-600">
+              ⚠️ Add {missingForStep7.join(' & ')} to unlock Step 7 auto-fill
             </span>
           )}
         </div>

@@ -123,10 +123,16 @@ function saveStep7(data) {
   } catch {}
 }
 
-function getAcceptedOptionDays() {
+function getAcceptedOffer() {
   try {
     const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
-    const accepted = (all.step6?.offers || []).find(o => o.status === 'Accepted')
+    return (all.step6?.offers || []).find(o => o.status === 'Accepted') || null
+  } catch { return null }
+}
+
+function getAcceptedOptionDays() {
+  try {
+    const accepted = getAcceptedOffer()
     return accepted ? (parseInt(accepted.optionDays) || 10) : 10
   } catch { return 10 }
 }
@@ -136,5 +142,6 @@ const inputCls = 'w-full px-3 py-2 rounded-lg border border-gray-200 text-sm tex
 export {
   ACCENT, PURPLE, DRAWERS, SDN_ITEMS, SDN_TREC_INFO, PHASE_RANGES,
   TIMELINE, INFO_NOTES, FINDINGS, REQUEST_TYPES, RESPONSE_TYPES, RESPONSE_STYLE,
-  PRO_TIPS, VENDORS, makeEmptyRequest, loadStep7, saveStep7, getAcceptedOptionDays, inputCls,
+  PRO_TIPS, VENDORS, makeEmptyRequest, loadStep7, saveStep7, getAcceptedOffer,
+  getAcceptedOptionDays, inputCls,
 }

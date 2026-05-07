@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import TRECDrawer from '../TRECDrawer'
 import {
   ACCENT, PURPLE, DRAWERS, SDN_ITEMS, SDN_TREC_INFO, PHASE_RANGES,
   TIMELINE, INFO_NOTES, FINDINGS, REQUEST_TYPES, RESPONSE_TYPES, RESPONSE_STYLE,
-  PRO_TIPS, VENDORS, makeEmptyRequest, loadStep7, saveStep7, getAcceptedOptionDays, inputCls,
+  PRO_TIPS, VENDORS, makeEmptyRequest, loadStep7, saveStep7, getAcceptedOffer,
+  getAcceptedOptionDays, inputCls,
 } from './Step7Inspection.data'
+import { calcNetProceeds, fmtCurrency } from './Step6Offers.data'
 
 export default function Step7Inspection({ onComplete, isCompleted, onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
@@ -15,7 +17,19 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
   const [optionPeriod, setOptionPeriod] = useState(() => {
     if (typeof window === 'undefined') return { startDate: '', endDate: '' }
     const saved = loadStep7().optionPeriod || {}
-    return { startDate: saved.startDate || '', endDate: saved.endDate || '' }
+    const accepted = getAcceptedOffer()
+    const todayStr = new Date().toISOString().slice(0, 10)
+    const defaultStart = accepted ? todayStr : ''
+    let defaultEnd = ''
+    if (accepted && !saved.startDate && accepted.optionDays) {
+      const d = new Date(todayStr + 'T00:00:00')
+      d.setDate(d.getDate() + (parseInt(accepted.optionDays) || 10))
+      defaultEnd = d.toISOString().slice(0, 10)
+    }
+    return {
+      startDate: saved.startDate || defaultStart,
+      endDate: saved.endDate || defaultEnd,
+    }
   })
 
   const [repairRequests, setRepairRequests] = useState(() => {
@@ -43,9 +57,46 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
     return loadStep7().sdnChecked || []
   })
 
-  useEffect(() => {
-    saveStep7({ optionPeriod, repairRequests, bottomLine, contractorNotes, sdnChecked })
-  }, [optionPeriod, repairRequests, bottomLine, contractorNotes, sdnChecked])
+  const acceptedOffer = typeof window !== 'undefined' ? getAcceptedOffer() : null
+
+  const saveAll = (updates) => {
+    saveStep7({
+      optionPeriod: updates.optionPeriod ?? optionPeriod,
+      repairRequests: updates.repairRequests ?? repairRequests,
+      bottomLine: updates.bottomLine ?? bottomLine,
+      contractorNotes: updates.contractorNotes ?? contractorNotes,
+      sdnChecked: updates.sdnChecked ?? sdnChecked,
+    })
+  }
+
+  const setAndSaveOptionPeriod = (val) => {
+    const next = typeof val === 'function' ? val(optionPeriod) : val
+    setOptionPeriod(next)
+    saveStep7({ optionPeriod: next, repairRequests, bottomLine, contractorNotes, sdnChecked })
+  }
+
+  const setAndSaveRepairRequests = (val) => {
+    const next = typeof val === 'function' ? val(repairRequests) : val
+    setRepairRequests(next)
+    saveStep7({ optionPeriod, repairRequests: next, bottomLine, contractorNotes, sdnChecked })
+  }
+
+  const setAndSaveBottomLine = (val) => {
+    const next = typeof val === 'function' ? val(bottomLine) : val
+    setBottomLine(next)
+    saveStep7({ optionPeriod, repairRequests, bottomLine: next, contractorNotes, sdnChecked })
+  }
+
+  const setAndSaveContractorNotes = (val) => {
+    setContractorNotes(val)
+    saveStep7({ optionPeriod, repairRequests, bottomLine, contractorNotes: val, sdnChecked })
+  }
+
+  const setAndSaveSdnChecked = (val) => {
+    const next = typeof val === 'function' ? val(sdnChecked) : val
+    setSdnChecked(next)
+    saveStep7({ optionPeriod, repairRequests, bottomLine, contractorNotes, sdnChecked: next })
+  }
 
   const closeDrawer = useCallback(() => setActiveDrawer(null), [])
 
@@ -53,14 +104,14 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
 
   const addRequest = () => {
     if (!form.description.trim()) return
-    setRepairRequests(prev => [...prev, { ...form, id: Date.now() + Math.random() }])
+    setAndSaveRepairRequests(prev => [...prev, { ...form, id: Date.now() + Math.random() }])
     setForm(makeEmptyRequest())
   }
 
-  const removeRequest = (id) => setRepairRequests(prev => prev.filter(r => r.id !== id))
+  const removeRequest = (id) => setAndSaveRepairRequests(prev => prev.filter(r => r.id !== id))
 
   const updateRequest = (id, field, value) =>
-    setRepairRequests(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r))
+    setAndSaveRepairRequests(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r))
 
   const totalConcessions = repairRequests.reduce((sum, r) => {
     if (r.response === 'Decline') return sum
@@ -73,7 +124,6 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
   const maxCreditNum = parseFloat(bottomLine.maxCredit) || 0
   const overCeiling = maxCreditNum > 0 && totalConcessions > maxCreditNum
 
-  // Progress bar derived values
   const { startDate, endDate } = optionPeriod
   let daysRemaining = null
   let pctElapsed = 0
@@ -103,6 +153,8 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
     : daysRemaining !== null && daysRemaining <= 5 ? '#ca8a04'
     : ACCENT
 
+  const netCheckResult = acceptedOffer?.price ? calcNetProceeds(acceptedOffer, '') : null
+
   return (
     <>
     <div className="flex max-w-4xl">
@@ -123,6 +175,30 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
           The option period is the most critical 5–10 days of your sale. Buyers will find things — every home has issues.
           The goal is to negotiate smartly, not panic.
         </p>
+
+        {/* Locked Contract header */}
+        {acceptedOffer && (
+          <div className="rounded-xl px-5 py-4 mb-8 flex items-center gap-4 flex-wrap"
+            style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #86efac' }}>
+            <span className="text-xl">🔒</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-green-800">
+                Under Contract — {acceptedOffer.nickname || 'Accepted Offer'}
+              </p>
+              <p className="text-xs text-green-700 mt-0.5">
+                {acceptedOffer.price ? `$${parseFloat(acceptedOffer.price).toLocaleString()} · ` : ''}
+                {acceptedOffer.financing || ''}
+                {acceptedOffer.closingDate
+                  ? ` · Closing ${new Date(acceptedOffer.closingDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                  : ''}
+              </p>
+            </div>
+            <button type="button" onClick={() => onSelectStep && onSelectStep(6)}
+              className="text-xs font-semibold text-green-700 hover:text-green-900 transition-colors flex-shrink-0">
+              ← View offer
+            </button>
+          </div>
+        )}
 
         {/* 4 Action Buttons */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
@@ -153,7 +229,7 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
                   value={startDate}
                   onChange={e => {
                     const s = e.target.value
-                    setOptionPeriod(prev => {
+                    setAndSaveOptionPeriod(prev => {
                       let end = prev.endDate
                       if (!end && s) {
                         const d = new Date(s + 'T00:00:00')
@@ -171,7 +247,7 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
                 <input
                   type="date"
                   value={endDate}
-                  onChange={e => setOptionPeriod(prev => ({ ...prev, endDate: e.target.value }))}
+                  onChange={e => setAndSaveOptionPeriod(prev => ({ ...prev, endDate: e.target.value }))}
                   className={inputCls}
                 />
               </div>
@@ -251,7 +327,6 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
           <h3 className="text-lg font-bold text-gray-900 mb-1">Repair &amp; Credit Tracker</h3>
           <p className="text-sm text-gray-500 mb-4">Log each buyer request and decide how to respond.</p>
 
-          {/* Add form */}
           <div className="rounded-xl border border-gray-200 bg-white px-5 py-5 mb-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <input
@@ -288,7 +363,6 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
             </div>
           </div>
 
-          {/* Request list */}
           {repairRequests.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-6">No repair requests logged yet — add one above.</p>
           ) : (
@@ -388,6 +462,63 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
           )}
         </div>
 
+        {/* Updated Net Check */}
+        {netCheckResult && (
+          <div className="mb-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Updated Net Check</h3>
+            <p className="text-sm text-gray-500 mb-4">Repair concessions deducted from your estimated proceeds in real-time.</p>
+            <div className="rounded-xl border border-gray-100 overflow-hidden">
+              <div className="flex">
+                <div className="px-4 py-4 flex flex-col items-center justify-center min-w-[120px]"
+                  style={{ backgroundColor: '#f0fdf4' }}>
+                  {(() => {
+                    const net = Math.round(netCheckResult.net - totalConcessions)
+                    return (
+                      <>
+                        <p className="text-xl font-bold leading-none"
+                          style={{ color: net >= 0 ? '#15803d' : '#dc2626' }}>
+                          {fmtCurrency(String(net))}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">Est. net check</p>
+                      </>
+                    )
+                  })()}
+                </div>
+                <div className="flex-1 divide-y divide-gray-100">
+                  <div className="flex justify-between px-3 py-1.5 text-xs">
+                    <span className="text-gray-500">Gross Price</span>
+                    <span className="text-gray-800 font-bold tabular-nums">{fmtCurrency(acceptedOffer.price)}</span>
+                  </div>
+                  {netCheckResult.sellerContrib > 0 && (
+                    <div className="flex justify-between px-3 py-1.5 text-xs">
+                      <span className="text-gray-500">Para 12</span>
+                      <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(netCheckResult.sellerContrib)))}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between px-3 py-1.5 text-xs">
+                    <span className="text-gray-500">Title Policy</span>
+                    <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(netCheckResult.titlePolicy)))}</span>
+                  </div>
+                  <div className="flex justify-between px-3 py-1.5 text-xs">
+                    <span className="text-gray-500">Tax{!netCheckResult.hasClosingDate ? ' (est.)' : ''}</span>
+                    <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(netCheckResult.taxProration)))}</span>
+                  </div>
+                  <div className="flex justify-between px-3 py-1.5 text-xs">
+                    <span className="text-gray-500">Escrow &amp; Rec.</span>
+                    <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(netCheckResult.escrow))}</span>
+                  </div>
+                  {totalConcessions > 0 && (
+                    <div className="flex justify-between px-3 py-1.5 text-xs bg-amber-50">
+                      <span className="text-amber-700 font-semibold">Repair Concessions</span>
+                      <span className="text-amber-700 font-medium tabular-nums">−{fmtCurrency(String(totalConcessions))}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Footer */}
         <div className="pt-6 border-t border-gray-100">
           {isCompleted ? (
@@ -463,6 +594,14 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
                   ${totalConcessions.toLocaleString()}
                 </span>
               </div>
+              {netCheckResult && (
+                <div className="flex justify-between pt-1 border-t border-gray-100">
+                  <span className="text-gray-600">Est. Net</span>
+                  <span className="font-semibold" style={{ color: '#15803d' }}>
+                    {fmtCurrency(String(Math.round(netCheckResult.net - totalConcessions)))}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -554,7 +693,7 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
                         <input
                           type="checkbox"
                           checked={sdnChecked.includes(i)}
-                          onChange={() => setSdnChecked(prev =>
+                          onChange={() => setAndSaveSdnChecked(prev =>
                             prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]
                           )}
                           className="h-4 w-4 rounded border-gray-300 flex-shrink-0 mt-0.5"
@@ -634,7 +773,7 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
                   <label className="block text-xs font-semibold text-gray-700 mb-1">Contractor Notes</label>
                   <textarea
                     value={contractorNotes}
-                    onChange={e => setContractorNotes(e.target.value)}
+                    onChange={e => setAndSaveContractorNotes(e.target.value)}
                     rows={4}
                     placeholder="e.g. Foundation — Got quote from ABC Structural: $4,200 vs buyer's requested $8,000"
                     className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition resize-none"
@@ -675,20 +814,20 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
                       <label className="block text-xs font-semibold text-gray-700 mb-1">Minimum acceptable price ($)</label>
                       <p className="text-xs text-gray-400 mb-1">The lowest you'll go after all concessions</p>
                       <input type="number" min="0" value={bottomLine.minPrice}
-                        onChange={e => setBottomLine(prev => ({ ...prev, minPrice: e.target.value }))}
+                        onChange={e => setAndSaveBottomLine(prev => ({ ...prev, minPrice: e.target.value }))}
                         placeholder="e.g. 440000" className={inputCls} />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">Max repair credit ceiling ($)</label>
                       <p className="text-xs text-gray-400 mb-1">Your ceiling for total concessions</p>
                       <input type="number" min="0" value={bottomLine.maxCredit}
-                        onChange={e => setBottomLine(prev => ({ ...prev, maxCredit: e.target.value }))}
+                        onChange={e => setAndSaveBottomLine(prev => ({ ...prev, maxCredit: e.target.value }))}
                         placeholder="e.g. 5000" className={inputCls} />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">Deal breakers</label>
                       <input type="text" value={bottomLine.dealBreakers}
-                        onChange={e => setBottomLine(prev => ({ ...prev, dealBreakers: e.target.value }))}
+                        onChange={e => setAndSaveBottomLine(prev => ({ ...prev, dealBreakers: e.target.value }))}
                         placeholder="e.g. Buyer demands full foundation repair" className={inputCls} />
                     </div>
                   </div>
