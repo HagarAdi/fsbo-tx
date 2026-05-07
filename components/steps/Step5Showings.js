@@ -100,12 +100,22 @@ const TITLE_COMPANIES = [
   { name: 'Independence Title',  coverage: 'Austin & Central TX',        url: 'https://independencetitle.com' },
 ]
 
-const TITLE_TIMELINE = [
-  { period: 'Week 1',      label: 'Title search',          detail: "The title company searches for liens, judgments, or ownership disputes on your property" },
-  { period: 'Week 1–2',    label: 'HOA estoppel letter',   detail: "If you have an HOA, they'll need to issue a clearance letter — plan for 1–2 weeks and $200–400" },
-  { period: 'Week 2–3',    label: 'Lien clearance',        detail: "Any existing liens will be paid off from your sale proceeds before you receive the remainder" },
-  { period: 'Week 3',      label: 'Closing disclosure',    detail: "You'll receive a document showing your estimated costs and net proceeds 3 days before closing" },
-  { period: 'Closing day', label: 'Deed transfer & funds', detail: "The deed transfers to the buyer and your net proceeds are wired to you" },
+const TITLE_BENEFITS = [
+  {
+    icon: '🛡️',
+    label: 'Earnest money on day one',
+    detail: 'Having an open escrow lets the buyer deposit funds the moment the contract is signed — satisfying Paragraph 5 immediately and signaling a committed deal.',
+  },
+  {
+    icon: '🔍',
+    label: 'Catch problems before the Option Period clock starts',
+    detail: "A preliminary title search can surface liens, boundary errors, or ownership gaps before the buyer's 10-day inspection window even begins.",
+  },
+  {
+    icon: '✅',
+    label: 'Signal you are a prepared seller',
+    detail: 'Buyer agents notice when a FSBO has an established escrow team. It removes a common objection and speeds up offer negotiations.',
+  },
 ]
 
 function loadStep5() {
@@ -413,30 +423,24 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                 </div>
               </div>
 
-              {/* Title process timeline */}
+              {/* Strategic benefits of choosing title now */}
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => setTimelineOpen(o => !o)}
                   className="w-full flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700 transition-colors"
                 >
-                  <span>What does the title process look like?</span>
+                  <span>Strategic Advantage: Why Choose Title Now?</span>
                   <span>{timelineOpen ? '▲' : '▼'}</span>
                 </button>
                 {timelineOpen && (
-                  <div className="mt-3 space-y-2">
-                    {TITLE_TIMELINE.map(({ period, label, detail }, i) => (
-                      <div key={i} className="flex gap-3">
-                        <div
-                          className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white mt-0.5"
-                          style={{ backgroundColor: ACCENT, fontSize: '10px' }}
-                        >
-                          {i + 1}
-                        </div>
-                        <div className="rounded-lg border border-gray-100 px-3 py-2 flex-1">
-                          <p className="text-xs font-bold uppercase tracking-wide mb-0.5 text-gray-400">{period}</p>
+                  <div className="mt-3 space-y-3">
+                    {TITLE_BENEFITS.map(({ icon, label, detail }, i) => (
+                      <div key={i} className="flex gap-3 rounded-lg border border-gray-100 px-3 py-2">
+                        <span className="text-lg flex-shrink-0">{icon}</span>
+                        <div>
                           <p className="text-xs font-semibold text-gray-800">{label}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{detail}</p>
+                          <p className="text-xs text-gray-500 mt-0.5 leading-snug">{detail}</p>
                         </div>
                       </div>
                     ))}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   ACCENT, PURPLE, DRAWERS,
   PAYOFF_CARDS, SURVEY_OPTIONS,
@@ -7,6 +7,39 @@ import {
   NET_PROCEEDS_FIELDS, CLOSING_DATE_FIELDS,
   loadStep8, saveStep8, daysUntilDate, initNetProceeds, initClosingDates, inputCls,
 } from './Step8Title.data'
+
+const CLOSING_TIMELINE = [
+  {
+    period: 'Week 1',
+    seller: 'Request payoff statement from your lender',
+    title:  'Order title search and open escrow account',
+    buyer:  'Option period begins — 10 days to inspect',
+  },
+  {
+    period: 'Week 1–2',
+    seller: 'Schedule survey if required by the contract',
+    title:  'Send HOA estoppel letter request (if applicable)',
+    buyer:  'Complete inspections; submit any repair requests',
+  },
+  {
+    period: 'Week 2–3',
+    seller: 'Respond to buyer repair requests before Option Period ends',
+    title:  'Clear liens; coordinate payoff with your lender',
+    buyer:  'Lender orders appraisal; loan processing begins',
+  },
+  {
+    period: 'Week 3',
+    seller: 'Review closing disclosure for accuracy',
+    title:  'Prepare and deliver closing disclosure (3 days before closing)',
+    buyer:  'Underwriting review; final loan approval (clear to close)',
+  },
+  {
+    period: 'Closing day',
+    seller: 'Sign documents and hand over keys',
+    title:  'Record deed with county; wire net proceeds to you',
+    buyer:  'Final walkthrough; wire closing funds to escrow',
+  },
+]
 
 function getTitleCo() {
   try {
@@ -17,6 +50,8 @@ function getTitleCo() {
 
 export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
+  const [activeNode, setActiveNode]     = useState(null)
+  const timelinePanelRef                = useRef(null)
 
   const [titleCo] = useState(() => typeof window !== 'undefined' ? getTitleCo() : null)
 
@@ -36,6 +71,12 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
   useEffect(() => {
     saveStep8({ titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, netProceeds, utilitiesChecked })
   }, [titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, netProceeds, utilitiesChecked])
+
+  useEffect(() => {
+    if (activeNode !== null) {
+      timelinePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  }, [activeNode])
 
   const sp    = parseFloat(netProceeds.salePrice)      || 0
   const mp    = parseFloat(netProceeds.mortgagePayoff)  || 0
@@ -88,7 +129,7 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
           In Texas, the title company handles everything legal. Your job is to open title immediately, stay organized, and respond quickly.
         </p>
 
-        {/* 3 Action Buttons (Title Setup removed — selection lives in Step 5) */}
+        {/* 3 Action Buttons */}
         <div className="grid grid-cols-3 gap-3 mb-8">
           {DRAWERS.filter(d => d.id !== 'title').map(({ id, emoji, label }) => (
             <button
@@ -105,6 +146,66 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
             </button>
           ))}
         </div>
+
+        {/* Closing Timeline — swim-lane */}
+        <section className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">Closing Timeline</h3>
+          <p className="text-xs text-gray-500 mb-4">Click a week to see what each party needs to do. Buyer tasks are shown for your awareness only.</p>
+
+          {/* Node rail */}
+          <div className="overflow-x-auto -mx-1 px-1 pb-2">
+            <div className="flex items-center min-w-max">
+              {CLOSING_TIMELINE.map(({ period }, i) => (
+                <div key={i} className="flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setActiveNode(prev => prev === i ? null : i)}
+                    className="flex flex-col items-center gap-1.5 focus:outline-none group"
+                  >
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all group-hover:scale-105"
+                      style={activeNode === i
+                        ? { backgroundColor: ACCENT, borderColor: ACCENT, color: '#fff' }
+                        : { backgroundColor: '#fff', borderColor: '#d1d5db', color: '#6b7280' }}
+                    >
+                      {i + 1}
+                    </div>
+                    <span
+                      className="text-[10px] font-semibold whitespace-nowrap transition-colors"
+                      style={{ color: activeNode === i ? ACCENT : '#9ca3af' }}
+                    >
+                      {period}
+                    </span>
+                  </button>
+                  {i < CLOSING_TIMELINE.length - 1 && (
+                    <div className="w-12 h-0.5 bg-gray-200 mx-1 flex-shrink-0" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Expanded swim-lane panel */}
+          {activeNode !== null && (() => {
+            const { seller, title: titleTask, buyer } = CLOSING_TIMELINE[activeNode]
+            return (
+              <div ref={timelinePanelRef} className="mt-3 rounded-xl border border-gray-100 overflow-hidden text-xs">
+                <div className="flex items-start gap-2 px-4 py-3 bg-green-50 border-b border-gray-100">
+                  <span className="font-bold text-green-700 w-12 flex-shrink-0">You</span>
+                  <span className="text-gray-800">{seller}</span>
+                </div>
+                <div className="flex items-start gap-2 px-4 py-3 bg-sky-50 border-b border-gray-100">
+                  <span className="font-bold text-sky-700 w-12 flex-shrink-0">Title</span>
+                  <span className="text-gray-800">{titleTask}</span>
+                </div>
+                <div className="flex items-start gap-2 px-4 py-3 bg-amber-50">
+                  <span className="font-bold text-amber-700 w-12 flex-shrink-0">Buyer</span>
+                  <span className="text-gray-500 italic">{buyer}</span>
+                </div>
+              </div>
+            )
+          })()}
+        </section>
 
         {/* Setup Block */}
         <div className="rounded-xl border border-gray-200 bg-white px-5 py-5 mb-8 space-y-5">
@@ -236,7 +337,7 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
           </div>
         </div>
 
-        {/* Net Proceeds Calculator — hero */}
+        {/* Net Proceeds Calculator */}
         <section className="mb-8">
           <h3 className="text-xl font-bold text-gray-900 mb-1">Net Proceeds Calculator 💰</h3>
           <p className="text-sm text-gray-500 mb-5">What will you actually walk away with after closing costs?</p>
