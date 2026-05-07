@@ -266,6 +266,7 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
                   setActiveTooltip={setActiveTooltip}
                   annualTaxes={annualTaxes}
                   setAnnualTaxes={setAnnualTaxes}
+                  onSelectStep={onSelectStep}
                 />
               ))}
             </div>

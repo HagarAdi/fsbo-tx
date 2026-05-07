@@ -92,6 +92,8 @@ const CONTACT_STATUS_COLORS = {
   Passed:       { bg: '#f3f4f6', text: '#6b7280' },
 }
 
+const EMPTY_TITLE_CO = { name: '', escrow: '', email: '', phone: '' }
+
 function loadStep5() {
   try {
     const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
@@ -122,6 +124,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
   const [showingMethod, setShowingMethod] = useState('')
   const [contacts, setContacts] = useState([])
   const [showings, setShowings] = useState([])
+  const [titleCompany, setTitleCompany] = useState(EMPTY_TITLE_CO)
 
   const [formOpen, setFormOpen] = useState(false)
   const [form, setForm] = useState({ date: '', time: '', agent: '', status: 'Scheduled', notes: '' })
@@ -137,11 +140,12 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
     setShowingMethod(saved.showingMethod || '')
     setContacts(saved.contacts || [])
     setShowings(saved.showings || [])
+    setTitleCompany(saved.titleCompany || EMPTY_TITLE_CO)
   }, [])
 
   useEffect(() => {
-    saveStep5({ yardSignPhone, virtualTourUrl, virtualTourType, showingMethod, contacts, showings })
-  }, [yardSignPhone, virtualTourUrl, virtualTourType, showingMethod, contacts, showings])
+    saveStep5({ yardSignPhone, virtualTourUrl, virtualTourType, showingMethod, contacts, showings, titleCompany })
+  }, [yardSignPhone, virtualTourUrl, virtualTourType, showingMethod, contacts, showings, titleCompany])
 
   const closeDrawer = useCallback(() => setActiveDrawer(null), [])
 
@@ -322,6 +326,65 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
             )}
           </section>
 
+          {/* Preferred Title Company */}
+          <section className="mb-12">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Preferred Title Company</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              In Texas, the seller pays for the Title Policy and typically chooses the title company.
+              Locking this in now means buyers can send earnest money to the right place immediately
+              after you accept an offer — preventing delays at Step 8.
+            </p>
+            <div className="rounded-xl border border-gray-200 bg-white px-5 py-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Company name</label>
+                  <input
+                    type="text"
+                    value={titleCompany.name}
+                    onChange={e => setTitleCompany(p => ({ ...p, name: e.target.value }))}
+                    placeholder="e.g. Capital Title of Texas"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Escrow officer name</label>
+                  <input
+                    type="text"
+                    value={titleCompany.escrow}
+                    onChange={e => setTitleCompany(p => ({ ...p, escrow: e.target.value }))}
+                    placeholder="e.g. Maria Gonzalez"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={titleCompany.email}
+                    onChange={e => setTitleCompany(p => ({ ...p, email: e.target.value }))}
+                    placeholder="escrow@titleco.com"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    value={titleCompany.phone}
+                    onChange={e => setTitleCompany(p => ({ ...p, phone: e.target.value }))}
+                    placeholder="(512) 555-0100"
+                    className={inputCls}
+                  />
+                </div>
+              </div>
+              {titleCompany.name && (
+                <p className="mt-3 text-xs text-green-700 font-medium">
+                  ✓ Will appear automatically in your Step 6 offer cards (Para 5C — Escrow Agent)
+                </p>
+              )}
+            </div>
+          </section>
+
           {/* Footer */}
           <div className="pt-6 border-t border-gray-100">
             {isCompleted ? (
@@ -403,6 +466,13 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                   <span className="text-gray-500">Method:</span>
                   <span className={showingMethod ? 'text-gray-800 font-medium' : 'text-gray-300'}>
                     {showingMethod ? methodLabel : '—'}
+                  </span>
+                </div>
+                <div className="flex items-start gap-1.5">
+                  <span>🏢</span>
+                  <span className="text-gray-500">Title co:</span>
+                  <span className={titleCompany.name ? 'text-green-600 font-medium' : 'text-gray-300'}>
+                    {titleCompany.name || '—'}
                   </span>
                 </div>
               </div>
