@@ -94,6 +94,12 @@ const CONTACT_STATUS_COLORS = {
 
 const EMPTY_TITLE_CO = { name: '', escrow: '', email: '', phone: '' }
 
+const TITLE_COMPANIES = [
+  { name: 'Republic Title',      coverage: 'Dallas/Fort Worth & Austin', url: 'https://republictitle.com' },
+  { name: 'Chicago Title Texas', coverage: 'All TX counties',            url: 'https://cttexas.com' },
+  { name: 'Independence Title',  coverage: 'Austin & Central TX',        url: 'https://independencetitle.com' },
+]
+
 function loadStep5() {
   try {
     const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
@@ -378,6 +384,23 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                   ✓ Will appear automatically in your Step 6 offer cards (Para 5C — Escrow Agent)
                 </p>
               )}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Popular title companies in Texas</p>
+                <div className="flex flex-wrap gap-2">
+                  {TITLE_COMPANIES.map(co => (
+                    <a
+                      key={co.name}
+                      href={co.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col px-3 py-2 rounded-lg border border-gray-200 hover:border-green-400 transition-colors text-xs"
+                    >
+                      <span className="font-semibold text-gray-800">🏢 {co.name}</span>
+                      <span className="text-gray-500">{co.coverage}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
             </div>
           </section>
 
