@@ -368,7 +368,6 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
           ) : (
             <div className="space-y-3 mb-4">
               {repairRequests.map(r => {
-                const style = RESPONSE_STYLE[r.response] || RESPONSE_STYLE.Accept
                 return (
                   <div key={r.id} className="rounded-xl border border-gray-200 bg-white px-5 py-4">
                     <div className="flex items-start justify-between gap-4">
@@ -400,10 +399,6 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
                               {rt}
                             </button>
                           ))}
-                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                            style={{ backgroundColor: style.bg, color: style.text }}>
-                            {r.response}
-                          </span>
                         </div>
                         {r.response === 'Counter' && (
                           <div className="flex gap-3 mt-3">
