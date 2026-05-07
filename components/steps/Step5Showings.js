@@ -101,11 +101,11 @@ const TITLE_COMPANIES = [
 ]
 
 const TITLE_TIMELINE = [
-  { period: 'Week 1',      label: 'Title search',                      detail: 'Checks for liens, judgments, ownership disputes on your property' },
-  { period: 'Week 1–2',    label: 'HOA estoppel letter',               detail: 'If you have an HOA, they request a clearance letter (takes 1–2 weeks, costs $200–400)' },
-  { period: 'Week 2–3',    label: 'Lien clearance',                    detail: 'Pays off any liens from your proceeds at closing' },
-  { period: 'Week 3',      label: 'Closing disclosure',                 detail: 'You receive a document showing exact costs and net proceeds 3 days before closing' },
-  { period: 'Closing day', label: 'Deed transfer, funds distribution',  detail: 'You get paid' },
+  { period: 'Week 1',      label: 'Title search',          detail: "The title company searches for liens, judgments, or ownership disputes on your property" },
+  { period: 'Week 1–2',    label: 'HOA estoppel letter',   detail: "If you have an HOA, they'll need to issue a clearance letter — plan for 1–2 weeks and $200–400" },
+  { period: 'Week 2–3',    label: 'Lien clearance',        detail: "Any existing liens will be paid off from your sale proceeds before you receive the remainder" },
+  { period: 'Week 3',      label: 'Closing disclosure',    detail: "You'll receive a document showing your estimated costs and net proceeds 3 days before closing" },
+  { period: 'Closing day', label: 'Deed transfer & funds', detail: "The deed transfers to the buyer and your net proceeds are wired to you" },
 ]
 
 function loadStep5() {
@@ -420,7 +420,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                   onClick={() => setTimelineOpen(o => !o)}
                   className="w-full flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700 transition-colors"
                 >
-                  <span>What happens after you open title?</span>
+                  <span>What does the title process look like?</span>
                   <span>{timelineOpen ? '▲' : '▼'}</span>
                 </button>
                 {timelineOpen && (
