@@ -8,9 +8,18 @@ import {
   loadStep8, saveStep8, daysUntilDate, initNetProceeds, initClosingDates, inputCls,
 } from './Step8Title.data'
 
+function getTitleCo() {
+  try {
+    const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
+    return all.step5?.titleCompany || null
+  } catch { return null }
+}
+
 export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
   const [activeDrawer, setActiveDrawer]   = useState(null)
   const [timelineOpen, setTimelineOpen]   = useState(false)
+
+  const [titleCo] = useState(() => typeof window !== 'undefined' ? getTitleCo() : null)
 
   const [titleOpened, setTitleOpened]     = useState(() => typeof window === 'undefined' ? false : (loadStep8().titleOpened || false))
   const [hasHOA, setHasHOA]               = useState(() => { if (typeof window === 'undefined') return null; const s = loadStep8().hasHOA; return s === undefined ? null : s })
@@ -103,15 +112,46 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
 
           {/* Title opened */}
           <div>
-            <label className="flex items-center gap-3 cursor-pointer mb-2">
-              <input type="checkbox" checked={titleOpened} onChange={e => setTitleOpened(e.target.checked)} className="h-4 w-4 rounded border-gray-300 flex-shrink-0" style={{ accentColor: ACCENT }} />
+            <label className="flex items-center gap-3 mb-2" style={{ cursor: titleCo?.name ? 'pointer' : 'not-allowed' }}>
+              <input
+                type="checkbox"
+                checked={titleOpened}
+                disabled={!titleCo?.name}
+                onChange={e => setTitleOpened(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 flex-shrink-0"
+                style={{ accentColor: ACCENT, opacity: titleCo?.name ? 1 : 0.4, cursor: titleCo?.name ? 'pointer' : 'not-allowed' }}
+              />
               <span className={`text-sm font-medium ${titleOpened ? 'line-through text-gray-400' : 'text-gray-800'}`}>Title company contacted / escrow opened</span>
             </label>
-            <div className="flex flex-wrap gap-3 pl-7">
-              {TITLE_COMPANIES.map(co => (
-                <a key={co.name} href={co.url} target="_blank" rel="noopener noreferrer" className="text-xs text-purple-600 hover:underline">🏢 {co.name}</a>
-              ))}
-            </div>
+            {titleCo?.name ? (
+              <div className="mt-2 ml-7 px-3 py-2.5 rounded-xl text-sm" style={{ backgroundColor: '#f0fdf4', border: '1px solid #86efac' }}>
+                <p className="font-semibold text-gray-900 text-xs">{titleCo.name}</p>
+                {titleCo.escrow && <p className="text-gray-600 text-xs mt-0.5">{titleCo.escrow}</p>}
+                <div className="flex flex-wrap gap-4 mt-1 text-xs text-gray-500">
+                  {titleCo.email && <span>{titleCo.email}</span>}
+                  {titleCo.phone && <span>{titleCo.phone}</span>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onSelectStep?.(5)}
+                  className="mt-1 text-xs font-semibold transition-opacity hover:opacity-80"
+                  style={{ color: '#16a34a' }}
+                >
+                  ← Edit in Step 5
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2 ml-7 px-3 py-2 rounded-xl text-xs text-amber-700" style={{ backgroundColor: '#fffbeb', border: '1px solid #fcd34d' }}>
+                ⚠️ No title company selected yet.{' '}
+                <button
+                  type="button"
+                  onClick={() => onSelectStep?.(5)}
+                  className="font-semibold underline"
+                >
+                  Select one in Step 5 →
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="border-t border-gray-100" />
