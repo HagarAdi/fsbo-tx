@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import TRECDrawer from '../TRECDrawer'
 import {
-  ACCENT, PURPLE, DRAWERS, SDN_ITEMS, SDN_TREC_INFO, PHASE_RANGES,
+  ACCENT, PURPLE, DRAWERS, SDN_ITEMS, SDN_TREC_INFO,
   TIMELINE, INFO_NOTES, FINDINGS, REQUEST_TYPES, RESPONSE_TYPES, RESPONSE_STYLE,
   PRO_TIPS, VENDORS, makeEmptyRequest, loadStep7, saveStep7, getAcceptedOffer,
   getAcceptedOptionDays, inputCls,
@@ -127,7 +127,6 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
   const { startDate, endDate } = optionPeriod
   let daysRemaining = null
   let pctElapsed = 0
-  let activePhaseIdx = -1
   let isExpired = false
 
   if (startDate && endDate) {
@@ -140,12 +139,6 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
     daysRemaining   = Math.round((end - today)   / 86400000)
     isExpired       = daysRemaining <= 0
     pctElapsed      = totalDays > 0 ? Math.min(100, Math.max(0, (elapsed / totalDays) * 100)) : 0
-    if (!isExpired) {
-      activePhaseIdx = PHASE_RANGES.findIndex(
-        p => elapsed >= p.startDay && (p.endDay === null || elapsed < p.endDay)
-      )
-      if (activePhaseIdx === -1) activePhaseIdx = PHASE_RANGES.length - 1
-    }
   }
 
   const sidebarDaysColor = isExpired ? ACCENT
@@ -264,31 +257,6 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
                     }}
                   />
                 </div>
-                <div className="flex gap-1.5 flex-wrap mb-4">
-                  {PHASE_RANGES.map((p, i) => (
-                    <span
-                      key={p.label}
-                      className="px-2.5 py-1 rounded-full text-xs font-semibold"
-                      style={
-                        isExpired
-                          ? { backgroundColor: '#f3f4f6', color: '#9ca3af' }
-                          : i === activePhaseIdx
-                          ? { backgroundColor: '#dcfce7', color: '#15803d' }
-                          : i < activePhaseIdx
-                          ? { backgroundColor: '#f3f4f6', color: '#9ca3af' }
-                          : { backgroundColor: '#f9fafb', color: '#6b7280' }
-                      }
-                    >
-                      {p.label}
-                    </span>
-                  ))}
-                  {isExpired && (
-                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold"
-                      style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>
-                      Expired
-                    </span>
-                  )}
-                </div>
                 {isExpired ? (
                   <div className="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold"
                     style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>
@@ -368,7 +336,6 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
           ) : (
             <div className="space-y-3 mb-4">
               {repairRequests.map(r => {
-                const style = RESPONSE_STYLE[r.response] || RESPONSE_STYLE.Accept
                 return (
                   <div key={r.id} className="rounded-xl border border-gray-200 bg-white px-5 py-4">
                     <div className="flex items-start justify-between gap-4">
@@ -400,10 +367,6 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
                               {rt}
                             </button>
                           ))}
-                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                            style={{ backgroundColor: style.bg, color: style.text }}>
-                            {r.response}
-                          </span>
                         </div>
                         {r.response === 'Counter' && (
                           <div className="flex gap-3 mt-3">
