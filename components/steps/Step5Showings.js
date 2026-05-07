@@ -118,19 +118,18 @@ const pillStyle = (active) =>
 export default function Step5Showings({ onComplete, isCompleted, onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
 
-  const [yardSignPhone, setYardSignPhone] = useState('')
-  const [virtualTourUrl, setVirtualTourUrl] = useState('')
-  const [virtualTourType, setVirtualTourType] = useState('')
-  const [showingMethod, setShowingMethod] = useState('')
-  const [contacts, setContacts] = useState([])
-  const [showings, setShowings] = useState([])
-  const [titleCompany, setTitleCompany] = useState(EMPTY_TITLE_CO)
+  const [yardSignPhone, setYardSignPhone]       = useState('')
+  const [virtualTourUrl, setVirtualTourUrl]     = useState('')
+  const [virtualTourType, setVirtualTourType]   = useState('')
+  const [showingMethod, setShowingMethod]       = useState('')
+  const [contacts, setContacts]                 = useState([])
+  const [showings, setShowings]                 = useState([])
+  const [titleCompany, setTitleCompany]         = useState(EMPTY_TITLE_CO)
 
-  const [formOpen, setFormOpen] = useState(false)
-  const [form, setForm] = useState({ date: '', time: '', agent: '', status: 'Scheduled', notes: '' })
-
+  const [formOpen, setFormOpen]               = useState(false)
+  const [form, setForm]                       = useState({ date: '', time: '', agent: '', status: 'Scheduled', notes: '' })
   const [contactFormOpen, setContactFormOpen] = useState(false)
-  const [contactForm, setContactForm] = useState({ name: '', phone: '', email: '', status: 'Interested' })
+  const [contactForm, setContactForm]         = useState({ name: '', phone: '', email: '', status: 'Interested' })
 
   useEffect(() => {
     const saved = loadStep5()
@@ -156,7 +155,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
     return () => document.removeEventListener('keydown', handler)
   }, [activeDrawer, closeDrawer])
 
-  const handleFormChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
+  const handleFormChange        = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
   const handleContactFormChange = (field, value) => setContactForm(prev => ({ ...prev, [field]: value }))
 
   const addShowing = () => {
@@ -174,10 +173,8 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
     setContactFormOpen(false)
   }
 
-  const deleteContact = (id) => setContacts(prev => prev.filter(c => c.id !== id))
-
-  const updateContactStatus = (id, status) =>
-    setContacts(prev => prev.map(c => c.id === id ? { ...c, status } : c))
+  const deleteContact       = (id)         => setContacts(prev => prev.filter(c => c.id !== id))
+  const updateContactStatus = (id, status) => setContacts(prev => prev.map(c => c.id === id ? { ...c, status } : c))
 
   const formatTime = (t) => {
     if (!t) return ''
@@ -195,7 +192,6 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
         {/* LEFT: main content */}
         <div className="flex-1 px-4 py-8 md:px-10 md:py-12 min-w-0">
 
-          {/* Header */}
           <div className="mb-3">
             <span
               className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide"
@@ -424,11 +420,10 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
 
         </div>
 
-        {/* RIGHT: sticky panel */}
+        {/* RIGHT: sticky sidebar */}
         <aside className="hidden lg:block w-52 shrink-0 pt-8 pr-6">
           <div className="sticky top-8 space-y-6">
 
-            {/* Safety Protocol */}
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">🔒 Safety Protocol</p>
               <ol className="space-y-2.5">
@@ -443,7 +438,6 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
               </ol>
             </div>
 
-            {/* Quick Setup */}
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Quick Setup</p>
               <div className="space-y-2 text-xs">
@@ -491,8 +485,6 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
             className="fixed right-0 top-0 h-full z-50 bg-white shadow-2xl overflow-y-auto"
             style={{ width: 'min(420px, calc(100vw - 40px))', transition: 'transform 300ms ease' }}
           >
-
-            {/* Drawer header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <h3 className="text-base font-bold text-gray-900">
                 {DRAWERS.find(d => d.id === activeDrawer)?.emoji}{' '}
@@ -507,7 +499,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
 
             <div className="px-6 py-6 space-y-6">
 
-              {/* ===== YARD SIGN ===== */}
+              {/* YARD SIGN */}
               {activeDrawer === 'yardsign' && (
                 <>
                   <div>
@@ -527,19 +519,11 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                       </div>
                     </div>
                   </div>
-
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1.5">Your phone number for the sign</label>
-                    <input
-                      type="tel"
-                      value={yardSignPhone}
-                      onChange={e => setYardSignPhone(e.target.value)}
-                      placeholder="(512) 555-0123"
-                      className={inputCls}
-                    />
+                    <input type="tel" value={yardSignPhone} onChange={e => setYardSignPhone(e.target.value)} placeholder="(512) 555-0123" className={inputCls} />
                     <p className="text-xs text-gray-400 mt-1">Updates the Quick Setup panel instantly</p>
                   </div>
-
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Placement tips</p>
                     <ul className="space-y-1 text-sm text-gray-600">
@@ -548,12 +532,10 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                       <li className="flex items-start gap-2"><span>•</span> Eye level, not blocked by bushes or parked cars</li>
                     </ul>
                   </div>
-
                   <div className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: '#fffbeb', border: '1px solid #fcd34d' }}>
                     <p className="font-semibold text-amber-800 mb-1">⚠️ HOA Warning</p>
                     <p className="text-amber-700 text-xs">Check your HOA rules before ordering — some restrict sign size, style, or placement.</p>
                   </div>
-
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Where to buy</p>
                     <div className="space-y-2">
@@ -582,42 +564,29 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                 </>
               )}
 
-              {/* ===== VIRTUAL TOUR ===== */}
+              {/* VIRTUAL TOUR */}
               {activeDrawer === 'virtualtour' && (
                 <>
                   <div className="rounded-xl px-4 py-4 text-center" style={{ backgroundColor: '#f0fdf4', border: '1px solid #86efac' }}>
                     <p className="text-2xl font-extrabold text-green-700 mb-1">87%</p>
                     <p className="text-sm text-green-700">more views for listings with a virtual tour <span className="text-xs text-green-500">(NAR)</span></p>
                   </div>
-
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1.5">Your tour URL</label>
-                    <input
-                      type="url"
-                      value={virtualTourUrl}
-                      onChange={e => setVirtualTourUrl(e.target.value)}
-                      placeholder="https://..."
-                      className={inputCls}
-                    />
+                    <input type="url" value={virtualTourUrl} onChange={e => setVirtualTourUrl(e.target.value)} placeholder="https://..." className={inputCls} />
                   </div>
-
                   <div>
                     <p className="text-xs font-semibold text-gray-700 mb-2">Tour type</p>
                     <div className="flex flex-wrap gap-2">
                       {TOUR_TYPE_OPTIONS.map(opt => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setVirtualTourType(opt.id)}
+                        <button key={opt.id} type="button" onClick={() => setVirtualTourType(opt.id)}
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors"
-                          style={pillStyle(virtualTourType === opt.id)}
-                        >
+                          style={pillStyle(virtualTourType === opt.id)}>
                           {opt.label}
                         </button>
                       ))}
                     </div>
                   </div>
-
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Your options</p>
                     <div className="space-y-3">
@@ -625,9 +594,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                         <div key={opt.id} className="rounded-xl border border-gray-200 px-4 py-4">
                           <div className="flex items-center justify-between mb-2">
                             <p className="text-sm font-semibold text-gray-800">{opt.label}</p>
-                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: opt.costBg, color: opt.costColor }}>
-                              {opt.cost}
-                            </span>
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: opt.costBg, color: opt.costColor }}>{opt.cost}</span>
                           </div>
                           <p className="text-xs text-gray-600 mb-2">{opt.description}</p>
                           {opt.link && (
@@ -642,7 +609,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                 </>
               )}
 
-              {/* ===== SHOWING METHOD ===== */}
+              {/* SHOWING METHOD */}
               {activeDrawer === 'method' && (
                 <>
                   <div>
@@ -651,34 +618,19 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                       {SHOWING_METHOD_OPTIONS.map(opt => {
                         const isSelected = showingMethod === opt.id
                         return (
-                          <button
-                            key={opt.id}
-                            type="button"
-                            onClick={() => setShowingMethod(opt.id)}
+                          <button key={opt.id} type="button" onClick={() => setShowingMethod(opt.id)}
                             className="w-full text-left rounded-xl border px-4 py-4 transition-colors hover:bg-gray-50"
-                            style={{ borderColor: isSelected ? ACCENT : '#e5e7eb', backgroundColor: isSelected ? '#f0fdf4' : 'white' }}
-                          >
+                            style={{ borderColor: isSelected ? ACCENT : '#e5e7eb', backgroundColor: isSelected ? '#f0fdf4' : 'white' }}>
                             <div className="flex items-center gap-2 mb-1.5">
-                              <span
-                                className="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center"
-                                style={{ borderColor: isSelected ? ACCENT : '#d1d5db' }}
-                              >
-                                {isSelected && (
-                                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ACCENT }} />
-                                )}
+                              <span className="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center" style={{ borderColor: isSelected ? ACCENT : '#d1d5db' }}>
+                                {isSelected && <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ACCENT }} />}
                               </span>
                               <p className="text-sm font-semibold text-gray-800">{opt.label}</p>
                             </div>
                             <p className="text-xs text-gray-600 ml-6">{opt.description}</p>
                             {opt.link && (
-                              <a
-                                href={opt.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={e => e.stopPropagation()}
-                                className="ml-6 mt-1.5 inline-block text-xs font-semibold hover:underline"
-                                style={{ color: ACCENT }}
-                              >
+                              <a href={opt.link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                                className="ml-6 mt-1.5 inline-block text-xs font-semibold hover:underline" style={{ color: ACCENT }}>
                                 {opt.linkLabel}
                               </a>
                             )}
@@ -687,12 +639,11 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                       })}
                     </div>
                   </div>
-
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">How to handle a showing request</p>
                     <div className="space-y-2">
                       {[
-                        'Get the buyer\'s name, agent name, and preferred date/time',
+                        "Get the buyer's name, agent name, and preferred date/time",
                         'Confirm the appointment 24–48 hours in advance',
                         'Be available but give them space during the tour',
                         'Follow up within 24 hours to ask for feedback',
@@ -709,7 +660,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                 </>
               )}
 
-              {/* ===== BUYER CONTACTS ===== */}
+              {/* BUYER CONTACTS */}
               {activeDrawer === 'buyers' && (
                 <>
                   <div className="flex items-start justify-between">
@@ -717,12 +668,9 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                       <p className="text-sm text-gray-600">Track everyone who&apos;s expressed interest.</p>
                       <p className="text-xs text-gray-400 mt-0.5">Calendar sync coming soon</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setContactFormOpen(o => !o)}
+                    <button type="button" onClick={() => setContactFormOpen(o => !o)}
                       className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                      style={{ backgroundColor: ACCENT }}
-                    >
+                      style={{ backgroundColor: ACCENT }}>
                       {contactFormOpen ? 'Cancel' : '+ Add'}
                     </button>
                   </div>
@@ -745,25 +693,17 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                         <label className="block text-xs font-semibold text-gray-700 mb-1">Status</label>
                         <div className="flex flex-wrap gap-2">
                           {CONTACT_STATUS_OPTIONS.map(s => (
-                            <button
-                              key={s}
-                              type="button"
-                              onClick={() => handleContactFormChange('status', s)}
+                            <button key={s} type="button" onClick={() => handleContactFormChange('status', s)}
                               className="px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors"
-                              style={pillStyle(contactForm.status === s)}
-                            >
+                              style={pillStyle(contactForm.status === s)}>
                               {s}
                             </button>
                           ))}
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={addContact}
-                        disabled={!contactForm.name.trim()}
+                      <button type="button" onClick={addContact} disabled={!contactForm.name.trim()}
                         className="w-full py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{ backgroundColor: ACCENT }}
-                      >
+                        style={{ backgroundColor: ACCENT }}>
                         Save contact
                       </button>
                     </div>
@@ -789,16 +729,12 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                             </div>
                             <div className="flex flex-wrap gap-1.5 mt-2">
                               {CONTACT_STATUS_OPTIONS.map(s => (
-                                <button
-                                  key={s}
-                                  type="button"
-                                  onClick={() => updateContactStatus(c.id, s)}
+                                <button key={s} type="button" onClick={() => updateContactStatus(c.id, s)}
                                   className="px-2 py-0.5 rounded-full text-xs font-semibold border transition-colors"
                                   style={c.status === s
                                     ? { backgroundColor: colors.bg, color: colors.text, borderColor: colors.bg }
                                     : { backgroundColor: 'white', color: '#9ca3af', borderColor: '#e5e7eb' }
-                                  }
-                                >
+                                  }>
                                   {s}
                                 </button>
                               ))}
@@ -812,7 +748,9 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                   {contacts.length === 0 && !contactFormOpen && (
                     <div className="rounded-xl border border-dashed border-gray-200 py-10 flex flex-col items-center gap-3">
                       <p className="text-sm text-gray-400">No contacts yet.</p>
-                      <button type="button" onClick={() => setContactFormOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                      <button type="button" onClick={() => setContactFormOpen(true)}
+                        className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                        style={{ backgroundColor: ACCENT }}>
                         Add your first interested buyer
                       </button>
                     </div>
