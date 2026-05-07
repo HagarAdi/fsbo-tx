@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import {
   ACCENT, PURPLE, DRAWERS,
   PAYOFF_CARDS, SURVEY_OPTIONS,
@@ -50,8 +50,6 @@ function getTitleCo() {
 
 export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
-  const [activeNode, setActiveNode]     = useState(null)
-  const timelinePanelRef                = useRef(null)
 
   const [titleCo] = useState(() => typeof window !== 'undefined' ? getTitleCo() : null)
 
@@ -71,12 +69,6 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
   useEffect(() => {
     saveStep8({ titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, netProceeds, utilitiesChecked })
   }, [titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, netProceeds, utilitiesChecked])
-
-  useEffect(() => {
-    if (activeNode !== null) {
-      timelinePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    }
-  }, [activeNode])
 
   const sp    = parseFloat(netProceeds.salePrice)      || 0
   const mp    = parseFloat(netProceeds.mortgagePayoff)  || 0
@@ -147,64 +139,99 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
           ))}
         </div>
 
-        {/* Closing Timeline — swim-lane */}
+        {/* Closing Timeline — above/below bar */}
         <section className="mb-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-1">Closing Timeline</h3>
-          <p className="text-xs text-gray-500 mb-4">Click a week to see what each party needs to do. Buyer tasks are shown for your awareness only.</p>
+          <p className="text-xs text-gray-500 mb-5">
+            What each party is responsible for during the ~30-day closing window. Buyer tasks are shown for your awareness.
+          </p>
 
-          {/* Node rail */}
           <div className="overflow-x-auto -mx-1 px-1 pb-2">
-            <div className="flex items-center min-w-max">
-              {CLOSING_TIMELINE.map(({ period }, i) => (
-                <div key={i} className="flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => setActiveNode(prev => prev === i ? null : i)}
-                    className="flex flex-col items-center gap-1.5 focus:outline-none group"
-                  >
+            <div style={{ minWidth: 600 }}>
+
+              {/* Seller row */}
+              <div className="flex gap-1">
+                {CLOSING_TIMELINE.map(({ seller }, i) => (
+                  <div key={i} className="flex-1 rounded-lg px-2 py-2 text-xs" style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                    <p className="font-bold uppercase tracking-wide mb-0.5" style={{ color: ACCENT, fontSize: 9 }}>You</p>
+                    <p className="text-gray-700 leading-snug">{seller}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Stems: seller → bar */}
+              <div className="flex gap-1">
+                {CLOSING_TIMELINE.map((_, i) => (
+                  <div key={i} className="flex-1 flex justify-center">
+                    <div className="w-px h-4" style={{ backgroundColor: '#d1d5db' }} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Bar + circles */}
+              <div className="relative flex items-center" style={{ height: 32 }}>
+                <div className="absolute left-0 right-0 h-2 rounded-full" style={{ backgroundColor: '#e5e7eb', top: '50%', transform: 'translateY(-50%)' }} />
+                {CLOSING_TIMELINE.map((_, i) => (
+                  <div key={i} className="flex-1 flex justify-center relative z-10">
                     <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all group-hover:scale-105"
-                      style={activeNode === i
-                        ? { backgroundColor: ACCENT, borderColor: ACCENT, color: '#fff' }
-                        : { backgroundColor: '#fff', borderColor: '#d1d5db', color: '#6b7280' }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                      style={{ backgroundColor: ACCENT, border: '2px solid white', boxShadow: '0 0 0 2px ' + ACCENT }}
                     >
                       {i + 1}
                     </div>
-                    <span
-                      className="text-[10px] font-semibold whitespace-nowrap transition-colors"
-                      style={{ color: activeNode === i ? ACCENT : '#9ca3af' }}
-                    >
-                      {period}
-                    </span>
-                  </button>
-                  {i < CLOSING_TIMELINE.length - 1 && (
-                    <div className="w-12 h-0.5 bg-gray-200 mx-1 flex-shrink-0" />
-                  )}
-                </div>
-              ))}
+                  </div>
+                ))}
+              </div>
+
+              {/* Period labels */}
+              <div className="flex gap-1">
+                {CLOSING_TIMELINE.map(({ period }, i) => (
+                  <div key={i} className="flex-1 flex justify-center">
+                    <span className="text-center font-semibold text-gray-400 whitespace-nowrap" style={{ fontSize: 9 }}>{period}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Stems: bar → title */}
+              <div className="flex gap-1">
+                {CLOSING_TIMELINE.map((_, i) => (
+                  <div key={i} className="flex-1 flex justify-center">
+                    <div className="w-px h-4" style={{ backgroundColor: '#d1d5db' }} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Title row */}
+              <div className="flex gap-1">
+                {CLOSING_TIMELINE.map(({ title: titleTask }, i) => (
+                  <div key={i} className="flex-1 rounded-lg px-2 py-2 text-xs" style={{ backgroundColor: '#f0f9ff', border: '1px solid #bae6fd' }}>
+                    <p className="font-bold uppercase tracking-wide mb-0.5" style={{ color: '#0369a1', fontSize: 9 }}>Title</p>
+                    <p className="text-gray-700 leading-snug">{titleTask}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Stems: title → buyer */}
+              <div className="flex gap-1">
+                {CLOSING_TIMELINE.map((_, i) => (
+                  <div key={i} className="flex-1 flex justify-center">
+                    <div className="w-px h-4" style={{ backgroundColor: '#fde68a' }} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Buyer row */}
+              <div className="flex gap-1">
+                {CLOSING_TIMELINE.map(({ buyer }, i) => (
+                  <div key={i} className="flex-1 rounded-lg px-2 py-2 text-xs" style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a' }}>
+                    <p className="font-bold uppercase tracking-wide mb-0.5" style={{ color: '#92400e', fontSize: 9 }}>Buyer</p>
+                    <p className="text-gray-500 leading-snug italic">{buyer}</p>
+                  </div>
+                ))}
+              </div>
+
             </div>
           </div>
-
-          {/* Expanded swim-lane panel */}
-          {activeNode !== null && (() => {
-            const { seller, title: titleTask, buyer } = CLOSING_TIMELINE[activeNode]
-            return (
-              <div ref={timelinePanelRef} className="mt-3 rounded-xl border border-gray-100 overflow-hidden text-xs">
-                <div className="flex items-start gap-2 px-4 py-3 bg-green-50 border-b border-gray-100">
-                  <span className="font-bold text-green-700 w-12 flex-shrink-0">You</span>
-                  <span className="text-gray-800">{seller}</span>
-                </div>
-                <div className="flex items-start gap-2 px-4 py-3 bg-sky-50 border-b border-gray-100">
-                  <span className="font-bold text-sky-700 w-12 flex-shrink-0">Title</span>
-                  <span className="text-gray-800">{titleTask}</span>
-                </div>
-                <div className="flex items-start gap-2 px-4 py-3 bg-amber-50">
-                  <span className="font-bold text-amber-700 w-12 flex-shrink-0">Buyer</span>
-                  <span className="text-gray-500 italic">{buyer}</span>
-                </div>
-              </div>
-            )
-          })()}
         </section>
 
         {/* Setup Block */}
@@ -383,7 +410,7 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
           </div>
         </section>
 
-        {/* Closing Timeline Tracker */}
+        {/* Closing Date Tracker */}
         <section className="mb-10">
           <h3 className="text-xl font-bold text-gray-900 mb-1">Closing Timeline 📅</h3>
           <p className="text-sm text-gray-500 mb-5">Key dates — fill as you confirm them.</p>
