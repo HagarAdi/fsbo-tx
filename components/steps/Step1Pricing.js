@@ -1,6 +1,7 @@
 import { useState, useEffect, Fragment } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import SourceDrawer from '../SourceDrawer'
+import HelpTip from '../Tooltip'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
 
 const ACCENT = '#16a34a'
@@ -79,34 +80,6 @@ function getDomNote(domNum) {
 
 function formatDollars(n) {
   return Math.round(n).toLocaleString()
-}
-
-function TooltipIcon({ id, activeTooltip, setActiveTooltip }) {
-  return (
-    <button
-      type="button"
-      onMouseEnter={() => setActiveTooltip(id)}
-      onMouseLeave={() => setActiveTooltip((cur) => cur === id ? null : cur)}
-      onPointerDown={(e) => {
-        if (e.pointerType === 'touch') {
-          e.preventDefault()
-          setActiveTooltip((cur) => cur === id ? null : id)
-        }
-      }}
-      className="inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-bold text-gray-400 border border-gray-300 hover:text-gray-600 hover:border-gray-400 transition-colors ml-1.5 flex-shrink-0 leading-none"
-      aria-label="Show tip"
-    >
-      ?
-    </button>
-  )
-}
-
-function Tooltip({ children }) {
-  return (
-    <p className="mt-1 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded px-3 py-2">
-      {children}
-    </p>
-  )
 }
 
 export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep }) {
@@ -376,13 +349,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
           <div>
-            <div className="flex items-center mb-1">
-              <label className="text-sm font-medium text-gray-700">Square footage</label>
-              <TooltipIcon id="sqft" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
-            </div>
-            {activeTooltip === 'sqft' && (
-              <Tooltip>Heated/cooled area only. Find on Williamson CAD (wcad.org)</Tooltip>
-            )}
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+              Square footage
+              <HelpTip id="sqft" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                Heated/cooled area only. Find on Williamson CAD (wcad.org)
+              </HelpTip>
+            </label>
             <input
               type="number"
               value={sqft}
@@ -393,13 +365,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           </div>
 
           <div>
-            <div className="flex items-center mb-1">
-              <label className="text-sm font-medium text-gray-700">Bedrooms</label>
-              <TooltipIcon id="bedrooms" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
-            </div>
-            {activeTooltip === 'bedrooms' && (
-              <Tooltip>Number of bedrooms. Buyers filter by this — comps should match your bedroom count</Tooltip>
-            )}
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+              Bedrooms
+              <HelpTip id="bedrooms" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                Number of bedrooms. Buyers filter by this — comps should match your bedroom count
+              </HelpTip>
+            </label>
             <input
               type="number"
               value={bedrooms}
@@ -412,13 +383,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           </div>
 
           <div>
-            <div className="flex items-center mb-1">
-              <label className="text-sm font-medium text-gray-700">Bathrooms</label>
-              <TooltipIcon id="bathrooms" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
-            </div>
-            {activeTooltip === 'bathrooms' && (
-              <Tooltip>Full baths count as 1, half baths (no shower) count as 0.5</Tooltip>
-            )}
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+              Bathrooms
+              <HelpTip id="bathrooms" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                Full baths count as 1, half baths (no shower) count as 0.5
+              </HelpTip>
+            </label>
             <input
               type="number"
               value={bathrooms}
@@ -431,15 +401,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           </div>
 
           <div>
-            <div className="flex items-center mb-1">
-              <label className="text-sm font-medium text-gray-700">Year built</label>
-              <TooltipIcon id="yearBuilt" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
-            </div>
-            {activeTooltip === 'yearBuilt' && (
-              <Tooltip>
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+              Year built
+              <HelpTip id="yearBuilt" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
                 On your CAD record. Homes 10+ years older than comps price 3–5% lower unless updated
-              </Tooltip>
-            )}
+              </HelpTip>
+            </label>
             <input
               type="number"
               value={yearBuilt}
@@ -450,13 +417,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           </div>
 
           <div>
-            <div className="flex items-center mb-1">
-              <label className="text-sm font-medium text-gray-700">Condition</label>
-              <TooltipIcon id="condition" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
-            </div>
-            {activeTooltip === 'condition' && (
-              <Tooltip>Be honest — buyers find out at inspection</Tooltip>
-            )}
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+              Condition
+              <HelpTip id="condition" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                Be honest — buyers find out at inspection
+              </HelpTip>
+            </label>
             <select
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
@@ -471,13 +437,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           </div>
 
           <div>
-            <div className="flex items-center mb-2">
-              <label className="text-sm font-medium text-gray-700">One-story or Two-story</label>
-              <TooltipIcon id="stories" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
-            </div>
-            {activeTooltip === 'stories' && (
-              <Tooltip>In Texas, single-story homes typically sell faster and for more per sqft, especially for buyers over 50</Tooltip>
-            )}
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+              One-story or Two-story
+              <HelpTip id="stories" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                In Texas, single-story homes typically sell faster and for more per sqft, especially for buyers over 50
+              </HelpTip>
+            </label>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -507,13 +472,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           </div>
 
           <div>
-            <div className="flex items-center mb-2">
-              <label className="text-sm font-medium text-gray-700">Pool</label>
-              <TooltipIcon id="pool" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
-            </div>
-            {activeTooltip === 'pool' && (
-              <Tooltip>In Texas, a pool adds $15,000–$30,000 depending on neighborhood</Tooltip>
-            )}
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+              Pool
+              <HelpTip id="pool" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                In Texas, a pool adds $15,000–$30,000 depending on neighborhood
+              </HelpTip>
+            </label>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -667,21 +631,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                   { id: null, label: '' },
                 ].map(({ id, label }) => (
                   <th key={label} className="text-left px-4 py-3 font-medium text-gray-600">
-                    <div>
-                      <div className="flex items-center gap-0.5">
-                        {label}
-                        {id && (
-                          <TooltipIcon
-                            id={id}
-                            activeTooltip={activeTooltip}
-                            setActiveTooltip={setActiveTooltip}
-                          />
-                        )}
-                      </div>
-                      {activeTooltip === id && id && (
-                        <div className="mt-1 text-xs font-normal normal-case tracking-normal text-gray-500 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 whitespace-normal min-w-[180px]">
+                    <div className="flex items-center gap-0.5">
+                      {label}
+                      {id && (
+                        <HelpTip id={id} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
                           {compTooltips[id]}
-                        </div>
+                        </HelpTip>
                       )}
                     </div>
                   </th>
