@@ -1,6 +1,7 @@
 import { useState, useEffect, Fragment } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import SourceDrawer from '../SourceDrawer'
+import { notifyStepDataChange } from '../../utils/notifyStepData'
 
 const ACCENT = '#16a34a'
 const EMPTY_COMP = { address: '', price: '', sqft: '', yearBuilt: '', dom: '' }
@@ -108,7 +109,7 @@ function Tooltip({ children }) {
   )
 }
 
-export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onPriceUpdate, onSelectStep }) {
+export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep }) {
   const [activeTooltip, setActiveTooltip] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerSource, setDrawerSource] = useState(null)
@@ -171,6 +172,7 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
         'fsbo_stepData',
         JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garage, comps, renovations } })
       )
+      notifyStepDataChange()
     } catch {}
   }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garage, comps, renovations])
 
@@ -1039,54 +1041,15 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
         </section>
       )}
 
-      {/* Mark complete */}
       <div className="pt-6 border-t border-gray-100">
-        {isCompleted ? (
-          <>
-            <div className="flex items-center gap-4 mb-4">
-              <span
-                className="inline-flex items-center gap-1.5 text-sm font-semibold"
-                style={{ color: ACCENT }}
-              >
-                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="7" fill={ACCENT} />
-                  <path
-                    d="M5 8l2.5 2.5L11 5.5"
-                    stroke="white"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Completed
-              </span>
-              <button
-                type="button"
-                onClick={() => onComplete(false)}
-                className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors"
-              >
-                Undo
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => onSelectStep && onSelectStep(2)}
-              className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
-              style={{ backgroundColor: ACCENT }}
-            >
-              Next: Step 2 — Repairs &amp; Pre-Listing Fixes →
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => onComplete(true)}
-            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            style={{ backgroundColor: ACCENT }}
-          >
-            Mark this step complete
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => onSelectStep && onSelectStep(2)}
+          className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
+          style={{ backgroundColor: ACCENT }}
+        >
+          Next: Step 2 — Repairs &amp; Pre-Listing Fixes →
+        </button>
       </div>
 
       </div>

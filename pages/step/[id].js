@@ -19,10 +19,7 @@ export default function StepPage() {
 
   const {
     homeAddress,
-    completed,
     priceEstimate,
-    handleComplete,
-    handleUndo,
     handlePriceUpdate,
   } = useAppStateContext()
 
@@ -48,16 +45,12 @@ export default function StepPage() {
   if (stepId === 1) return (
     <Step1Pricing
       homeAddress={homeAddress}
-      onComplete={(value) => value ? handleComplete(1) : handleUndo(1)}
-      isCompleted={completed.has(1)}
       onPriceUpdate={handlePriceUpdate}
       onSelectStep={handleSelect}
     />
   )
   if (stepId === 2) return (
     <Step2Repairs
-      onComplete={(value) => value ? handleComplete(2) : handleUndo(2)}
-      isCompleted={completed.has(2)}
       onSelectStep={handleSelect}
       onPriceUpdate={handlePriceUpdate}
       priceEstimate={priceEstimate}
@@ -65,8 +58,6 @@ export default function StepPage() {
   )
   if (stepId === 3) return (
     <Step3Staging
-      onComplete={(value) => value ? handleComplete(3) : handleUndo(3)}
-      isCompleted={completed.has(3)}
       onSelectStep={handleSelect}
       onPriceUpdate={handlePriceUpdate}
       priceEstimate={priceEstimate}
@@ -74,54 +65,35 @@ export default function StepPage() {
   )
   if (stepId === 4) return (
     <Step4Listing
-      onComplete={(value) => value ? handleComplete(4) : handleUndo(4)}
-      isCompleted={completed.has(4)}
       onSelectStep={handleSelect}
     />
   )
   if (stepId === 5) return (
     <Step5Showings
-      onComplete={(value) => value ? handleComplete(5) : handleUndo(5)}
-      isCompleted={completed.has(5)}
       onSelectStep={handleSelect}
     />
   )
   if (stepId === 6) return (
     <Step6Offers
-      onComplete={(value) => value ? handleComplete(6) : handleUndo(6)}
-      isCompleted={completed.has(6)}
       onSelectStep={handleSelect}
     />
   )
   if (stepId === 7) return (
     <Step7Inspection
-      onComplete={(value) => value ? handleComplete(7) : handleUndo(7)}
-      isCompleted={completed.has(7)}
       onSelectStep={handleSelect}
     />
   )
   if (stepId === 8) return (
     <Step8Title
-      onComplete={(value) => value ? handleComplete(8) : handleUndo(8)}
-      isCompleted={completed.has(8)}
       onSelectStep={handleSelect}
     />
   )
   if (stepId === 9) return (
     <Step9Closing
-      onComplete={(value) => value ? handleComplete(9) : handleUndo(9)}
-      isCompleted={completed.has(9)}
       priceEstimate={priceEstimate}
       onSelectStep={handleSelect}
     />
   )
 
-  return (
-    <StepPlaceholder
-      step={step}
-      isComplete={completed.has(stepId)}
-      onComplete={() => handleComplete(stepId)}
-      onUndo={() => handleUndo(stepId)}
-    />
-  )
+  return <StepPlaceholder step={step} />
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { notifyStepDataChange } from '../../utils/notifyStepData'
 
 const ACCENT = '#16a34a'
 
@@ -129,6 +130,7 @@ function saveStep5(data) {
   try {
     const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
     localStorage.setItem('fsbo_stepData', JSON.stringify({ ...all, step5: data }))
+    notifyStepDataChange()
   } catch {}
 }
 
@@ -139,7 +141,7 @@ const pillStyle = (active) =>
     ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
     : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
 
-export default function Step5Showings({ onComplete, isCompleted, onSelectStep }) {
+export default function Step5Showings({ onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
   const [timelineOpen, setTimelineOpen] = useState(false)
 
@@ -478,39 +480,14 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
 
           {/* Footer */}
           <div className="pt-6 border-t border-gray-100">
-            {isCompleted ? (
-              <>
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ACCENT }}>
-                    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-                      <circle cx="8" cy="8" r="7" fill={ACCENT} />
-                      <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    Done!
-                  </span>
-                  <button type="button" onClick={() => onComplete(false)} className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors">
-                    Undo
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onSelectStep && onSelectStep(6)}
-                  className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  Next up: Review &amp; Negotiate Offers →
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => onComplete(true)}
-                className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: ACCENT }}
-              >
-                Mark this step complete
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => onSelectStep && onSelectStep(6)}
+              className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
+              style={{ backgroundColor: ACCENT }}
+            >
+              Next up: Review &amp; Negotiate Offers →
+            </button>
           </div>
 
         </div>

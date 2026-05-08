@@ -1,3 +1,5 @@
+import { notifyStepDataChange } from '../../utils/notifyStepData'
+
 const ACCENT = '#16a34a'
 const PURPLE = '#7c3aed'
 
@@ -81,6 +83,7 @@ function saveStep9(data) {
   try {
     const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
     localStorage.setItem('fsbo_stepData', JSON.stringify({ ...all, step9: data }))
+    notifyStepDataChange()
   } catch {}
 }
 
