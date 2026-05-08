@@ -239,7 +239,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     comp_dom: 'Under 14 days = sold fast. 14–30 = normal. 31–60 = took a while. Over 60 = may have had issues',
   }
 
-  // Price calculation (derived values, only meaningful when avgPpsf and sqft exist)
   const sqftNum = parseFloat(sqft)
   const hasComps = avgPpsf !== null
   const baseValue = hasComps && sqftNum > 0 ? parseFloat(avgPpsf) * sqftNum : null
@@ -281,19 +280,10 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     setEstimateSaved(true)
   }
 
-  const PRO_TIPS = [
-    { tip: 'Homes priced correctly sell 50% faster than overpriced ones', source: 'Zillow Research 2023' },
-    { tip: 'After 21 days on market, buyers assume something is wrong with the home', source: 'NAR Profile of Home Buyers' },
-    { tip: 'A $400 pre-listing appraisal gives you a defensible price to show buyers', source: 'HomeLight Agent Survey' },
-    { tip: 'Price reductions signal desperation — better to price right the first time', source: 'Industry best practice' },
-  ]
-
   return (
     <div className="px-4 py-8 md:px-10 md:py-12">
       <div className="flex gap-8 items-start">
-      {/* Left: wizard content */}
       <div className="flex-1 min-w-0">
-      {/* Static header */}
       <div className="mb-3">
         <span
           className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide"
@@ -309,19 +299,19 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         sit and get stigmatized. Texas buyers are data-savvy and know the comps.
       </p>
 
-      {/* Sub-step progress indicator */}
+      {/* Sub-step tabs */}
       <div className="flex items-center mb-8">
         {SUB_STEPS.map((s, i) => (
           <div key={s.id} className="flex items-center">
             <button
               type="button"
-              onClick={() => s.id < activeSubStep && goTo(s.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+              onClick={() => goTo(s.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
                 s.id === activeSubStep
                   ? 'text-white'
                   : s.id < activeSubStep
-                  ? 'text-green-700 hover:bg-green-50 cursor-pointer'
-                  : 'text-gray-400 cursor-default'
+                  ? 'text-green-700 hover:bg-green-50'
+                  : 'text-gray-400 hover:bg-gray-100'
               }`}
               style={s.id === activeSubStep ? { backgroundColor: ACCENT } : {}}
             >
@@ -345,7 +335,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         ))}
       </div>
 
-      {/* Animated card content */}
       <AnimatePresence mode="wait" custom={direction}>
         <motion.div
           key={activeSubStep}
@@ -361,7 +350,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Your home details</h3>
 
-        {/* Address display */}
         {homeAddress ? (
           <div className="flex items-center gap-2 mb-5">
             <span className="text-sm text-gray-800">🏠 {homeAddress}</span>
@@ -387,7 +375,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
-          {/* Square footage */}
           <div>
             <div className="flex items-center mb-1">
               <label className="text-sm font-medium text-gray-700">Square footage</label>
@@ -405,7 +392,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             />
           </div>
 
-          {/* Bedrooms */}
           <div>
             <div className="flex items-center mb-1">
               <label className="text-sm font-medium text-gray-700">Bedrooms</label>
@@ -425,7 +411,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             />
           </div>
 
-          {/* Bathrooms */}
           <div>
             <div className="flex items-center mb-1">
               <label className="text-sm font-medium text-gray-700">Bathrooms</label>
@@ -445,7 +430,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             />
           </div>
 
-          {/* Year built */}
           <div>
             <div className="flex items-center mb-1">
               <label className="text-sm font-medium text-gray-700">Year built</label>
@@ -465,7 +449,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             />
           </div>
 
-          {/* Condition */}
           <div>
             <div className="flex items-center mb-1">
               <label className="text-sm font-medium text-gray-700">Condition</label>
@@ -487,7 +470,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             </select>
           </div>
 
-          {/* Stories */}
           <div>
             <div className="flex items-center mb-2">
               <label className="text-sm font-medium text-gray-700">One-story or Two-story</label>
@@ -524,7 +506,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             </div>
           </div>
 
-          {/* Pool */}
           <div>
             <div className="flex items-center mb-2">
               <label className="text-sm font-medium text-gray-700">Pool</label>
@@ -561,7 +542,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             </div>
           </div>
 
-          {/* Garage */}
           <div>
             <div className="flex items-center mb-2">
               <label className="text-sm font-medium text-gray-700">Garage</label>
@@ -595,7 +575,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           </div>
         </div>
 
-        {/* Card 1 → Next */}
         <div className="mt-8 flex justify-end">
           <button
             type="button"
@@ -612,15 +591,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       {/* ── CARD 2: Market Comps ── */}
       {activeSubStep === 2 && (
       <div>
-        <button
-          type="button"
-          onClick={() => goTo(1)}
-          className="mb-6 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1"
-        >
-          ← Back to Property Details
-        </button>
-
-      {/* How to find your comps */}
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">How to find your comps</h3>
         <ol className="space-y-3">
@@ -652,14 +622,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         </ol>
       </section>
 
-      {/* Comparable sales */}
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Comparable sales</h3>
         <p className="text-sm text-gray-500 mb-4">
           Enter 3–5 recent nearby sales to establish your price baseline.
         </p>
 
-        {/* Quick-access data links */}
         <div className="flex flex-wrap gap-2 mb-5">
           {[
             { label: 'Redfin', href: 'https://redfin.com' },
@@ -851,15 +819,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         )}
       </section>
 
-        {/* Card 2 → Next */}
-        <div className="mt-8 flex justify-between">
-          <button
-            type="button"
-            onClick={() => goTo(1)}
-            className="px-5 py-2.5 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            ← Back
-          </button>
+        <div className="mt-8 flex justify-end">
           <button
             type="button"
             onClick={() => goTo(3)}
@@ -875,15 +835,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       {/* ── CARD 3: Value Additions ── */}
       {activeSubStep === 3 && (
       <div>
-        <button
-          type="button"
-          onClick={() => goTo(2)}
-          className="mb-6 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1"
-        >
-          ← Back to Market Comps
-        </button>
-
-      {/* Section 1: Renovation checklist */}
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">What have you updated?</h3>
         <p className="text-sm text-gray-500 mb-5">
@@ -924,14 +875,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         </div>
       </section>
 
-      {/* Section 2: Price calculation */}
       {hasComps && baseValue && (
         <section className="mb-10">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Calculated Price Range</h3>
 
           <div className="rounded-lg border border-gray-200 overflow-hidden">
             <div className="divide-y divide-gray-100">
-              {/* Base value */}
               <div className="flex items-center justify-between px-5 py-3 bg-white">
                 <span className="text-sm text-gray-600">
                   Base value: avg ${avgPpsf}/sqft × {Number(sqft).toLocaleString()} sqft
@@ -939,7 +888,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 <span className="text-sm font-semibold text-gray-900">${formatDollars(baseValue)}</span>
               </div>
 
-              {/* Condition adjustment */}
               {condition && condPct !== null && condAmt !== 0 && (
                 <div className="flex items-center justify-between px-5 py-3 bg-white">
                   <span className="text-sm text-gray-600">
@@ -960,7 +908,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 </div>
               )}
 
-              {/* Pool */}
               {pool === true && (
                 <div className="flex items-center justify-between px-5 py-3 bg-white">
                   <span className="text-sm text-gray-600">
@@ -970,7 +917,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 </div>
               )}
 
-              {/* One-story premium */}
               {stories === 'one' && (
                 <div className="flex items-center justify-between px-5 py-3 bg-white">
                   <span className="text-sm text-gray-600">One-story premium: +2%</span>
@@ -980,7 +926,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 </div>
               )}
 
-              {/* Renovation adjustments */}
               {renovationAmounts.map((r) => (
                 <div key={r.key} className="flex items-center justify-between px-5 py-3 bg-white">
                   <span className="text-sm text-gray-600">
@@ -995,7 +940,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 </div>
               ))}
 
-              {/* Dividing line + price range */}
               <div className="flex items-center justify-end px-5 py-4 bg-gray-50">
                 <span className="text-sm font-bold text-gray-900">
                   ${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}
@@ -1004,12 +948,10 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             </div>
           </div>
 
-          {/* Disclaimer */}
           <p className="mt-3 text-xs text-gray-500">
             📊 This is a computer-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
           </p>
 
-          {/* Tip box */}
           <div
             className="mt-4 rounded-lg px-4 py-3"
             style={{ backgroundColor: '#f0fdf4', borderWidth: 1, borderStyle: 'solid', borderColor: '#bbf7d0' }}
@@ -1021,7 +963,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             </p>
           </div>
 
-          {/* Save button */}
           <div className="mt-4">
             {estimateSaved ? (
               <span className="text-sm font-semibold" style={{ color: ACCENT }}>
@@ -1057,7 +998,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
 
         </motion.div>
       </AnimatePresence>
-
 
       <SourceDrawer
         isOpen={drawerOpen}
