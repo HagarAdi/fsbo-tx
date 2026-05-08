@@ -51,12 +51,12 @@ const PRO_TIPS = [
   { tip: 'Price reductions signal desperation — better to price right the first time', source: 'Industry best practice' },
 ]
 
-const DATA_LINKS = [
-  { label: 'Redfin', href: 'https://redfin.com' },
-  { label: 'HAR.com', href: 'https://har.com' },
-  { label: 'Zillow', href: 'https://zillow.com' },
-  { label: 'Williamson CAD', href: 'https://wcad.org' },
-  { label: 'Travis CAD', href: 'https://traviscad.org' },
+const COMPS_TIPS = [
+  { tip: 'Use 3–5 sold comps from the last 90 days, within 0.5 miles, for the strongest baseline', source: 'NAR Comp Selection Guidelines' },
+  { tip: 'Same-subdivision comps are 10× more reliable than nearby ones — buyers compare against the closest match', source: 'Industry best practice' },
+  { tip: 'Skip comps that sat 60+ days — they were overpriced and will skew your average', source: 'HomeLight Agent Survey' },
+  { tip: 'Texas is a non-disclosure state — never use Zestimate, only verified sold prices from Redfin or HAR', source: 'TREC Buyer Disclosure' },
+  { tip: 'Adjust ±$50–100 per sqft for differences in condition, lot size, or recent upgrades', source: 'Texas appraisal guidelines' },
 ]
 
 const SUB_STEPS = [
@@ -963,49 +963,17 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
 
       {/* Right: context-aware sticky panel */}
       <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-4 space-y-4">
-        {activeSubStep === 2 ? (
-          <>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Find Comps</h4>
-              <div className="space-y-1.5">
-                {DATA_LINKS.map(({ label, href }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 bg-white text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                  >
-                    {label} <span className="text-gray-400">↗</span>
-                  </a>
-                ))}
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
+          <div className="space-y-3">
+            {(activeSubStep === 2 ? COMPS_TIPS : PRO_TIPS).map(({ tip, source }, i) => (
+              <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
+                <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
+                <p className="text-xs text-gray-400">— {source}</p>
               </div>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
-              <div className="space-y-3">
-                {PRO_TIPS.slice(0, 2).map(({ tip, source }, i) => (
-                  <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
-                    <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
-                    <p className="text-xs text-gray-400">— {source}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
-            <div className="space-y-3">
-              {PRO_TIPS.map(({ tip, source }, i) => (
-                <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
-                  <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
-                  <p className="text-xs text-gray-400">— {source}</p>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
-        )}
+        </div>
       </aside>
 
       </div>{/* end flex row */}
