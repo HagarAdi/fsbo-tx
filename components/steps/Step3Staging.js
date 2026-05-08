@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
+import MilestoneCelebration from '../MilestoneCelebration'
 
 const ACCENT = '#16a34a'
 
@@ -234,6 +235,31 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
       else next.add(label)
       return next
     })
+  }
+
+  const [showMilestone, setShowMilestone] = useState(false)
+
+  const buildPrepareSummary = () => {
+    let priceLabel = '—'
+    let repairsLabel = `${highItems.length} high-impact tasks`
+    let stagingLabel = `${highDone} of ${highItems.length} high-impact tasks done`
+    try {
+      const data = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
+      const compsCount = Array.isArray(data.step1?.comps) ? data.step1.comps.filter(c => c.price).length : 0
+      const est = JSON.parse(localStorage.getItem('fsbo_priceEstimate') || 'null')
+      if (est?.currentEstimate) {
+        priceLabel = `$${Math.round(est.currentEstimate).toLocaleString()}` + (compsCount ? ` · ${compsCount} comps` : '')
+      } else if (compsCount) {
+        priceLabel = `${compsCount} comps entered`
+      }
+      const checked = Array.isArray(data.step2?.checkedItems) ? data.step2.checkedItems.length : 0
+      if (checked > 0) repairsLabel = `${checked} repair items checked`
+    } catch {}
+    return [
+      { icon: '💰', label: 'Pricing', value: priceLabel },
+      { icon: '🔧', label: 'Repairs', value: repairsLabel },
+      { icon: '🛋️', label: 'Staging', value: stagingLabel },
+    ]
   }
 
   return (
@@ -476,7 +502,7 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
                       <button type="button" onClick={() => goTo(1)} className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors">
                         ← Back
                       </button>
-                      <button type="button" onClick={() => onSelectStep && onSelectStep(4)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                      <button type="button" onClick={() => setShowMilestone(true)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
                         Next up: Photography &amp; Listing →
                       </button>
                     </div>
@@ -536,6 +562,16 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
           )}
         </aside>
       </div>
+
+      <MilestoneCelebration
+        isOpen={showMilestone}
+        onClose={() => setShowMilestone(false)}
+        onContinue={() => { setShowMilestone(false); onSelectStep && onSelectStep(4) }}
+        phaseTitle="Prepare phase complete"
+        subtitle="Pricing, repairs, and staging — done. Time to take it to market."
+        summaryItems={showMilestone ? buildPrepareSummary() : []}
+        continueLabel="Continue to Step 4: Listing →"
+      />
     </div>
   )
 }

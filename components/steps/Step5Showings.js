@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
+import MilestoneCelebration from '../MilestoneCelebration'
 
 const ACCENT = '#16a34a'
 
@@ -157,6 +158,30 @@ export default function Step5Showings({ onSelectStep }) {
   const [form, setForm]                       = useState({ date: '', time: '', agent: '', status: 'Scheduled', notes: '' })
   const [contactFormOpen, setContactFormOpen] = useState(false)
   const [contactForm, setContactForm]         = useState({ name: '', phone: '', email: '', status: 'Interested' })
+
+  const [showMilestone, setShowMilestone] = useState(false)
+
+  const buildMarketSummary = () => {
+    let listingLabel = 'Listing in progress'
+    let showingLabel = showingMethod || 'Method not yet selected'
+    let titleLabel = titleCompany?.name || 'Title company not yet set'
+    try {
+      const data = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
+      const photoCount = Array.isArray(data.step4?.uploadedRooms) ? data.step4.uploadedRooms.length : 0
+      const hasDescription = !!(data.step4?.description && String(data.step4.description).trim())
+      if (photoCount > 0 || hasDescription) {
+        const parts = []
+        if (photoCount > 0) parts.push(`${photoCount} photo room${photoCount === 1 ? '' : 's'}`)
+        if (hasDescription) parts.push('description ready')
+        listingLabel = parts.join(' · ')
+      }
+    } catch {}
+    return [
+      { icon: '📸', label: 'Listing', value: listingLabel },
+      { icon: '🔑', label: 'Showings', value: showingLabel },
+      { icon: '🏛️', label: 'Title', value: titleLabel },
+    ]
+  }
 
   useEffect(() => {
     const saved = loadStep5()
@@ -482,7 +507,7 @@ export default function Step5Showings({ onSelectStep }) {
           <div className="pt-6 border-t border-gray-100">
             <button
               type="button"
-              onClick={() => onSelectStep && onSelectStep(6)}
+              onClick={() => setShowMilestone(true)}
               className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
               style={{ backgroundColor: ACCENT }}
             >
@@ -818,6 +843,16 @@ export default function Step5Showings({ onSelectStep }) {
           </div>
         </>
       )}
+
+      <MilestoneCelebration
+        isOpen={showMilestone}
+        onClose={() => setShowMilestone(false)}
+        onContinue={() => { setShowMilestone(false); onSelectStep && onSelectStep(6) }}
+        phaseTitle="Market phase complete"
+        subtitle="Your home is live and showings are set up. Now the offers come in."
+        summaryItems={showMilestone ? buildMarketSummary() : []}
+        continueLabel="Continue to Step 6: Offers →"
+      />
     </>
   )
 }
