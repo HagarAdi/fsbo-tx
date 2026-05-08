@@ -1,14 +1,29 @@
-export default function HelpTip({ id, activeTooltip, setActiveTooltip, placement = 'top', children }) {
+export default function HelpTip({
+  id,
+  activeTooltip,
+  setActiveTooltip,
+  placement = 'top',
+  align = 'center',
+  children,
+}) {
   const isActive = activeTooltip === id
   const isBottom = placement === 'bottom'
 
-  const popoverPos = isBottom
-    ? 'top-full mt-2'
-    : 'bottom-full mb-2'
+  const popoverY = isBottom ? 'top-full mt-2' : 'bottom-full mb-2'
 
-  const arrowPos = isBottom
-    ? 'bottom-full left-1/2 -translate-x-1/2 border-b-gray-800'
-    : 'top-full left-1/2 -translate-x-1/2 border-t-gray-800'
+  const popoverX =
+    align === 'start' ? 'left-0'
+    : align === 'end' ? 'right-0'
+    : 'left-1/2 -translate-x-1/2'
+
+  const arrowX =
+    align === 'start' ? 'left-2'
+    : align === 'end' ? 'right-2'
+    : 'left-1/2 -translate-x-1/2'
+
+  const arrowY = isBottom
+    ? 'bottom-full border-b-gray-800'
+    : 'top-full border-t-gray-800'
 
   return (
     <span className="relative inline-flex">
@@ -33,10 +48,10 @@ export default function HelpTip({ id, activeTooltip, setActiveTooltip, placement
       {isActive && (
         <span
           role="tooltip"
-          className={`absolute left-1/2 -translate-x-1/2 ${popoverPos} w-56 px-3 py-2 z-20 pointer-events-none bg-gray-800 text-white text-xs rounded-lg shadow-lg leading-snug font-normal normal-case tracking-normal`}
+          className={`absolute ${popoverX} ${popoverY} w-56 px-3 py-2 z-20 pointer-events-none bg-gray-800 text-white text-xs rounded-lg shadow-lg leading-snug font-normal normal-case tracking-normal`}
         >
           {children}
-          <span className={`absolute ${arrowPos} border-4 border-transparent`} />
+          <span className={`absolute ${arrowX} ${arrowY} border-4 border-transparent`} />
         </span>
       )}
     </span>
