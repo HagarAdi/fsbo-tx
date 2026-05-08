@@ -361,10 +361,7 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
               {/* Card header */}
               <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50">
                 <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: ACCENT }} />
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">Preferred Title Company</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Escrow opens the moment you accept an offer. Lock this in now.</p>
-                </div>
+                <p className="text-xs text-gray-500">Escrow opens the moment you accept an offer. Lock this in now.</p>
               </div>
 
               {/* Two-panel body */}
@@ -581,8 +578,8 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
             </div>
 
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-0.5">Quick Setup</p>
-              <p className="text-xs text-gray-400 mb-3 leading-snug">Saved from the drawers above</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-0.5">Your Setup</p>
+              <p className="text-xs text-gray-400 mb-3 leading-snug">What you&apos;ve configured so far</p>
               <div className="space-y-2 text-xs">
                 <div className="flex items-start gap-1.5">
                   <span>📞</span>
