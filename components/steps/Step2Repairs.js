@@ -619,6 +619,29 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
                     Focus on <span className="font-semibold text-red-600">Must Fix</span> items first — they protect your asking price. Tap a category to expand.
                   </p>
 
+                  {/* Progress summary */}
+                  <div className="rounded-xl border border-gray-200 bg-white p-4 mb-6">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">
+                          {mustFixDone}<span className="text-sm font-normal text-gray-400">/{mustFixItems.length}</span>
+                        </p>
+                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#dc2626' }}>Must Fix</p>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">
+                          {recommendedDone}<span className="text-sm font-normal text-gray-400">/{recommendedItems.length}</span>
+                        </p>
+                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#ca8a04' }}>Recommended</p>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">${estimatedCost.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Est. DIY cost</p>
+                      </div>
+                    </div>
+                    <p className="text-xs font-medium mt-3" style={{ color: motivatingColor }}>{motivatingMessage}</p>
+                  </div>
+
                   {/* Accordion checklist */}
                   <div className="space-y-2 mb-6">
                     {CHECKLIST_CATEGORIES.map((category) => {
@@ -694,29 +717,6 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
                         </div>
                       )
                     })}
-                  </div>
-
-                  {/* Progress summary */}
-                  <div className="rounded-xl border border-gray-200 bg-white p-4 mb-6">
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <p className="text-xl font-bold text-gray-900">
-                          {mustFixDone}<span className="text-sm font-normal text-gray-400">/{mustFixItems.length}</span>
-                        </p>
-                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#dc2626' }}>Must Fix</p>
-                      </div>
-                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <p className="text-xl font-bold text-gray-900">
-                          {recommendedDone}<span className="text-sm font-normal text-gray-400">/{recommendedItems.length}</span>
-                        </p>
-                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#ca8a04' }}>Recommended</p>
-                      </div>
-                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <p className="text-xl font-bold text-gray-900">${estimatedCost.toLocaleString()}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Est. DIY cost</p>
-                      </div>
-                    </div>
-                    <p className="text-xs font-medium mt-3" style={{ color: motivatingColor }}>{motivatingMessage}</p>
                   </div>
 
                   {/* Price protection alert */}
