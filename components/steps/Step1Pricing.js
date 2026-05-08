@@ -622,19 +622,19 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 {[
-                  { id: 'comp_address', label: 'Address' },
+                  { id: 'comp_address', label: 'Address', align: 'start' },
                   { id: 'comp_price', label: 'Sale Price' },
                   { id: 'comp_sqft', label: 'Sqft' },
                   { id: 'comp_yr', label: 'Yr Built' },
-                  { id: 'comp_dom', label: 'DOM' },
+                  { id: 'comp_dom', label: 'DOM', align: 'end' },
                   { id: null, label: '$/sqft' },
                   { id: null, label: '' },
-                ].map(({ id, label }) => (
+                ].map(({ id, label, align }) => (
                   <th key={label} className="text-left px-4 py-3 font-medium text-gray-600">
                     <div className="flex items-center gap-0.5">
                       {label}
                       {id && (
-                        <HelpTip id={id} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} placement="bottom">
+                        <HelpTip id={id} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} placement="bottom" align={align}>
                           {compTooltips[id]}
                         </HelpTip>
                       )}
