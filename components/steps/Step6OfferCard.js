@@ -2,25 +2,7 @@ import {
   ACCENT, OFFER_STATUS_OPTIONS, OFFER_STATUS_COLORS, FINANCING_OPTIONS,
   getScoreBand, fmtCurrency, fmtDate, inputCls, calcNetProceeds,
 } from './Step6Offers.data'
-
-function TooltipIcon({ id, activeTooltip, setActiveTooltip }) {
-  return (
-    <button
-      type="button"
-      onMouseEnter={() => setActiveTooltip(id)}
-      onMouseLeave={() => setActiveTooltip(cur => cur === id ? null : cur)}
-      onPointerDown={e => {
-        if (e.pointerType === 'touch') { e.preventDefault(); setActiveTooltip(cur => cur === id ? null : id) }
-      }}
-      className="inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-bold text-gray-400 border border-gray-300 hover:text-gray-600 hover:border-gray-400 transition-colors ml-1.5 flex-shrink-0 leading-none"
-      aria-label="Show tip"
-    >?</button>
-  )
-}
-
-function Tooltip({ children }) {
-  return <p className="mt-1 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded px-3 py-2">{children}</p>
-}
+import HelpTip from '../Tooltip'
 
 function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
   const r = calcNetProceeds(offer, annualTaxes)
@@ -207,33 +189,30 @@ export default function Step6OfferCard({
             <div>
               <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
                 Purchase price ($)
-                <TooltipIcon id={`${offer.id}-price`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+                <HelpTip id={`${offer.id}-price`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  The total agreed sales price. Found in Paragraph 3C of the TREC contract.
+                </HelpTip>
               </label>
-              {activeTooltip === `${offer.id}-price` && (
-                <Tooltip>The total agreed sales price. Found in Paragraph 3C of the TREC contract.</Tooltip>
-              )}
               <input type="number" value={offer.price} onChange={e => updateOffer(offer.id, 'price', e.target.value)} placeholder="e.g. 450000" className={inputCls} />
             </div>
 
             <div>
               <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
                 Seller Contribution to Buyer (Para 12) ($)
-                <TooltipIcon id={`${offer.id}-sellerContrib`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+                <HelpTip id={`${offer.id}-sellerContrib`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  Check Paragraph 12A(1)(b) of the contract. This is the amount the buyer is asking you to pay toward their closing costs or agent fees.
+                </HelpTip>
               </label>
-              {activeTooltip === `${offer.id}-sellerContrib` && (
-                <Tooltip>Check Paragraph 12A(1)(b) of the contract. This is the amount the buyer is asking you to pay toward their closing costs or agent fees.</Tooltip>
-              )}
               <input type="number" min="0" value={offer.sellerContribution} onChange={e => updateOffer(offer.id, 'sellerContribution', e.target.value)} placeholder="e.g. 5000" className={inputCls} />
             </div>
 
             <div>
               <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
                 Financing type
-                <TooltipIcon id={`${offer.id}-financing`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+                <HelpTip id={`${offer.id}-financing`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  Check Paragraph 4 or the Third Party Financing Addendum. (Cash is strongest).
+                </HelpTip>
               </label>
-              {activeTooltip === `${offer.id}-financing` && (
-                <Tooltip>Check Paragraph 4 or the Third Party Financing Addendum. (Cash is strongest).</Tooltip>
-              )}
               <select value={offer.financing} onChange={e => updateOffer(offer.id, 'financing', e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
                 {FINANCING_OPTIONS.map(f => <option key={f}>{f}</option>)}
               </select>
@@ -242,55 +221,50 @@ export default function Step6OfferCard({
             <div>
               <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
                 Down payment (%)
-                <TooltipIcon id={`${offer.id}-downPayment`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+                <HelpTip id={`${offer.id}-downPayment`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  The cash portion of the sales price the buyer pays at closing. Found in Paragraph 3A.
+                </HelpTip>
               </label>
-              {activeTooltip === `${offer.id}-downPayment` && (
-                <Tooltip>The cash portion of the sales price the buyer pays at closing. Found in Paragraph 3A.</Tooltip>
-              )}
               <input type="number" min="0" max="100" value={offer.downPayment} onChange={e => updateOffer(offer.id, 'downPayment', e.target.value)} placeholder="e.g. 20" className={inputCls} />
             </div>
 
             <div>
               <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
                 Option period (days)
-                <TooltipIcon id={`${offer.id}-optionDays`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+                <HelpTip id={`${offer.id}-optionDays`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  The number of days for inspections and backing out. Found in Paragraph 5B.
+                </HelpTip>
               </label>
-              {activeTooltip === `${offer.id}-optionDays` && (
-                <Tooltip>The number of days for inspections and backing out. Found in Paragraph 5B.</Tooltip>
-              )}
               <input type="number" min="0" value={offer.optionDays} onChange={e => updateOffer(offer.id, 'optionDays', e.target.value)} placeholder="e.g. 7" className={inputCls} />
             </div>
 
             <div>
               <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
                 Option fee ($)
-                <TooltipIcon id={`${offer.id}-optionFee`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+                <HelpTip id={`${offer.id}-optionFee`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  The non-refundable fee for the right to terminate. Found in Paragraph 5B.
+                </HelpTip>
               </label>
-              {activeTooltip === `${offer.id}-optionFee` && (
-                <Tooltip>The non-refundable fee for the right to terminate. Found in Paragraph 5B.</Tooltip>
-              )}
               <input type="number" min="0" value={offer.optionFee} onChange={e => updateOffer(offer.id, 'optionFee', e.target.value)} placeholder="e.g. 250" className={inputCls} />
             </div>
 
             <div>
               <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
                 Earnest money ($)
-                <TooltipIcon id={`${offer.id}-earnest`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+                <HelpTip id={`${offer.id}-earnest`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  The &apos;good faith&apos; deposit, usually ~1%. Found in Paragraph 5A.
+                </HelpTip>
               </label>
-              {activeTooltip === `${offer.id}-earnest` && (
-                <Tooltip>The &apos;good faith&apos; deposit, usually ~1%. Found in Paragraph 5A.</Tooltip>
-              )}
               <input type="number" min="0" value={offer.earnestMoney} onChange={e => updateOffer(offer.id, 'earnestMoney', e.target.value)} placeholder="e.g. 4500" className={inputCls} />
             </div>
 
             <div>
               <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
                 Closing date
-                <TooltipIcon id={`${offer.id}-closingDate`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} />
+                <HelpTip id={`${offer.id}-closingDate`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  The date you officially get paid and hand over keys. Found in Paragraph 9A.
+                </HelpTip>
               </label>
-              {activeTooltip === `${offer.id}-closingDate` && (
-                <Tooltip>The date you officially get paid and hand over keys. Found in Paragraph 9A.</Tooltip>
-              )}
               <input type="date" value={offer.closingDate} onChange={e => updateOffer(offer.id, 'closingDate', e.target.value)} className={inputCls} />
             </div>
 
