@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
+import { getStepStatuses } from '../utils/getStepStatuses'
 
 export function useAppState() {
   const [homeAddress, setHomeAddress] = useState('')
   const [showOnboarding, setShowOnboarding] = useState(false)
-  const [completed, setCompleted] = useState(new Set())
+  const [stepData, setStepData] = useState({})
   const [priceEstimate, setPriceEstimate] = useState(null)
 
   useEffect(() => {
@@ -12,14 +13,25 @@ export function useAppState() {
     setShowOnboarding(!address)
 
     try {
-      const saved = localStorage.getItem('fsbo_completedSteps')
-      if (saved) setCompleted(new Set(JSON.parse(saved)))
+      const saved = localStorage.getItem('fsbo_stepData')
+      if (saved) setStepData(JSON.parse(saved))
     } catch {}
 
     try {
       const saved = localStorage.getItem('fsbo_priceEstimate')
       if (saved) setPriceEstimate(JSON.parse(saved))
     } catch {}
+  }, [])
+
+  useEffect(() => {
+    const onUpdate = () => {
+      try {
+        const saved = localStorage.getItem('fsbo_stepData')
+        setStepData(saved ? JSON.parse(saved) : {})
+      } catch {}
+    }
+    window.addEventListener('fsbo_stepdata_changed', onUpdate)
+    return () => window.removeEventListener('fsbo_stepdata_changed', onUpdate)
   }, [])
 
   const handleAddressSave = (address) => {
@@ -34,23 +46,6 @@ export function useAppState() {
     setShowOnboarding(true)
   }
 
-  const handleComplete = (id) => {
-    setCompleted((prev) => {
-      const next = new Set([...prev, id])
-      localStorage.setItem('fsbo_completedSteps', JSON.stringify([...next]))
-      return next
-    })
-  }
-
-  const handleUndo = (id) => {
-    setCompleted((prev) => {
-      const next = new Set(prev)
-      next.delete(id)
-      localStorage.setItem('fsbo_completedSteps', JSON.stringify([...next]))
-      return next
-    })
-  }
-
   const handlePriceUpdate = (estimate) => {
     setPriceEstimate(estimate)
     try {
@@ -61,12 +56,10 @@ export function useAppState() {
   return {
     homeAddress,
     showOnboarding,
-    completed,
+    stepStatuses: getStepStatuses(stepData),
     priceEstimate,
     handleAddressSave,
     handleShowOnboarding,
-    handleComplete,
-    handleUndo,
     handlePriceUpdate,
   }
 }

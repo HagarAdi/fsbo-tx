@@ -6,8 +6,12 @@ import {
   CONFETTI_PIECES,
   loadStep9, saveStep9, fmtMoney, getSalePrice,
 } from './Step9Closing.data'
+import { useAppStateContext } from '../../hooks/AppStateContext'
 
-export default function Step9Closing({ onComplete, isCompleted, priceEstimate, onSelectStep }) {
+export default function Step9Closing({ priceEstimate, onSelectStep }) {
+  const { stepStatuses } = useAppStateContext()
+  const isComplete = stepStatuses[9] === 'complete'
+
   const [activeDrawer, setActiveDrawer] = useState(null)
 
   const [walkthroughChecked, setWalkthroughChecked] = useState(() =>
@@ -187,35 +191,25 @@ export default function Step9Closing({ onComplete, isCompleted, priceEstimate, o
           </p>
 
           <div className="relative z-10">
-            {isCompleted ? (
+            {isComplete ? (
               <div className="text-center space-y-3">
                 <div className="rounded-xl px-6 py-4 bg-white" style={{ border: '2px solid #16a34a' }}>
                   <p className="text-lg font-bold mb-1" style={{ color: ACCENT }}>✓ All 9 steps complete!</p>
                   <p className="text-xl font-bold text-gray-900">You sold your home FSBO — congratulations!</p>
                   {savings > 0 && <p className="text-sm font-semibold mt-2" style={{ color: ACCENT }}>You saved {fmtMoney(savings)} in listing agent commission</p>}
                 </div>
-                <div className="flex items-center justify-center gap-4">
-                  <button
-                    type="button"
-                    disabled
-                    className="px-6 py-3 rounded-lg text-sm font-semibold text-white opacity-50 cursor-not-allowed"
-                    style={{ backgroundColor: PURPLE }}
-                  >
-                    Share your success (coming soon)
-                  </button>
-                  <button type="button" onClick={() => onComplete(false)} className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors">Undo</button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center">
                 <button
                   type="button"
-                  onClick={() => onComplete(true)}
-                  className="px-8 py-3 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: ACCENT }}
+                  disabled
+                  className="px-6 py-3 rounded-lg text-sm font-semibold text-white opacity-50 cursor-not-allowed"
+                  style={{ backgroundColor: PURPLE }}
                 >
-                  Mark this step complete — I&apos;m done! 🎉
+                  Share your success (coming soon)
                 </button>
+              </div>
+            ) : (
+              <div className="text-center rounded-xl px-6 py-4 bg-white" style={{ border: '1px solid #e5e7eb' }}>
+                <p className="text-sm text-gray-500">Complete the walkthrough checklist above to finish this step.</p>
               </div>
             )}
           </div>

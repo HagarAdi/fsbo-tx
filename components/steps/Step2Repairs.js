@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { notifyStepDataChange } from '../../utils/notifyStepData'
 
 const ACCENT = '#16a34a'
 
@@ -213,7 +214,7 @@ function UploadZone({ photos, onAdd, maxPhotos }) {
   )
 }
 
-export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, onPriceUpdate, priceEstimate }) {
+export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimate }) {
   const [wizardStage, setWizardStage] = useState(0)
   const [wizardDone, setWizardDone] = useState(false)
   const [photos, setPhotos] = useState({ bathrooms: [], kitchen: [], front: [], other: [] })
@@ -314,6 +315,7 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
         'fsbo_stepData',
         JSON.stringify({ ...existing, step2: { checkedItems: [...checkedItems] } })
       )
+      notifyStepDataChange()
     } catch {}
   }, [checkedItems])
 
@@ -725,7 +727,6 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
                     </div>
                   )}
 
-                  {/* Mark complete */}
                   <div className="pt-4 border-t border-gray-100">
                     <div className="flex items-center justify-between">
                       <button
@@ -735,35 +736,14 @@ export default function Step2Repairs({ onComplete, isCompleted, onSelectStep, on
                       >
                         ← Back
                       </button>
-                      {isCompleted ? (
-                        <div className="flex items-center gap-4">
-                          <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ACCENT }}>
-                            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-                              <circle cx="8" cy="8" r="7" fill={ACCENT} />
-                              <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            Done!
-                          </span>
-                          <button type="button" onClick={() => onComplete(false)} className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors">Undo</button>
-                          <button
-                            type="button"
-                            onClick={() => onSelectStep && onSelectStep(3)}
-                            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                            style={{ backgroundColor: ACCENT }}
-                          >
-                            Next up: Staging &amp; Curb Appeal →
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => onComplete(true)}
-                          className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                          style={{ backgroundColor: ACCENT }}
-                        >
-                          Mark this step complete
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => onSelectStep && onSelectStep(3)}
+                        className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                        style={{ backgroundColor: ACCENT }}
+                      >
+                        Next up: Staging &amp; Curb Appeal →
+                      </button>
                     </div>
                   </div>
                 </div>

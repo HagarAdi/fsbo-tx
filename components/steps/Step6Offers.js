@@ -9,7 +9,7 @@ import {
   fmtCurrency, fmtDate, loadStep6, saveStep6,
 } from './Step6Offers.data'
 
-export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
+export default function Step6Offers({ onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
   const [trecDrawer, setTrecDrawer] = useState({ isOpen: false, info: null })
   const [expandedOffer, setExpandedOffer] = useState(null)
@@ -350,37 +350,14 @@ export default function Step6Offers({ onComplete, isCompleted, onSelectStep }) {
           )}
 
           <div className="pt-6 border-t border-gray-100">
-            {isCompleted ? (
-              <>
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ACCENT }}>
-                    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-                      <circle cx="8" cy="8" r="7" fill={ACCENT} />
-                      <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    Done!
-                  </span>
-                  <button type="button" onClick={() => onComplete(false)} className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors">Undo</button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onSelectStep && onSelectStep(7)}
-                  className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  Next up: Option Period &amp; Inspection →
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => onComplete(true)}
-                className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: ACCENT }}
-              >
-                Mark this step complete
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => onSelectStep && onSelectStep(7)}
+              className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
+              style={{ backgroundColor: ACCENT }}
+            >
+              Next up: Option Period &amp; Inspection →
+            </button>
           </div>
         </div>
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { notifyStepDataChange } from '../../utils/notifyStepData'
 
 const ACCENT = '#16a34a'
 
@@ -129,6 +130,7 @@ function saveStep5(data) {
   try {
     const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
     localStorage.setItem('fsbo_stepData', JSON.stringify({ ...all, step5: data }))
+    notifyStepDataChange()
   } catch {}
 }
 
@@ -139,7 +141,7 @@ const pillStyle = (active) =>
     ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
     : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
 
-export default function Step5Showings({ onComplete, isCompleted, onSelectStep }) {
+export default function Step5Showings({ onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
   const [timelineOpen, setTimelineOpen] = useState(false)
 
@@ -369,7 +371,6 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
 
                 {/* LEFT: form */}
                 <div className="flex-1 px-5 py-5 min-w-0">
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Your Title Company</p>
                   <div className="space-y-4 max-w-xs">
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">Company name</label>
@@ -474,87 +475,19 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                 </div>
               )}
 
-              {/* Popular title companies */}
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Popular title companies in Texas</p>
-                <div className="flex flex-wrap gap-2">
-                  {TITLE_COMPANIES.map(co => (
-                    <a
-                      key={co.name}
-                      href={co.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex flex-col px-3 py-2 rounded-lg border border-gray-200 hover:border-green-400 transition-colors text-xs"
-                    >
-                      <span className="font-semibold text-gray-800">🏢 {co.name}</span>
-                      <span className="text-gray-500">{co.coverage}</span>
-                    </a>
-                  ))}
-                </div>
-              </div>
-
-              {/* Strategic benefits of choosing title now */}
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={() => setTimelineOpen(o => !o)}
-                  className="w-full flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700 transition-colors"
-                >
-                  <span>Strategic Advantage: Why Choose Title Now?</span>
-                  <span>{timelineOpen ? '▲' : '▼'}</span>
-                </button>
-                {timelineOpen && (
-                  <div className="mt-3 space-y-3">
-                    {TITLE_BENEFITS.map(({ icon, label, detail }, i) => (
-                      <div key={i} className="flex gap-3 rounded-lg border border-gray-100 px-3 py-2">
-                        <span className="text-lg flex-shrink-0">{icon}</span>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-800">{label}</p>
-                          <p className="text-xs text-gray-500 mt-0.5 leading-snug">{detail}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           </section>
 
           {/* Footer */}
           <div className="pt-6 border-t border-gray-100">
-            {isCompleted ? (
-              <>
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ACCENT }}>
-                    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
-                      <circle cx="8" cy="8" r="7" fill={ACCENT} />
-                      <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    Done!
-                  </span>
-                  <button type="button" onClick={() => onComplete(false)} className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors">
-                    Undo
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onSelectStep && onSelectStep(6)}
-                  className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  Next up: Review &amp; Negotiate Offers →
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => onComplete(true)}
-                className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: ACCENT }}
-              >
-                Mark this step complete
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => onSelectStep && onSelectStep(6)}
+              className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
+              style={{ backgroundColor: ACCENT }}
+            >
+              Next up: Review &amp; Negotiate Offers →
+            </button>
           </div>
 
         </div>
@@ -578,37 +511,20 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
             </div>
 
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-0.5">Your Setup</p>
-              <p className="text-xs text-gray-400 mb-3 leading-snug">What you&apos;ve configured so far</p>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-start gap-1.5">
-                  <span>📞</span>
-                  <span className="text-gray-500">Sign phone:</span>
-                  <span className={yardSignPhone ? 'text-gray-800 font-medium' : 'text-gray-300'}>
-                    {yardSignPhone || '—'}
-                  </span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span>🎥</span>
-                  <span className="text-gray-500">Tour:</span>
-                  <span className={virtualTourUrl ? 'text-green-600 font-medium' : 'text-gray-300'}>
-                    {virtualTourUrl ? '✓ Linked' : '—'}
-                  </span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span>🔑</span>
-                  <span className="text-gray-500">Method:</span>
-                  <span className={showingMethod ? 'text-gray-800 font-medium' : 'text-gray-300'}>
-                    {showingMethod ? methodLabel : '—'}
-                  </span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span>🏢</span>
-                  <span className="text-gray-500">Title co:</span>
-                  <span className={titleCompany.name ? 'text-green-600 font-medium' : 'text-gray-300'}>
-                    {titleCompany.name || '—'}
-                  </span>
-                </div>
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Checklist</p>
+              <p className="text-xs text-gray-400 mb-3 leading-snug">4 things to set up in this step</p>
+              <div className="space-y-2">
+                {[
+                  { emoji: '🪧', label: 'Yard sign phone', done: !!yardSignPhone },
+                  { emoji: '🎥', label: 'Virtual tour', done: !!virtualTourUrl },
+                  { emoji: '🔑', label: 'Showing method', done: !!showingMethod },
+                  { emoji: '🏢', label: 'Title company', done: !!titleCompany.name },
+                ].map(({ emoji, label, done }) => (
+                  <div key={label} className="flex items-center gap-2 text-xs">
+                    <span className={done ? 'text-green-500' : 'text-gray-300'} style={{ fontSize: 13 }}>{done ? '✓' : '○'}</span>
+                    <span className={done ? 'text-gray-700 font-medium' : 'text-gray-400'}>{emoji} {label}</span>
+                  </div>
+                ))}
               </div>
             </div>
 

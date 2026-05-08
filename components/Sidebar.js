@@ -5,7 +5,22 @@ import { useAppStateContext } from '../hooks/AppStateContext'
 
 const ACCENT = '#16a34a'
 
-function PhaseGroup({ phase, steps, activeId, completed, onClose }) {
+function StepStatusIcon({ status }) {
+  if (status === 'complete') {
+    return (
+      <svg className="w-5 h-5 drop-shadow-sm" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="7.5" fill={ACCENT} />
+        <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    )
+  }
+  if (status === 'partial') {
+    return <span className="block w-4 h-4 rounded-full bg-yellow-400" />
+  }
+  return <span className="block w-4 h-4 rounded-full border-2 border-gray-300" />
+}
+
+function PhaseGroup({ phase, steps, activeId, stepStatuses, onClose }) {
   return (
     <div className="mb-4">
       <p className="px-4 pt-2 pb-1.5 text-xs font-semibold uppercase" style={{ color: '#9ca3af', letterSpacing: '0.18em' }}>
@@ -13,7 +28,7 @@ function PhaseGroup({ phase, steps, activeId, completed, onClose }) {
       </p>
       {steps.map((step) => {
         const isSelected = step.id === activeId
-        const isComplete = completed.has(step.id)
+        const status = stepStatuses[step.id] ?? 'none'
         return (
           <Link
             key={step.id}
@@ -29,14 +44,7 @@ function PhaseGroup({ phase, steps, activeId, completed, onClose }) {
               {step.title}
             </span>
             <span className="ml-2 shrink-0">
-              {isComplete ? (
-                <svg className="w-5 h-5 drop-shadow-sm" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="7.5" fill={ACCENT} />
-                  <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ) : (
-                <span className="block w-4 h-4 rounded-full border-2 border-gray-300" />
-              )}
+              <StepStatusIcon status={status} />
             </span>
           </Link>
         )
@@ -47,10 +55,11 @@ function PhaseGroup({ phase, steps, activeId, completed, onClose }) {
 
 export default function Sidebar({ onClose, onCollapse }) {
   const router = useRouter()
-  const { completed, priceEstimate } = useAppStateContext()
+  const { stepStatuses, priceEstimate } = useAppStateContext()
   const activeId = router.query.id ? parseInt(router.query.id, 10) : null
 
-  const completedCount = completed.size
+  const statuses = stepStatuses || {}
+  const completedCount = Object.values(statuses).filter(s => s === 'complete').length
   const total = steps.length
   const pct = Math.round((completedCount / total) * 100)
 
@@ -104,7 +113,7 @@ export default function Sidebar({ onClose, onCollapse }) {
             phase={phase}
             steps={steps.filter((s) => s.phase === phase)}
             activeId={activeId}
-            completed={completed}
+            stepStatuses={statuses}
             onClose={onClose}
           />
         ))}
