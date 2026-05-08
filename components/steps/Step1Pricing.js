@@ -55,7 +55,6 @@ const COMPS_TIPS = [
   { tip: 'Use 3–5 sold comps from the last 90 days, within 0.5 miles, for the strongest baseline', source: 'NAR Comp Selection Guidelines' },
   { tip: 'Same-subdivision comps are 10× more reliable than nearby ones — buyers compare against the closest match', source: 'Industry best practice' },
   { tip: 'Skip comps that sat 60+ days — they were overpriced and will skew your average', source: 'HomeLight Agent Survey' },
-  { tip: 'Texas is a non-disclosure state — never use Zestimate, only verified sold prices from Redfin or HAR', source: 'TREC Buyer Disclosure' },
   { tip: 'Adjust ±$50–100 per sqft for differences in condition, lot size, or recent upgrades', source: 'Texas appraisal guidelines' },
 ]
 
