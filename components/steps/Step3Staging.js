@@ -502,7 +502,7 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
                       <button type="button" onClick={() => goTo(1)} className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors">
                         ← Back
                       </button>
-                      <button type="button" onClick={() => onSelectStep && onSelectStep(4)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                      <button type="button" onClick={() => setShowMilestone(true)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
                         Next up: Photography &amp; Listing →
                       </button>
                     </div>
@@ -562,6 +562,16 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
           )}
         </aside>
       </div>
+
+      <MilestoneCelebration
+        isOpen={showMilestone}
+        onClose={() => setShowMilestone(false)}
+        onContinue={() => { setShowMilestone(false); onSelectStep && onSelectStep(4) }}
+        phaseTitle="Prepare phase complete"
+        subtitle="Pricing, repairs, and staging — done. Time to take it to market."
+        summaryItems={showMilestone ? buildPrepareSummary() : []}
+        continueLabel="Continue to Step 4: Listing →"
+      />
     </div>
   )
 }
