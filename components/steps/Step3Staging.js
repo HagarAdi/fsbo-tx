@@ -250,21 +250,40 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
       </p>
 
       {/* Sub-step progress pills */}
-      <div className="flex items-center gap-2 mb-8">
+      <div className="flex items-center mb-8">
         {SUB_STEPS.map((step, i) => {
           const done = step.id < activeSubStep
           const active = step.id === activeSubStep
           return (
-            <div key={step.id} className="flex items-center gap-2">
+            <div key={step.id} className="flex items-center">
               <button
                 type="button"
                 onClick={() => goTo(step.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                style={{ backgroundColor: active ? ACCENT : done ? '#dcfce7' : '#f3f4f6', color: active ? '#fff' : done ? '#166534' : '#6b7280' }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                  active
+                    ? 'text-white'
+                    : done
+                    ? 'text-green-700 hover:bg-green-50'
+                    : 'text-gray-400 hover:bg-gray-100'
+                }`}
+                style={active ? { backgroundColor: ACCENT } : {}}
               >
-                {done ? '✓ ' : ''}{step.label}
+                <span
+                  className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                    done
+                      ? 'bg-green-500 text-white'
+                      : active
+                      ? 'bg-white/30 text-white'
+                      : 'bg-gray-200 text-gray-500'
+                  }`}
+                >
+                  {done ? '✓' : step.id}
+                </span>
+                {step.label}
               </button>
-              {i < SUB_STEPS.length - 1 && <div className="h-px w-4 bg-gray-200 flex-shrink-0" />}
+              {i < SUB_STEPS.length - 1 && (
+                <div className={`w-5 h-px mx-1 ${activeSubStep > step.id ? 'bg-green-400' : 'bg-gray-200'}`} />
+              )}
             </div>
           )
         })}
