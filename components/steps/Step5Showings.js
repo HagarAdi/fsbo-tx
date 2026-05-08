@@ -369,7 +369,6 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
 
                 {/* LEFT: form */}
                 <div className="flex-1 px-5 py-5 min-w-0">
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Your Title Company</p>
                   <div className="space-y-4 max-w-xs">
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">Company name</label>
@@ -578,37 +577,20 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
             </div>
 
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-0.5">Your Setup</p>
-              <p className="text-xs text-gray-400 mb-3 leading-snug">What you&apos;ve configured so far</p>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-start gap-1.5">
-                  <span>📞</span>
-                  <span className="text-gray-500">Sign phone:</span>
-                  <span className={yardSignPhone ? 'text-gray-800 font-medium' : 'text-gray-300'}>
-                    {yardSignPhone || '—'}
-                  </span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span>🎥</span>
-                  <span className="text-gray-500">Tour:</span>
-                  <span className={virtualTourUrl ? 'text-green-600 font-medium' : 'text-gray-300'}>
-                    {virtualTourUrl ? '✓ Linked' : '—'}
-                  </span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span>🔑</span>
-                  <span className="text-gray-500">Method:</span>
-                  <span className={showingMethod ? 'text-gray-800 font-medium' : 'text-gray-300'}>
-                    {showingMethod ? methodLabel : '—'}
-                  </span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span>🏢</span>
-                  <span className="text-gray-500">Title co:</span>
-                  <span className={titleCompany.name ? 'text-green-600 font-medium' : 'text-gray-300'}>
-                    {titleCompany.name || '—'}
-                  </span>
-                </div>
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Checklist</p>
+              <p className="text-xs text-gray-400 mb-3 leading-snug">4 things to set up in this step</p>
+              <div className="space-y-2">
+                {[
+                  { emoji: '🪧', label: 'Yard sign phone', done: !!yardSignPhone },
+                  { emoji: '🎥', label: 'Virtual tour', done: !!virtualTourUrl },
+                  { emoji: '🔑', label: 'Showing method', done: !!showingMethod },
+                  { emoji: '🏢', label: 'Title company', done: !!titleCompany.name },
+                ].map(({ emoji, label, done }) => (
+                  <div key={label} className="flex items-center gap-2 text-xs">
+                    <span className={done ? 'text-green-500' : 'text-gray-300'} style={{ fontSize: 13 }}>{done ? '✓' : '○'}</span>
+                    <span className={done ? 'text-gray-700 font-medium' : 'text-gray-400'}>{emoji} {label}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
