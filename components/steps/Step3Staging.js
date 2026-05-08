@@ -374,6 +374,25 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
                     Start with <span className="font-semibold text-red-600">High Impact</span> items — they protect your asking price. Tap a category to expand.
                   </p>
 
+                  {/* Progress summary */}
+                  <div className="rounded-xl border border-gray-200 bg-white p-4 mb-6">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">{highDone}<span className="text-sm font-normal text-gray-400">/{highItems.length}</span></p>
+                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#dc2626' }}>High Impact</p>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">{mediumDone}<span className="text-sm font-normal text-gray-400">/{mediumItems.length}</span></p>
+                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#ca8a04' }}>Medium</p>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">{stagingValue ? `$${stagingValue.toLocaleString()}` : '—'}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Est. protected</p>
+                      </div>
+                    </div>
+                    <p className="text-xs font-medium mt-3" style={{ color: motivatingColor }}>{motivatingMessage}</p>
+                  </div>
+
                   {/* Accordion checklist */}
                   <div className="space-y-2 mb-6">
                     {CHECKLIST_CATEGORIES.map((category) => {
@@ -432,25 +451,6 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
                         </div>
                       )
                     })}
-                  </div>
-
-                  {/* Progress summary */}
-                  <div className="rounded-xl border border-gray-200 bg-white p-4 mb-6">
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <p className="text-xl font-bold text-gray-900">{highDone}<span className="text-sm font-normal text-gray-400">/{highItems.length}</span></p>
-                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#dc2626' }}>High Impact</p>
-                      </div>
-                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <p className="text-xl font-bold text-gray-900">{mediumDone}<span className="text-sm font-normal text-gray-400">/{mediumItems.length}</span></p>
-                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#ca8a04' }}>Medium</p>
-                      </div>
-                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <p className="text-xl font-bold text-gray-900">{stagingValue ? `$${stagingValue.toLocaleString()}` : '—'}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Est. protected</p>
-                      </div>
-                    </div>
-                    <p className="text-xs font-medium mt-3" style={{ color: motivatingColor }}>{motivatingMessage}</p>
                   </div>
 
                   {/* Staging value alert */}
