@@ -106,7 +106,7 @@ export default function Step8Title({ onComplete, isCompleted, onSelectStep }) {
   }
 
   return (
-    <div className="relative flex gap-6 px-4 py-8 md:px-10 md:py-12 max-w-4xl">
+    <div className="relative flex gap-6 px-4 py-8 md:px-10 md:py-12">
 
       {/* ── Main column ── */}
       <div className="flex-1 min-w-0">
