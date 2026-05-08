@@ -507,7 +507,7 @@ export default function Step5Showings({ onSelectStep }) {
           <div className="pt-6 border-t border-gray-100">
             <button
               type="button"
-              onClick={() => onSelectStep && onSelectStep(6)}
+              onClick={() => setShowMilestone(true)}
               className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
               style={{ backgroundColor: ACCENT }}
             >
@@ -843,6 +843,16 @@ export default function Step5Showings({ onSelectStep }) {
           </div>
         </>
       )}
+
+      <MilestoneCelebration
+        isOpen={showMilestone}
+        onClose={() => setShowMilestone(false)}
+        onContinue={() => { setShowMilestone(false); onSelectStep && onSelectStep(6) }}
+        phaseTitle="Market phase complete"
+        subtitle="Your home is live and showings are set up. Now the offers come in."
+        summaryItems={showMilestone ? buildMarketSummary() : []}
+        continueLabel="Continue to Step 6: Offers →"
+      />
     </>
   )
 }
