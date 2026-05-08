@@ -903,7 +903,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           </div>
 
           <p className="mt-3 text-xs text-gray-500">
-            📊 This is a computer-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
+            📊 This is an AI-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
           </p>
 
           <div
