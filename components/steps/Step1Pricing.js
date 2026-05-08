@@ -634,7 +634,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                     <div className="flex items-center gap-0.5">
                       {label}
                       {id && (
-                        <HelpTip id={id} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                        <HelpTip id={id} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} placement="bottom">
                           {compTooltips[id]}
                         </HelpTip>
                       )}
