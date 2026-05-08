@@ -52,7 +52,7 @@ export default function Step9Closing({ onComplete, isCompleted, priceEstimate, o
   const mustDoneDone = walkthroughChecked.filter(id => WALKTHROUGH_SELLER.find(i => i.id === id && i.isMust)).length
 
   return (
-    <div className="relative flex gap-6 px-4 py-8 md:px-10 md:py-12 max-w-4xl">
+    <div className="relative flex gap-6 px-4 py-8 md:px-10 md:py-12">
       <style>{`
         @keyframes confettiFall {
           0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }

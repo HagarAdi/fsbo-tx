@@ -173,7 +173,7 @@ export default function Step7Inspection({ onComplete, isCompleted, onSelectStep 
 
   return (
     <>
-    <div className="flex max-w-4xl">
+    <div className="flex">
 
       {/* ── Main column ── */}
       <div className="flex-1 px-4 py-8 md:px-10 md:py-12 min-w-0">

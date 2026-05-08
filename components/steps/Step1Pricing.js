@@ -288,9 +288,9 @@ export default function Step1Pricing({ homeAddress, onComplete, isCompleted, onP
 
   return (
     <div className="px-4 py-8 md:px-10 md:py-12">
-      <div className="flex gap-8 items-start max-w-5xl">
+      <div className="flex gap-8 items-start">
       {/* Left: wizard content */}
-      <div className="flex-1 min-w-0 max-w-2xl">
+      <div className="flex-1 min-w-0">
       {/* Static header */}
       <div className="mb-3">
         <span
