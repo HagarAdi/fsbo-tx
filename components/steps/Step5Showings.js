@@ -355,53 +355,126 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
               Locking this in now means buyers can send earnest money to the right place immediately
               after you accept an offer — preventing delays at Step 8.
             </p>
-            <div className="rounded-xl border border-gray-200 bg-white px-5 py-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+
+              {/* Card header */}
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50">
+                <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: ACCENT }} />
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Company name</label>
-                  <input
-                    type="text"
-                    value={titleCompany.name}
-                    onChange={e => setTitleCompany(p => ({ ...p, name: e.target.value }))}
-                    placeholder="e.g. Capital Title of Texas"
-                    className={inputCls}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Escrow officer name</label>
-                  <input
-                    type="text"
-                    value={titleCompany.escrow}
-                    onChange={e => setTitleCompany(p => ({ ...p, escrow: e.target.value }))}
-                    placeholder="e.g. Maria Gonzalez"
-                    className={inputCls}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={titleCompany.email}
-                    onChange={e => setTitleCompany(p => ({ ...p, email: e.target.value }))}
-                    placeholder="escrow@titleco.com"
-                    className={inputCls}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Phone</label>
-                  <input
-                    type="tel"
-                    value={titleCompany.phone}
-                    onChange={e => setTitleCompany(p => ({ ...p, phone: e.target.value }))}
-                    placeholder="(512) 555-0100"
-                    className={inputCls}
-                  />
+                  <p className="text-sm font-semibold text-gray-900">Preferred Title Company</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Escrow opens the moment you accept an offer. Lock this in now.</p>
                 </div>
               </div>
+
+              {/* Two-panel body */}
+              <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+
+                {/* LEFT: form */}
+                <div className="flex-1 px-5 py-5 min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Your Title Company</p>
+                  <div className="space-y-4 max-w-xs">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Company name</label>
+                      <input
+                        type="text"
+                        value={titleCompany.name}
+                        onChange={e => setTitleCompany(p => ({ ...p, name: e.target.value }))}
+                        placeholder="e.g. Capital Title of Texas"
+                        className={inputCls}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Escrow officer name</label>
+                      <input
+                        type="text"
+                        value={titleCompany.escrow}
+                        onChange={e => setTitleCompany(p => ({ ...p, escrow: e.target.value }))}
+                        placeholder="e.g. Maria Gonzalez"
+                        className={inputCls}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={titleCompany.email}
+                        onChange={e => setTitleCompany(p => ({ ...p, email: e.target.value }))}
+                        placeholder="escrow@titleco.com"
+                        className={inputCls}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Phone</label>
+                      <input
+                        type="tel"
+                        value={titleCompany.phone}
+                        onChange={e => setTitleCompany(p => ({ ...p, phone: e.target.value }))}
+                        placeholder="(512) 555-0100"
+                        className={inputCls}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT: company cards + accordion */}
+                <div className="w-full sm:w-64 shrink-0 px-5 py-5 bg-gray-50">
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Popular in Texas</p>
+                  <div className="space-y-2">
+                    {TITLE_COMPANIES.map(co => (
+                      <a
+                        key={co.name}
+                        href={co.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start justify-between gap-2 px-3 py-3 rounded-lg border border-gray-200 bg-white hover:border-green-400 hover:shadow-sm transition-all group"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 group-hover:text-green-700 transition-colors truncate">{co.name}</p>
+                          <p className="text-xs text-gray-500 mt-0.5 leading-snug">{co.coverage}</p>
+                        </div>
+                        <svg className="w-4 h-4 text-gray-300 group-hover:text-green-500 flex-shrink-0 mt-0.5 transition-colors" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 8h10M9 4l4 4-4 4" />
+                        </svg>
+                      </a>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => setTimelineOpen(o => !o)}
+                      className="w-full flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-widest hover:text-gray-700 transition-colors"
+                    >
+                      <span>Why choose title now?</span>
+                      <span>{timelineOpen ? '▲' : '▼'}</span>
+                    </button>
+                    {timelineOpen && (
+                      <div className="mt-3 space-y-3">
+                        {TITLE_BENEFITS.map(({ icon, label, detail }, i) => (
+                          <div key={i} className="flex gap-3 rounded-lg border border-gray-100 bg-white px-3 py-2">
+                            <span className="text-base flex-shrink-0">{icon}</span>
+                            <div>
+                              <p className="text-xs font-semibold text-gray-800">{label}</p>
+                              <p className="text-xs text-gray-500 mt-0.5 leading-snug">{detail}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Full-width confirmation banner */}
               {titleCompany.name && (
-                <p className="mt-3 text-xs text-green-700 font-medium">
-                  ✓ Will appear automatically in your Step 6 offer cards (Para 5C — Escrow Agent)
-                </p>
+                <div className="px-5 py-3 border-t border-green-100 bg-green-50 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-green-600 flex-shrink-0" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="7" fill="#16a34a" />
+                    <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <p className="text-xs text-green-700 font-medium">Will auto-populate Para 5C (Escrow Agent) in your Step 6 offer cards</p>
+                </div>
               )}
 
               {/* Popular title companies */}
@@ -494,10 +567,10 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
           <div className="sticky top-8 space-y-6">
 
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">🔒 Safety Protocol</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">🔒 Safety Protocol</p>
               <ol className="space-y-2.5">
                 {SAFETY_ITEMS.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-gray-600 leading-snug">
+                  <li key={i} className="flex items-start gap-2 text-xs text-gray-700 font-medium leading-snug">
                     <span className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold text-white mt-0.5" style={{ backgroundColor: ACCENT, fontSize: '10px' }}>
                       {i + 1}
                     </span>
@@ -508,7 +581,8 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
             </div>
 
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Quick Setup</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-0.5">Quick Setup</p>
+              <p className="text-xs text-gray-400 mb-3 leading-snug">Saved from the drawers above</p>
               <div className="space-y-2 text-xs">
                 <div className="flex items-start gap-1.5">
                   <span>📞</span>
