@@ -476,6 +476,50 @@ export default function Step5Showings({ onComplete, isCompleted, onSelectStep })
                   <p className="text-xs text-green-700 font-medium">Will auto-populate Para 5C (Escrow Agent) in your Step 6 offer cards</p>
                 </div>
               )}
+
+              {/* Popular title companies */}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Popular title companies in Texas</p>
+                <div className="flex flex-wrap gap-2">
+                  {TITLE_COMPANIES.map(co => (
+                    <a
+                      key={co.name}
+                      href={co.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col px-3 py-2 rounded-lg border border-gray-200 hover:border-green-400 transition-colors text-xs"
+                    >
+                      <span className="font-semibold text-gray-800">🏢 {co.name}</span>
+                      <span className="text-gray-500">{co.coverage}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Strategic benefits of choosing title now */}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setTimelineOpen(o => !o)}
+                  className="w-full flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wide hover:text-gray-700 transition-colors"
+                >
+                  <span>Strategic Advantage: Why Choose Title Now?</span>
+                  <span>{timelineOpen ? '▲' : '▼'}</span>
+                </button>
+                {timelineOpen && (
+                  <div className="mt-3 space-y-3">
+                    {TITLE_BENEFITS.map(({ icon, label, detail }, i) => (
+                      <div key={i} className="flex gap-3 rounded-lg border border-gray-100 px-3 py-2">
+                        <span className="text-lg flex-shrink-0">{icon}</span>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-800">{label}</p>
+                          <p className="text-xs text-gray-500 mt-0.5 leading-snug">{detail}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </section>
 
