@@ -196,7 +196,6 @@ export default function Step9Closing({ priceEstimate, onSelectStep }) {
                 <div className="rounded-xl px-6 py-4 bg-white" style={{ border: '2px solid #16a34a' }}>
                   <p className="text-lg font-bold mb-1" style={{ color: ACCENT }}>✓ All 9 steps complete!</p>
                   <p className="text-xl font-bold text-gray-900">You sold your home FSBO — congratulations!</p>
-                  {savings > 0 && <p className="text-sm font-semibold mt-2" style={{ color: ACCENT }}>You saved {fmtMoney(savings)} in listing agent commission</p>}
                 </div>
                 <button
                   type="button"
