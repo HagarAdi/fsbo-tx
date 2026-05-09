@@ -117,17 +117,6 @@ export default function Step6OfferCard({
             <div className="flex items-center gap-0.5">
               <button
                 type="button"
-                onClick={() => toggleExpanded(offer.id)}
-                className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                aria-label="Edit offer"
-                title="Edit"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 2l3 3-8 8H3v-3l8-8z" />
-                </svg>
-              </button>
-              <button
-                type="button"
                 onClick={() => removeOffer(offer.id)}
                 className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                 aria-label="Delete offer"

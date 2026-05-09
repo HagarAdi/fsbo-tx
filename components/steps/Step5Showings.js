@@ -154,9 +154,6 @@ export default function Step5Showings({ onSelectStep }) {
   const [showings, setShowings]                 = useState([])
   const [titleCompany, setTitleCompany]         = useState(EMPTY_TITLE_CO)
 
-  const [formOpen, setFormOpen]               = useState(false)
-  const [form, setForm]                       = useState({ date: '', time: '', agent: '', status: 'Scheduled', notes: '' })
-  const [editingId, setEditingId]             = useState(null)
   const [expandedShowingId, setExpandedShowingId] = useState(null)
   const [contactFormOpen, setContactFormOpen] = useState(false)
   const [contactForm, setContactForm]         = useState({ name: '', phone: '', email: '', status: 'Interested' })
@@ -209,40 +206,19 @@ export default function Step5Showings({ onSelectStep }) {
     return () => document.removeEventListener('keydown', handler)
   }, [activeDrawer, closeDrawer])
 
-  const handleFormChange        = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
   const handleContactFormChange = (field, value) => setContactForm(prev => ({ ...prev, [field]: value }))
 
-  const resetShowingForm = () => {
-    setForm({ date: '', time: '', agent: '', status: 'Scheduled', notes: '' })
-    setEditingId(null)
+  const addShowing = () => {
+    const newShowing = { id: Date.now(), date: '', time: '', agent: '', status: 'Scheduled', notes: '' }
+    setShowings(prev => [newShowing, ...prev])
+    setExpandedShowingId(newShowing.id)
   }
 
-  const closeShowingForm = () => {
-    setFormOpen(false)
-    resetShowingForm()
-  }
-
-  const saveShowing = () => {
-    if (!form.date || !form.time) return
-    if (editingId) {
-      setShowings(prev => prev.map(s => s.id === editingId ? { ...s, ...form } : s))
-    } else {
-      setShowings(prev => [{ id: Date.now(), ...form }, ...prev])
-    }
-    resetShowingForm()
-    setFormOpen(false)
-  }
-
-  const startEditShowing = (s) => {
-    setEditingId(s.id)
-    setForm({ date: s.date || '', time: s.time || '', agent: s.agent || '', status: s.status || 'Scheduled', notes: s.notes || '' })
-    setFormOpen(true)
-    setExpandedShowingId(null)
-  }
+  const updateShowing = (id, field, value) =>
+    setShowings(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s))
 
   const deleteShowing = (id) => {
     setShowings(prev => prev.filter(s => s.id !== id))
-    if (editingId === id) resetShowingForm()
     if (expandedShowingId === id) setExpandedShowingId(null)
   }
 
@@ -324,58 +300,13 @@ export default function Step5Showings({ onSelectStep }) {
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  if (formOpen) {
-                    closeShowingForm()
-                  } else {
-                    resetShowingForm()
-                    setFormOpen(true)
-                  }
-                }}
+                onClick={addShowing}
                 className="px-4 py-2 rounded-lg text-sm font-semibold text-white flex-shrink-0 transition-opacity hover:opacity-90"
                 style={{ backgroundColor: ACCENT }}
               >
-                {formOpen ? 'Cancel' : '+ Log New Showing'}
+                + Log New Showing
               </button>
             </div>
-
-            {formOpen && (
-              <div className="rounded-xl border border-gray-200 bg-white px-5 py-5 mb-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Date</label>
-                    <input type="date" value={form.date} onChange={e => handleFormChange('date', e.target.value)} className={inputCls} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Time</label>
-                    <input type="time" value={form.time} onChange={e => handleFormChange('time', e.target.value)} className={inputCls} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Buyer agent name</label>
-                    <input type="text" value={form.agent} onChange={e => handleFormChange('agent', e.target.value)} placeholder="e.g. Sarah Johnson" className={inputCls} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Status</label>
-                    <select value={form.status} onChange={e => handleFormChange('status', e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
-                      {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Notes (optional)</label>
-                  <input type="text" value={form.notes} onChange={e => handleFormChange('notes', e.target.value)} placeholder="e.g. Very interested, asked about the backyard" className={inputCls} />
-                </div>
-                <button
-                  type="button"
-                  onClick={saveShowing}
-                  disabled={!form.date || !form.time}
-                  className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  {editingId ? 'Update showing' : 'Add showing'}
-                </button>
-              </div>
-            )}
 
             {showings.length > 0 && (
               <div className="space-y-3">
@@ -384,7 +315,7 @@ export default function Step5Showings({ onSelectStep }) {
                   .map(s => {
                   const colors = STATUS_COLORS[s.status] || STATUS_COLORS['Scheduled']
                   const isExpanded = expandedShowingId === s.id
-                  const isEditingThis = editingId === s.id
+                  const whenLabel = formatShowingWhen(s.date, s.time) || 'New showing'
                   return (
                     <div key={s.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
                       <div className="px-5 py-4 flex items-center gap-2">
@@ -396,30 +327,14 @@ export default function Step5Showings({ onSelectStep }) {
                         >
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-semibold text-gray-900">
-                              {formatShowingWhen(s.date, s.time)}
+                              {whenLabel}
                             </span>
                             <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: colors.bg, color: colors.text }}>
                               {s.status}
                             </span>
-                            {isEditingThis && (
-                              <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>
-                                Editing
-                              </span>
-                            )}
                           </div>
                         </button>
                         <div className="flex items-center gap-0.5 flex-shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => startEditShowing(s)}
-                            className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                            aria-label="Edit showing"
-                            title="Edit"
-                          >
-                            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M11 2l3 3-8 8H3v-3l8-8z" />
-                            </svg>
-                          </button>
                           <button
                             type="button"
                             onClick={() => deleteShowing(s.id)}
@@ -455,13 +370,31 @@ export default function Step5Showings({ onSelectStep }) {
                       </div>
 
                       {isExpanded && (
-                        <div className="px-5 pb-4 pt-3 border-t border-gray-100 space-y-1">
-                          {s.agent
-                            ? <p className="text-xs text-gray-600"><span className="font-semibold text-gray-700">Agent:</span> {s.agent}</p>
-                            : <p className="text-xs text-gray-400 italic">No agent recorded</p>}
-                          {s.notes
-                            ? <p className="text-xs text-gray-600"><span className="font-semibold text-gray-700">Notes:</span> {s.notes}</p>
-                            : <p className="text-xs text-gray-400 italic">No notes</p>}
+                        <div className="px-5 pb-5 pt-4 border-t border-gray-100">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Date</label>
+                              <input type="date" value={s.date} onChange={e => updateShowing(s.id, 'date', e.target.value)} className={inputCls} />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Time</label>
+                              <input type="time" value={s.time} onChange={e => updateShowing(s.id, 'time', e.target.value)} className={inputCls} />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Buyer agent name</label>
+                              <input type="text" value={s.agent} onChange={e => updateShowing(s.id, 'agent', e.target.value)} placeholder="e.g. Sarah Johnson" className={inputCls} />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Status</label>
+                              <select value={s.status} onChange={e => updateShowing(s.id, 'status', e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition">
+                                {STATUS_OPTIONS.map(opt => <option key={opt}>{opt}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Notes (optional)</label>
+                            <input type="text" value={s.notes} onChange={e => updateShowing(s.id, 'notes', e.target.value)} placeholder="e.g. Very interested, asked about the backyard" className={inputCls} />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -470,10 +403,10 @@ export default function Step5Showings({ onSelectStep }) {
               </div>
             )}
 
-            {showings.length === 0 && !formOpen && (
+            {showings.length === 0 && (
               <div className="rounded-xl border border-dashed border-gray-200 py-10 flex flex-col items-center gap-3">
                 <p className="text-sm text-gray-400">No showings logged yet.</p>
-                <button type="button" onClick={() => setFormOpen(true)} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                <button type="button" onClick={addShowing} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
                   Log your first showing
                 </button>
               </div>
