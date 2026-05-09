@@ -84,7 +84,7 @@ export default function Step6OfferCard({
       {/* Collapsed header — always visible */}
       <div className="px-5 py-4">
 
-        {/* Row 1: nickname, badges, status dropdown */}
+        {/* Row 1: nickname, badges, status dropdown, icon actions */}
         <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <span className="text-sm font-bold text-gray-900 truncate">
@@ -101,22 +101,68 @@ export default function Step6OfferCard({
               </span>
             )}
           </div>
-          <select
-            value={offer.status}
-            onChange={e => updateOffer(offer.id, 'status', e.target.value)}
-            className="px-2 py-1 rounded-lg text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors"
-            style={{
-              backgroundColor: OFFER_STATUS_COLORS[offer.status]?.bg || '#f3f4f6',
-              color: OFFER_STATUS_COLORS[offer.status]?.text || '#6b7280',
-              borderColor: OFFER_STATUS_COLORS[offer.status]?.bg || '#e5e7eb',
-            }}
-          >
-            {OFFER_STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <select
+              value={offer.status}
+              onChange={e => updateOffer(offer.id, 'status', e.target.value)}
+              className="px-2 py-1 rounded-lg text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors"
+              style={{
+                backgroundColor: OFFER_STATUS_COLORS[offer.status]?.bg || '#f3f4f6',
+                color: OFFER_STATUS_COLORS[offer.status]?.text || '#6b7280',
+                borderColor: OFFER_STATUS_COLORS[offer.status]?.bg || '#e5e7eb',
+              }}
+            >
+              {OFFER_STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => toggleExpanded(offer.id)}
+                className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                aria-label="Edit offer"
+                title="Edit"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 2l3 3-8 8H3v-3l8-8z" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => removeOffer(offer.id)}
+                className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                aria-label="Delete offer"
+                title="Delete"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 5h10M6.5 5V3.5a1 1 0 011-1h1a1 1 0 011 1V5M4.5 5l.7 8.1a1 1 0 001 .9h3.6a1 1 0 001-.9L11.5 5M6.8 7.5v4M9.2 7.5v4" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleExpanded(offer.id)}
+                className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                title={isExpanded ? 'Hide details' : 'Show details'}
+              >
+                <svg
+                  className="w-4 h-4 transition-transform"
+                  style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M4 6l4 4 4-4" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Row 2: price · financing · ~net · flags · Step 7 warning */}
-        <div className="flex items-center gap-3 flex-wrap text-sm text-gray-600 mb-2">
+        <div className="flex items-center gap-3 flex-wrap text-sm text-gray-600">
           {offer.price && (
             <span className="font-bold text-gray-900">{fmtCurrency(offer.price)}</span>
           )}
@@ -143,52 +189,6 @@ export default function Step6OfferCard({
               ⚠️ Add {missingForStep7.join(' & ')} to unlock Step 7 auto-fill
             </span>
           )}
-        </div>
-
-        {/* Row 3: icon actions — edit, delete, expand */}
-        <div className="flex items-center justify-end gap-0.5">
-          <button
-            type="button"
-            onClick={() => toggleExpanded(offer.id)}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-            aria-label="Edit offer"
-            title="Edit"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 2l3 3-8 8H3v-3l8-8z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => removeOffer(offer.id)}
-            className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-            aria-label="Delete offer"
-            title="Delete"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 5h10M6.5 5V3.5a1 1 0 011-1h1a1 1 0 011 1V5M4.5 5l.7 8.1a1 1 0 001 .9h3.6a1 1 0 001-.9L11.5 5M6.8 7.5v4M9.2 7.5v4" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => toggleExpanded(offer.id)}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-            aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
-            title={isExpanded ? 'Hide details' : 'Show details'}
-          >
-            <svg
-              className="w-4 h-4 transition-transform"
-              style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M4 6l4 4 4-4" />
-            </svg>
-          </button>
         </div>
       </div>
 
