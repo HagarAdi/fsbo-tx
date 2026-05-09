@@ -20,7 +20,7 @@ export default function Layout({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mounted, setMounted] = useState(false)
-  const { homeAddress, showOnboarding, completed, priceEstimate, handleAddressSave } =
+  const { homeAddress, showOnboarding, priceEstimate, handleAddressSave } =
     useAppStateContext()
 
   useEffect(() => setMounted(true), [])

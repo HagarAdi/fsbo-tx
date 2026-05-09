@@ -53,10 +53,16 @@ export function useAppState() {
     } catch {}
   }
 
+  const stepStatuses = getStepStatuses(stepData)
+  const completed = Object.entries(stepStatuses)
+    .filter(([, status]) => status === 'complete')
+    .map(([id]) => Number(id))
+
   return {
     homeAddress,
     showOnboarding,
-    stepStatuses: getStepStatuses(stepData),
+    stepStatuses,
+    completed,
     priceEstimate,
     handleAddressSave,
     handleShowOnboarding,
