@@ -137,7 +137,7 @@ export default function Step6Offers({ onSelectStep }) {
       values: filledOffers.map(o => {
         const bd = scoreBreakdown(o, maxPrice)
         const reasons = getScoreReasons(bd)
-        return { raw: offerScores[o.id], display: `${offerScores[o.id]}/100`, reasons }
+        return { raw: offerScores[o.id], display: `${offerScores[o.id]}`, reasons }
       }),
       best: 'max',
     },
@@ -145,8 +145,9 @@ export default function Step6Offers({ onSelectStep }) {
       label: 'Red Flags',
       type: 'flags',
       values: filledOffers.map(o => {
-        const count = getRedFlags(o).length
-        return { raw: count, display: count === 0 ? '—' : `⚠️ ${count}` }
+        const messages = getRedFlags(o)
+        const count = messages.length
+        return { raw: count, display: count === 0 ? '—' : `⚠️ ${count}`, messages }
       }),
       best: 'min',
     },
@@ -327,6 +328,13 @@ export default function Step6Offers({ onSelectStep }) {
                                     </span>
                                     {v.reasons?.length > 0 && (
                                       <p className="text-xs text-gray-400 mt-0.5 leading-snug font-normal">{v.reasons.join(' · ')}</p>
+                                    )}
+                                  </span>
+                                ) : isFlagsRow ? (
+                                  <span>
+                                    <span>{v.display}</span>
+                                    {v.messages?.length > 0 && (
+                                      <p className="text-xs text-amber-700 mt-0.5 leading-snug font-normal">{v.messages.join(' · ')}</p>
                                     )}
                                   </span>
                                 ) : v.display}
