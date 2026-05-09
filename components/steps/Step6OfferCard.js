@@ -66,7 +66,7 @@ function getTitleCo() {
 
 export default function Step6OfferCard({
   offer, isExpanded, score, flags, isHighestPrice,
-  confirmDelete, setConfirmDelete, removeOffer, updateOffer, toggleExpanded,
+  removeOffer, updateOffer, toggleExpanded,
   activeTooltip, setActiveTooltip, annualTaxes, setAnnualTaxes, onSelectStep,
 }) {
   const band = getScoreBand(score)
@@ -145,29 +145,49 @@ export default function Step6OfferCard({
           )}
         </div>
 
-        {/* Row 3: remove / edit */}
-        <div className="flex items-center justify-between">
-          {confirmDelete === offer.id ? (
-            <span className="flex items-center gap-2 text-xs">
-              <span className="text-gray-500">Remove this offer?</span>
-              <button type="button" onClick={() => removeOffer(offer.id)} className="text-red-500 font-semibold hover:text-red-700 transition-colors">Yes</button>
-              <button type="button" onClick={() => setConfirmDelete(null)} className="text-gray-400 hover:text-gray-600 transition-colors">Cancel</button>
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setConfirmDelete(offer.id)}
-              className="text-xs text-gray-300 hover:text-red-400 transition-colors"
-            >
-              Remove
-            </button>
-          )}
+        {/* Row 3: icon actions — edit, delete, expand */}
+        <div className="flex items-center justify-end gap-0.5">
           <button
             type="button"
             onClick={() => toggleExpanded(offer.id)}
-            className="text-xs font-semibold text-gray-400 hover:text-gray-700 transition-colors flex items-center gap-1"
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            aria-label="Edit offer"
+            title="Edit"
           >
-            {isExpanded ? 'Collapse ▴' : 'Edit details ▾'}
+            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 2l3 3-8 8H3v-3l8-8z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => removeOffer(offer.id)}
+            className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+            aria-label="Delete offer"
+            title="Delete"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 5h10M6.5 5V3.5a1 1 0 011-1h1a1 1 0 011 1V5M4.5 5l.7 8.1a1 1 0 001 .9h3.6a1 1 0 001-.9L11.5 5M6.8 7.5v4M9.2 7.5v4" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleExpanded(offer.id)}
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+            title={isExpanded ? 'Hide details' : 'Show details'}
+          >
+            <svg
+              className="w-4 h-4 transition-transform"
+              style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 6l4 4 4-4" />
+            </svg>
           </button>
         </div>
       </div>

@@ -16,7 +16,6 @@ export default function Step6Offers({ onSelectStep }) {
   const [openTerms, setOpenTerms] = useState({})
   const [offers, setOffers] = useState([])
   const [activeTooltip, setActiveTooltip] = useState(null)
-  const [confirmDelete, setConfirmDelete] = useState(null)
   const [annualTaxes, setAnnualTaxes] = useState('')
 
   useEffect(() => {
@@ -65,7 +64,6 @@ export default function Step6Offers({ onSelectStep }) {
   const removeOffer = (id) => {
     setOffers(prev => prev.filter(o => o.id !== id))
     if (expandedOffer === id) setExpandedOffer(null)
-    setConfirmDelete(null)
   }
 
   const toggleExpanded = (id) => setExpandedOffer(prev => prev === id ? null : id)
@@ -257,8 +255,6 @@ export default function Step6Offers({ onSelectStep }) {
                   score={offerScores[offer.id]}
                   flags={getRedFlags(offer)}
                   isHighestPrice={offer.price && parseFloat(offer.price) === maxPrice && filledOffers.length > 1}
-                  confirmDelete={confirmDelete}
-                  setConfirmDelete={setConfirmDelete}
                   removeOffer={removeOffer}
                   updateOffer={updateOffer}
                   toggleExpanded={toggleExpanded}
