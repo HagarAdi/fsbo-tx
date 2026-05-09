@@ -567,10 +567,11 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
         isOpen={showMilestone}
         onClose={() => setShowMilestone(false)}
         onContinue={() => { setShowMilestone(false); onSelectStep && onSelectStep(4) }}
-        phaseTitle="Prepare phase complete"
-        subtitle="Pricing, repairs, and staging — done. Time to take it to market."
+        phaseTitle="Prepare phase complete!"
+        subtitle="Pricing, repairs, and staging — done. Most sellers spend weeks here. You crushed it. Time to take it to market."
         summaryItems={showMilestone ? buildPrepareSummary() : []}
         continueLabel="Continue to Step 4: Listing →"
+        badge="Phase 1 of 3 unlocked"
       />
     </div>
   )

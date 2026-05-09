@@ -848,10 +848,11 @@ export default function Step5Showings({ onSelectStep }) {
         isOpen={showMilestone}
         onClose={() => setShowMilestone(false)}
         onContinue={() => { setShowMilestone(false); onSelectStep && onSelectStep(6) }}
-        phaseTitle="Market phase complete"
-        subtitle="Your home is live and showings are set up. Now the offers come in."
+        phaseTitle="Market phase complete!"
+        subtitle="Your home is live, showings are set up, and the title company is lined up. The hard part is behind you — now the offers come in."
         summaryItems={showMilestone ? buildMarketSummary() : []}
         continueLabel="Continue to Step 6: Offers →"
+        badge="Phase 2 of 3 unlocked"
       />
     </>
   )
