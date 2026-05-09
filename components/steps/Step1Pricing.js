@@ -621,7 +621,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           <div>
             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
               Pool
-              <HelpTip id="pool" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+              <HelpTip id="pool" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} align="start">
                 In Texas, a pool adds $15,000–$30,000 depending on neighborhood
               </HelpTip>
             </label>
