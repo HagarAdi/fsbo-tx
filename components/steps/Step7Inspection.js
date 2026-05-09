@@ -11,7 +11,7 @@ import { calcNetProceeds, fmtCurrency } from './Step6Offers.data'
 export default function Step7Inspection({ onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
   const [openFindings, setOpenFindings] = useState({})
-  const [form, setForm] = useState(makeEmptyRequest())
+  const [expandedRequestId, setExpandedRequestId] = useState(null)
   const [trecDrawer, setTrecDrawer] = useState({ isOpen: false, info: null })
 
   const [isLocked, setIsLocked] = useState(() => {
@@ -105,15 +105,16 @@ export default function Step7Inspection({ onSelectStep }) {
 
   const closeDrawer = useCallback(() => setActiveDrawer(null), [])
 
-  const handleFormChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
-
   const addRequest = () => {
-    if (!form.description.trim()) return
-    setAndSaveRepairRequests(prev => [...prev, { ...form, id: Date.now() + Math.random() }])
-    setForm(makeEmptyRequest())
+    const fresh = makeEmptyRequest()
+    setAndSaveRepairRequests(prev => [fresh, ...prev])
+    setExpandedRequestId(fresh.id)
   }
 
-  const removeRequest = (id) => setAndSaveRepairRequests(prev => prev.filter(r => r.id !== id))
+  const removeRequest = (id) => {
+    setAndSaveRepairRequests(prev => prev.filter(r => r.id !== id))
+    if (expandedRequestId === id) setExpandedRequestId(null)
+  }
 
   const updateRequest = (id, field, value) =>
     setAndSaveRepairRequests(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r))
@@ -332,8 +333,22 @@ export default function Step7Inspection({ onSelectStep }) {
 
         {/* Repair & Credit Tracker */}
         <div className="mb-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-1">Repair &amp; Credit Tracker</h3>
-          <p className="text-sm text-gray-500 mb-4">Log each buyer request and decide how to respond.</p>
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Repair &amp; Credit Tracker</h3>
+              <p className="text-sm text-gray-500">Log each buyer request and decide how to respond.</p>
+            </div>
+            {!isLocked && (
+              <button
+                type="button"
+                onClick={addRequest}
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-white flex-shrink-0 transition-opacity hover:opacity-90"
+                style={{ backgroundColor: ACCENT }}
+              >
+                + Add Repair Request
+              </button>
+            )}
+          </div>
 
           {isLocked ? (
             <div className="rounded-xl px-5 py-6 text-center"
@@ -379,117 +394,162 @@ export default function Step7Inspection({ onSelectStep }) {
                 </div>
               )}
 
-              <div className="rounded-xl border border-gray-200 bg-white px-5 py-5 mb-4">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <input
-                    type="text"
-                    value={form.description}
-                    onChange={e => handleFormChange('description', e.target.value)}
-                    placeholder="Item description (e.g. HVAC not cooling)"
-                    className={inputCls + ' flex-1'}
-                  />
-                  <select
-                    value={form.requestType}
-                    onChange={e => handleFormChange('requestType', e.target.value)}
-                    className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                  >
-                    {REQUEST_TYPES.map(t => <option key={t}>{t}</option>)}
-                  </select>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.requestedAmount}
-                    onChange={e => handleFormChange('requestedAmount', e.target.value)}
-                    placeholder="Amount ($)"
-                    className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition w-32"
-                  />
-                  <button
-                    type="button"
-                    onClick={addRequest}
-                    disabled={!form.description.trim()}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                    style={{ backgroundColor: ACCENT }}
-                  >
-                    + Add
+              {repairRequests.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-gray-200 py-10 flex flex-col items-center gap-3 mb-4">
+                  <p className="text-sm text-gray-400">No repair requests logged yet.</p>
+                  <button type="button" onClick={addRequest} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                    + Add your first repair request
                   </button>
                 </div>
-              </div>
-
-              {repairRequests.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-6">No repair requests logged yet — add one above.</p>
               ) : (
                 <div className="space-y-3 mb-4">
-                  {repairRequests.map(r => (
-                    <div key={r.id} className="rounded-xl border border-gray-200 bg-white px-5 py-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-2">
-                            <span className="text-sm font-semibold text-gray-900">{r.description}</span>
-                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                              style={{ backgroundColor: '#f1f5f9', color: '#475569' }}>
-                              {r.requestType}
-                            </span>
-                            {r.requestedAmount && (
-                              <span className="text-xs text-gray-500">
-                                ${parseFloat(r.requestedAmount).toLocaleString()} requested
+                  {repairRequests.map(r => {
+                    const isExpanded = expandedRequestId === r.id
+                    const titleLabel = r.description?.trim() || 'New repair request'
+                    const responseStyle = RESPONSE_STYLE[r.response] || RESPONSE_STYLE['Accept']
+                    return (
+                      <div key={r.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                        <div className="px-5 py-4 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedRequestId(isExpanded ? null : r.id)}
+                            className="flex-1 min-w-0 text-left rounded-md hover:bg-gray-50 -mx-1 px-1 py-1 transition-colors"
+                            aria-expanded={isExpanded}
+                          >
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-semibold text-gray-900">{titleLabel}</span>
+                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: '#f1f5f9', color: '#475569' }}>
+                                {r.requestType}
                               </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {RESPONSE_TYPES.map(rt => (
-                              <button
-                                key={rt}
-                                type="button"
-                                onClick={() => updateRequest(r.id, 'response', rt)}
-                                className="px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
-                                style={r.response === rt
-                                  ? { backgroundColor: RESPONSE_STYLE[rt].bg, color: RESPONSE_STYLE[rt].text }
-                                  : { backgroundColor: '#f9fafb', color: '#6b7280' }
-                                }
+                              {r.requestedAmount && (
+                                <span className="text-xs text-gray-500">
+                                  ${parseFloat(r.requestedAmount).toLocaleString()} requested
+                                </span>
+                              )}
+                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: responseStyle.bg, color: responseStyle.text }}>
+                                {r.response}
+                              </span>
+                            </div>
+                          </button>
+                          <div className="flex items-center gap-0.5 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => removeRequest(r.id)}
+                              className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                              aria-label="Delete repair request"
+                              title="Delete"
+                            >
+                              <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 5h10M6.5 5V3.5a1 1 0 011-1h1a1 1 0 011 1V5M4.5 5l.7 8.1a1 1 0 001 .9h3.6a1 1 0 001-.9L11.5 5M6.8 7.5v4M9.2 7.5v4" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setExpandedRequestId(isExpanded ? null : r.id)}
+                              className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                              aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                              title={isExpanded ? 'Hide details' : 'Show details'}
+                            >
+                              <svg
+                                className="w-4 h-4 transition-transform"
+                                style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
                               >
-                                {rt}
-                              </button>
-                            ))}
+                                <path d="M4 6l4 4 4-4" />
+                              </svg>
+                            </button>
                           </div>
-                          {r.response === 'Counter' && (
-                            <div className="flex gap-3 mt-3">
-                              <div className="w-36">
-                                <label className="block text-xs font-semibold text-gray-600 mb-1">Counter amount ($)</label>
+                        </div>
+
+                        {isExpanded && (
+                          <div className="px-5 pb-5 pt-4 border-t border-gray-100 space-y-4">
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Description</label>
+                              <input
+                                type="text"
+                                value={r.description}
+                                onChange={e => updateRequest(r.id, 'description', e.target.value)}
+                                placeholder="e.g. HVAC not cooling"
+                                className={inputCls}
+                              />
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                              <div className="flex-1">
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">Request type</label>
+                                <select
+                                  value={r.requestType}
+                                  onChange={e => updateRequest(r.id, 'requestType', e.target.value)}
+                                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                                >
+                                  {REQUEST_TYPES.map(t => <option key={t}>{t}</option>)}
+                                </select>
+                              </div>
+                              <div className="w-full sm:w-40">
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">Amount ($)</label>
                                 <input
                                   type="number"
                                   min="0"
-                                  value={r.counterAmount}
-                                  onChange={e => updateRequest(r.id, 'counterAmount', e.target.value)}
-                                  placeholder="e.g. 1000"
-                                  className={inputCls}
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <label className="block text-xs font-semibold text-gray-600 mb-1">Notes</label>
-                                <input
-                                  type="text"
-                                  value={r.notes}
-                                  onChange={e => updateRequest(r.id, 'notes', e.target.value)}
-                                  placeholder="e.g. Will get 3 quotes first"
+                                  value={r.requestedAmount}
+                                  onChange={e => updateRequest(r.id, 'requestedAmount', e.target.value)}
+                                  placeholder="0"
                                   className={inputCls}
                                 />
                               </div>
                             </div>
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeRequest(r.id)}
-                          className="flex-shrink-0 text-gray-300 hover:text-red-400 transition-colors mt-0.5"
-                          aria-label="Remove"
-                        >
-                          <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M6 2a1 1 0 00-1 1H3a1 1 0 000 2h10a1 1 0 100-2h-2a1 1 0 00-1-1H6zM4 7a1 1 0 011 1v4a1 1 0 002 0V8a1 1 0 012 0v4a1 1 0 002 0V8a1 1 0 011-1 1 1 0 100-2H4a1 1 0 100 2z" />
-                          </svg>
-                        </button>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-2">Your response</label>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {RESPONSE_TYPES.map(rt => (
+                                  <button
+                                    key={rt}
+                                    type="button"
+                                    onClick={() => updateRequest(r.id, 'response', rt)}
+                                    className="px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
+                                    style={r.response === rt
+                                      ? { backgroundColor: RESPONSE_STYLE[rt].bg, color: RESPONSE_STYLE[rt].text }
+                                      : { backgroundColor: '#f9fafb', color: '#6b7280' }
+                                    }
+                                  >
+                                    {rt}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            {r.response === 'Counter' && (
+                              <div className="flex flex-col sm:flex-row gap-3">
+                                <div className="w-full sm:w-40">
+                                  <label className="block text-xs font-semibold text-gray-700 mb-1">Counter amount ($)</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={r.counterAmount}
+                                    onChange={e => updateRequest(r.id, 'counterAmount', e.target.value)}
+                                    placeholder="e.g. 1000"
+                                    className={inputCls}
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <label className="block text-xs font-semibold text-gray-700 mb-1">Notes</label>
+                                  <input
+                                    type="text"
+                                    value={r.notes}
+                                    onChange={e => updateRequest(r.id, 'notes', e.target.value)}
+                                    placeholder="e.g. Will get 3 quotes first"
+                                    className={inputCls}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
 
