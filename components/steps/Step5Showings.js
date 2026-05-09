@@ -377,13 +377,13 @@ export default function Step5Showings({ onSelectStep }) {
                   const isEditingThis = editingId === s.id
                   return (
                     <div key={s.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => setExpandedShowingId(isExpanded ? null : s.id)}
-                        className="w-full px-5 py-4 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors"
-                        aria-expanded={isExpanded}
-                      >
-                        <div className="flex-1 min-w-0">
+                      <div className="px-5 py-4 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setExpandedShowingId(isExpanded ? null : s.id)}
+                          className="flex-1 min-w-0 text-left rounded-md hover:bg-gray-50 -mx-1 px-1 py-1 transition-colors"
+                          aria-expanded={isExpanded}
+                        >
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-semibold text-gray-900">
                               {new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -398,57 +398,61 @@ export default function Step5Showings({ onSelectStep }) {
                               </span>
                             )}
                           </div>
+                        </button>
+                        <div className="flex items-center gap-0.5 flex-shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => startEditShowing(s)}
+                            className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                            aria-label="Edit showing"
+                            title="Edit"
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 2l3 3-8 8H3v-3l8-8z" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteShowing(s.id)}
+                            className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            aria-label="Delete showing"
+                            title="Delete"
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M3 5h10M6.5 5V3.5a1 1 0 011-1h1a1 1 0 011 1V5M4.5 5l.7 8.1a1 1 0 001 .9h3.6a1 1 0 001-.9L11.5 5M6.8 7.5v4M9.2 7.5v4" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setExpandedShowingId(isExpanded ? null : s.id)}
+                            className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                            aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                            title={isExpanded ? 'Hide details' : 'Show details'}
+                          >
+                            <svg
+                              className="w-4 h-4 transition-transform"
+                              style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                              viewBox="0 0 16 16"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M4 6l4 4 4-4" />
+                            </svg>
+                          </button>
                         </div>
-                        <span className="flex-shrink-0 text-xs font-semibold text-gray-400">
-                          {isExpanded ? 'Hide' : 'Details'}
-                        </span>
-                        <svg
-                          className="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform"
-                          style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                          viewBox="0 0 16 16"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M4 6l4 4 4-4" />
-                        </svg>
-                      </button>
+                      </div>
 
                       {isExpanded && (
-                        <div className="px-5 pb-4 pt-3 border-t border-gray-100 space-y-3">
-                          <div className="space-y-1">
-                            {s.agent
-                              ? <p className="text-xs text-gray-600"><span className="font-semibold text-gray-700">Agent:</span> {s.agent}</p>
-                              : <p className="text-xs text-gray-400 italic">No agent recorded</p>}
-                            {s.notes
-                              ? <p className="text-xs text-gray-600"><span className="font-semibold text-gray-700">Notes:</span> {s.notes}</p>
-                              : <p className="text-xs text-gray-400 italic">No notes</p>}
-                          </div>
-                          <div className="flex flex-wrap gap-2 pt-1">
-                            <button
-                              type="button"
-                              onClick={() => startEditShowing(s)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-                            >
-                              <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M11 2l3 3-8 8H3v-3l8-8z" />
-                              </svg>
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => deleteShowing(s.id)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 text-red-600 bg-white hover:bg-red-50 transition-colors"
-                              aria-label="Delete showing"
-                            >
-                              <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 5h10M6.5 5V3.5a1 1 0 011-1h1a1 1 0 011 1V5M4.5 5l.7 8.1a1 1 0 001 .9h3.6a1 1 0 001-.9L11.5 5M6.8 7.5v4M9.2 7.5v4" />
-                              </svg>
-                              Delete
-                            </button>
-                          </div>
+                        <div className="px-5 pb-4 pt-3 border-t border-gray-100 space-y-1">
+                          {s.agent
+                            ? <p className="text-xs text-gray-600"><span className="font-semibold text-gray-700">Agent:</span> {s.agent}</p>
+                            : <p className="text-xs text-gray-400 italic">No agent recorded</p>}
+                          {s.notes
+                            ? <p className="text-xs text-gray-600"><span className="font-semibold text-gray-700">Notes:</span> {s.notes}</p>
+                            : <p className="text-xs text-gray-400 italic">No notes</p>}
                         </div>
                       )}
                     </div>
