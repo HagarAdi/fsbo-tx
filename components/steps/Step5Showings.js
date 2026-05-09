@@ -694,7 +694,7 @@ export default function Step5Showings({ onSelectStep }) {
                     <div className="space-y-2 text-sm text-gray-700">
                       <div className="flex items-start gap-2">
                         <span className="text-green-500 font-bold mt-0.5">✓</span>
-                        <p><span className="font-semibold">"For Sale By Owner"</span> — required on every sign</p>
+                        <p><span className="font-semibold">&ldquo;For Sale By Owner&rdquo;</span> — required on every sign</p>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="text-green-500 font-bold mt-0.5">✓</span>
@@ -744,7 +744,7 @@ export default function Step5Showings({ onSelectStep }) {
                       </a>
                       <div className="px-4 py-3 rounded-xl border border-gray-200">
                         <p className="text-sm font-semibold text-gray-800">Local print shop</p>
-                        <p className="text-xs text-gray-500">$50–100 for a custom sign with your design — search "sign printing near me"</p>
+                        <p className="text-xs text-gray-500">$50–100 for a custom sign with your design — search &ldquo;sign printing near me&rdquo;</p>
                       </div>
                     </div>
                   </div>

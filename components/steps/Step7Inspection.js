@@ -845,7 +845,7 @@ export default function Step7Inspection({ onSelectStep }) {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">Minimum acceptable price ($)</label>
-                      <p className="text-xs text-gray-400 mb-1">The lowest you'll go after all concessions</p>
+                      <p className="text-xs text-gray-400 mb-1">The lowest you&apos;ll go after all concessions</p>
                       <input type="number" min="0" value={bottomLine.minPrice}
                         onChange={e => setAndSaveBottomLine(prev => ({ ...prev, minPrice: e.target.value }))}
                         placeholder="e.g. 440000" className={inputCls} />
