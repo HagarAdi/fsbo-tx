@@ -372,7 +372,7 @@ export default function Step5Showings({ onSelectStep }) {
             {showings.length > 0 && (
               <div className="space-y-3">
                 {[...showings]
-                  .sort((a, b) => `${b.date || ''} ${b.time || ''}`.localeCompare(`${a.date || ''} ${a.time || ''}`))
+                  .sort((a, b) => `${a.date || ''} ${a.time || ''}`.localeCompare(`${b.date || ''} ${b.time || ''}`))
                   .map(s => {
                   const colors = STATUS_COLORS[s.status] || STATUS_COLORS['Scheduled']
                   const isExpanded = expandedShowingId === s.id
