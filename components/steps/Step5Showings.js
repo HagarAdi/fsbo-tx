@@ -256,11 +256,19 @@ export default function Step5Showings({ onSelectStep }) {
   const deleteContact       = (id)         => setContacts(prev => prev.filter(c => c.id !== id))
   const updateContactStatus = (id, status) => setContacts(prev => prev.map(c => c.id === id ? { ...c, status } : c))
 
-  const formatTime = (t) => {
-    if (!t) return ''
-    const [h, m] = t.split(':')
-    const hr = parseInt(h, 10)
-    return `${hr % 12 || 12}:${m} ${hr < 12 ? 'AM' : 'PM'}`
+  const formatShowingWhen = (dateStr, timeStr) => {
+    if (!dateStr || !timeStr) return ''
+    const d = new Date(`${dateStr}T${timeStr}`)
+    if (Number.isNaN(d.getTime())) return ''
+    const datePart = d.toLocaleDateString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+    })
+    const timePart = d.toLocaleTimeString('en-US', {
+      hour: 'numeric', minute: '2-digit', hour12: true,
+    })
+    const tz = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' })
+      .formatToParts(d).find(p => p.type === 'timeZoneName')?.value || ''
+    return tz ? `${datePart} at ${timePart} ${tz}` : `${datePart} at ${timePart}`
   }
 
   const methodLabel = SHOWING_METHOD_OPTIONS.find(o => o.id === showingMethod)?.label || '—'
@@ -388,8 +396,7 @@ export default function Step5Showings({ onSelectStep }) {
                         >
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-semibold text-gray-900">
-                              {new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                              {' '}at {formatTime(s.time)}
+                              {formatShowingWhen(s.date, s.time)}
                             </span>
                             <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: colors.bg, color: colors.text }}>
                               {s.status}
@@ -687,7 +694,7 @@ export default function Step5Showings({ onSelectStep }) {
                     <div className="space-y-2 text-sm text-gray-700">
                       <div className="flex items-start gap-2">
                         <span className="text-green-500 font-bold mt-0.5">✓</span>
-                        <p><span className="font-semibold">"For Sale By Owner"</span> — required on every sign</p>
+                        <p><span className="font-semibold">&ldquo;For Sale By Owner&rdquo;</span> — required on every sign</p>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="text-green-500 font-bold mt-0.5">✓</span>
@@ -737,7 +744,7 @@ export default function Step5Showings({ onSelectStep }) {
                       </a>
                       <div className="px-4 py-3 rounded-xl border border-gray-200">
                         <p className="text-sm font-semibold text-gray-800">Local print shop</p>
-                        <p className="text-xs text-gray-500">$50–100 for a custom sign with your design — search "sign printing near me"</p>
+                        <p className="text-xs text-gray-500">$50–100 for a custom sign with your design — search &ldquo;sign printing near me&rdquo;</p>
                       </div>
                     </div>
                   </div>
