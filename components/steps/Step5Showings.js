@@ -156,6 +156,8 @@ export default function Step5Showings({ onSelectStep }) {
 
   const [formOpen, setFormOpen]               = useState(false)
   const [form, setForm]                       = useState({ date: '', time: '', agent: '', status: 'Scheduled', notes: '' })
+  const [editingId, setEditingId]             = useState(null)
+  const [expandedShowingId, setExpandedShowingId] = useState(null)
   const [contactFormOpen, setContactFormOpen] = useState(false)
   const [contactForm, setContactForm]         = useState({ name: '', phone: '', email: '', status: 'Interested' })
 
@@ -210,13 +212,39 @@ export default function Step5Showings({ onSelectStep }) {
   const handleFormChange        = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
   const handleContactFormChange = (field, value) => setContactForm(prev => ({ ...prev, [field]: value }))
 
-  const addShowing = () => {
-    if (!form.date || !form.time) return
-    setShowings(prev => [{ id: Date.now(), ...form }, ...prev])
+  const resetShowingForm = () => {
     setForm({ date: '', time: '', agent: '', status: 'Scheduled', notes: '' })
+    setEditingId(null)
   }
 
-  const deleteShowing = (id) => setShowings(prev => prev.filter(s => s.id !== id))
+  const closeShowingForm = () => {
+    setFormOpen(false)
+    resetShowingForm()
+  }
+
+  const saveShowing = () => {
+    if (!form.date || !form.time) return
+    if (editingId) {
+      setShowings(prev => prev.map(s => s.id === editingId ? { ...s, ...form } : s))
+    } else {
+      setShowings(prev => [{ id: Date.now(), ...form }, ...prev])
+    }
+    resetShowingForm()
+    setFormOpen(false)
+  }
+
+  const startEditShowing = (s) => {
+    setEditingId(s.id)
+    setForm({ date: s.date || '', time: s.time || '', agent: s.agent || '', status: s.status || 'Scheduled', notes: s.notes || '' })
+    setFormOpen(true)
+    setExpandedShowingId(null)
+  }
+
+  const deleteShowing = (id) => {
+    setShowings(prev => prev.filter(s => s.id !== id))
+    if (editingId === id) resetShowingForm()
+    if (expandedShowingId === id) setExpandedShowingId(null)
+  }
 
   const addContact = () => {
     if (!contactForm.name.trim()) return
@@ -288,7 +316,14 @@ export default function Step5Showings({ onSelectStep }) {
               </div>
               <button
                 type="button"
-                onClick={() => setFormOpen(o => !o)}
+                onClick={() => {
+                  if (formOpen) {
+                    closeShowingForm()
+                  } else {
+                    resetShowingForm()
+                    setFormOpen(true)
+                  }
+                }}
                 className="px-4 py-2 rounded-lg text-sm font-semibold text-white flex-shrink-0 transition-opacity hover:opacity-90"
                 style={{ backgroundColor: ACCENT }}
               >
@@ -324,12 +359,12 @@ export default function Step5Showings({ onSelectStep }) {
                 </div>
                 <button
                   type="button"
-                  onClick={addShowing}
+                  onClick={saveShowing}
                   disabled={!form.date || !form.time}
                   className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ backgroundColor: ACCENT }}
                 >
-                  Add showing
+                  {editingId ? 'Update showing' : 'Add showing'}
                 </button>
               </div>
             )}
@@ -338,26 +373,84 @@ export default function Step5Showings({ onSelectStep }) {
               <div className="space-y-3">
                 {showings.map(s => {
                   const colors = STATUS_COLORS[s.status] || STATUS_COLORS['Scheduled']
+                  const isExpanded = expandedShowingId === s.id
+                  const isEditingThis = editingId === s.id
                   return (
-                    <div key={s.id} className="rounded-xl border border-gray-200 bg-white px-5 py-4 flex items-start gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <span className="text-sm font-semibold text-gray-900">
-                            {new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                            {' '}at {formatTime(s.time)}
-                          </span>
-                          <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: colors.bg, color: colors.text }}>
-                            {s.status}
-                          </span>
+                    <div key={s.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedShowingId(isExpanded ? null : s.id)}
+                        className="w-full px-5 py-4 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors"
+                        aria-expanded={isExpanded}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-gray-900">
+                              {new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              {' '}at {formatTime(s.time)}
+                            </span>
+                            <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: colors.bg, color: colors.text }}>
+                              {s.status}
+                            </span>
+                            {isEditingThis && (
+                              <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>
+                                Editing
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        {s.agent && <p className="text-xs text-gray-500 mb-1">Agent: {s.agent}</p>}
-                        {s.notes && <p className="text-xs text-gray-600 italic">{s.notes}</p>}
-                      </div>
-                      <button type="button" onClick={() => deleteShowing(s.id)} className="flex-shrink-0 text-gray-300 hover:text-red-400 transition-colors" aria-label="Delete showing">
-                        <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
-                          <path d="M6 2a1 1 0 00-1 1H3a1 1 0 000 2h10a1 1 0 100-2h-2a1 1 0 00-1-1H6zM4 7a1 1 0 011 1v4a1 1 0 002 0V8a1 1 0 012 0v4a1 1 0 002 0V8a1 1 0 011-1 1 1 0 100-2H4a1 1 0 100 2z" />
+                        <span className="flex-shrink-0 text-xs font-semibold text-gray-400">
+                          {isExpanded ? 'Hide' : 'Details'}
+                        </span>
+                        <svg
+                          className="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform"
+                          style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M4 6l4 4 4-4" />
                         </svg>
                       </button>
+
+                      {isExpanded && (
+                        <div className="px-5 pb-4 pt-3 border-t border-gray-100 space-y-3">
+                          <div className="space-y-1">
+                            {s.agent
+                              ? <p className="text-xs text-gray-600"><span className="font-semibold text-gray-700">Agent:</span> {s.agent}</p>
+                              : <p className="text-xs text-gray-400 italic">No agent recorded</p>}
+                            {s.notes
+                              ? <p className="text-xs text-gray-600"><span className="font-semibold text-gray-700">Notes:</span> {s.notes}</p>
+                              : <p className="text-xs text-gray-400 italic">No notes</p>}
+                          </div>
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => startEditShowing(s)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                            >
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 2l3 3-8 8H3v-3l8-8z" />
+                              </svg>
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteShowing(s.id)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 text-red-600 bg-white hover:bg-red-50 transition-colors"
+                              aria-label="Delete showing"
+                            >
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 5h10M6.5 5V3.5a1 1 0 011-1h1a1 1 0 011 1V5M4.5 5l.7 8.1a1 1 0 001 .9h3.6a1 1 0 001-.9L11.5 5M6.8 7.5v4M9.2 7.5v4" />
+                              </svg>
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -802,9 +895,9 @@ export default function Step5Showings({ onSelectStep }) {
                                 {c.phone && <p className="text-xs text-gray-500">{c.phone}</p>}
                                 {c.email && <p className="text-xs text-gray-500">{c.email}</p>}
                               </div>
-                              <button type="button" onClick={() => deleteContact(c.id)} className="text-gray-300 hover:text-red-400 transition-colors" aria-label="Delete contact">
-                                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
-                                  <path d="M6 2a1 1 0 00-1 1H3a1 1 0 000 2h10a1 1 0 100-2h-2a1 1 0 00-1-1H6zM4 7a1 1 0 011 1v4a1 1 0 002 0V8a1 1 0 012 0v4a1 1 0 002 0V8a1 1 0 011-1 1 1 0 100-2H4a1 1 0 100 2z" />
+                              <button type="button" onClick={() => deleteContact(c.id)} className="text-gray-400 hover:text-red-500 transition-colors" aria-label="Delete contact">
+                                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M3 5h10M6.5 5V3.5a1 1 0 011-1h1a1 1 0 011 1V5M4.5 5l.7 8.1a1 1 0 001 .9h3.6a1 1 0 001-.9L11.5 5M6.8 7.5v4M9.2 7.5v4" />
                                 </svg>
                               </button>
                             </div>
