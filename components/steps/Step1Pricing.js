@@ -801,8 +801,8 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                   { id: 'comp_price', label: 'List Price' },
                   { id: 'comp_sqft', label: 'Sqft' },
                   { id: 'comp_yr', label: 'Yr Built' },
-                  { id: 'comp_dom', label: 'DOM', align: 'end' },
-                  { id: 'comp_features', label: 'Adj $/sqft' },
+                  { id: 'comp_dom', label: 'DOM' },
+                  { id: 'comp_features', label: 'Adj $/sqft', align: 'end' },
                   { id: null, label: '' },
                 ].map(({ id, label, align }) => (
                   <th key={label} className="text-left px-4 py-3 font-medium text-gray-600">
