@@ -5,7 +5,10 @@ import HelpTip from '../Tooltip'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
 
 const ACCENT = '#16a34a'
-const EMPTY_COMP = { address: '', price: '', sqft: '', yearBuilt: '', dom: '' }
+const EMPTY_COMP = {
+  address: '', price: '', sqft: '', yearBuilt: '', dom: '',
+  pool: null, garageCars: '', stories: '', condition: '',
+}
 
 const SOURCE_DATA = {
   'NAR Remodeling Impact Report': {
@@ -29,20 +32,164 @@ const SOURCE_DATA = {
     whyItMatters: 'In Texas where AC runs 8+ months a year, HVAC age and condition is the #1 question buyers ask. A service receipt costs $150 and removes a major objection.',
     fullReportUrl: 'https://www.homelight.com/blog/top-agent-insights',
   },
+  'Texas appraisal guidelines': {
+    title: 'Texas Appraisal Practice — Foundation & Soil',
+    year: '2024',
+    keyFinding: 'In Central Texas expansive-clay regions, documented foundation work with a transferable warranty typically restores 80–100% of value vs. an undocumented home with visible movement, which sees 1–3% buyer-driven discounts.',
+    whyItMatters: 'Foundation is the #1 inspection objection in Texas. Documented repair receipts and transferable warranties remove the negotiation entirely.',
+    fullReportUrl: 'https://www.trec.texas.gov',
+  },
 }
 
-const RENOVATIONS = [
-  { key: 'newRoof', label: 'New roof (last 5 years)', pct: 0.015, source: 'NAR Remodeling Impact Report' },
-  { key: 'updatedKitchen', label: 'Updated kitchen', pct: 0.03, source: 'NAR Remodeling Impact Report' },
-  { key: 'updatedBathrooms', label: 'Updated bathrooms', pct: 0.02, source: 'NAR Remodeling Impact Report' },
-  { key: 'freshPaint', label: 'Fresh interior paint', pct: 0.0075, source: 'Zillow Research' },
-  { key: 'newFlooring', label: 'New flooring', pct: 0.015, source: 'NAR Remodeling Impact Report' },
-  { key: 'newWindows', label: 'New windows', pct: 0.0075, source: 'NAR Remodeling Impact Report' },
-  { key: 'hvacOld', label: 'HVAC over 15 years old', pct: -0.015, source: 'HomeLight Agent Survey' },
-  { key: 'roofOld', label: 'Roof over 20 years old', pct: -0.015, source: 'HomeLight Agent Survey' },
+const RENOVATION_GROUPS = [
+  {
+    label: 'Big-ticket upgrades',
+    items: [
+      { key: 'newRoof', label: 'New roof (last 5 years)', pct: 0.015, source: 'NAR Remodeling Impact Report' },
+      { key: 'updatedKitchen', label: 'Updated kitchen', pct: 0.03, source: 'NAR Remodeling Impact Report' },
+      { key: 'updatedBathrooms', label: 'Updated bathrooms', pct: 0.02, source: 'NAR Remodeling Impact Report' },
+      { key: 'newWindows', label: 'New windows (energy-efficient)', pct: 0.0075, source: 'NAR Remodeling Impact Report' },
+      { key: 'newFlooring', label: 'New flooring', pct: 0.015, source: 'NAR Remodeling Impact Report' },
+      { key: 'freshPaint', label: 'Fresh interior paint', pct: 0.0075, source: 'Zillow Research' },
+    ],
+  },
+  {
+    label: 'Mechanical, electrical & plumbing',
+    items: [
+      { key: 'newHvac', label: 'New HVAC (last 5 years)', pct: 0.015, source: 'HomeLight Agent Survey' },
+      { key: 'tanklessWaterHeater', label: 'Tankless water heater', pct: 0.005, source: 'Industry best practice' },
+      { key: 'updatedElectricalPanel', label: 'Updated electrical panel (200 amp)', pct: 0.0075, source: 'Industry best practice' },
+      { key: 'replumbed', label: 'Replumbed (no polybutylene / galvanized)', pct: 0.01, source: 'Industry best practice' },
+      { key: 'waterSoftener', label: 'Water softener installed', pct: 0.0025, source: 'Industry best practice' },
+    ],
+  },
+  {
+    label: 'Texas-specific value adds',
+    items: [
+      { key: 'solarPanelsOwned', label: 'Solar panels (owned, not leased)', pct: 0.015, source: 'Industry best practice' },
+      { key: 'wholeHomeGenerator', label: 'Whole-home generator (post-2021 freeze)', pct: 0.01, source: 'Industry best practice' },
+      { key: 'foundationDocumented', label: 'Foundation work documented (transferable warranty)', pct: 0.01, source: 'Texas appraisal guidelines' },
+      { key: 'radiantBarrier', label: 'Radiant barrier or spray-foam attic insulation', pct: 0.005, source: 'Industry best practice' },
+      { key: 'sprinklerSystem', label: 'Sprinkler / irrigation system', pct: 0.005, source: 'Industry best practice' },
+      { key: 'evCharger', label: 'EV charger (240V) installed', pct: 0.005, source: 'Industry best practice' },
+      { key: 'smartHome', label: 'Smart home features (Nest, Ring, etc.)', pct: 0.0025, source: 'Industry best practice' },
+    ],
+  },
+  {
+    label: 'Concerns buyers will discount for',
+    items: [
+      { key: 'hvacOld', label: 'HVAC over 15 years old', pct: -0.015, source: 'HomeLight Agent Survey' },
+      { key: 'roofOld', label: 'Roof over 20 years old', pct: -0.015, source: 'HomeLight Agent Survey' },
+      { key: 'foundationIssues', label: 'Visible foundation movement (no documentation)', pct: -0.02, source: 'Texas appraisal guidelines' },
+      { key: 'polybutylenePlumbing', label: 'Polybutylene plumbing', pct: -0.015, source: 'Industry best practice' },
+      { key: 'aluminumWiring', label: 'Aluminum wiring', pct: -0.01, source: 'Industry best practice' },
+    ],
+  },
 ]
+const RENOVATIONS = RENOVATION_GROUPS.flatMap((g) => g.items)
 
 const CONDITION_PCT = { Excellent: 0.04, Good: 0, Average: -0.03, Fair: -0.06 }
+
+// Per-comp adjustments: dollars (or multipliers) applied to the comp price to
+// estimate what the comp would have sold for if it matched the subject home.
+const POOL_ADJUSTMENT = 20000
+const PER_GARAGE_SPACE = 5000
+const ONE_STORY_PREMIUM = 0.02
+
+function adjustCompPrice(comp, subject) {
+  const price = parseFloat(comp.price)
+  if (!(price > 0)) return { adjustedPrice: null, deltas: [] }
+  let p = price
+  const deltas = []
+
+  if (subject.pool !== null && comp.pool !== null && subject.pool !== comp.pool) {
+    const delta = subject.pool ? POOL_ADJUSTMENT : -POOL_ADJUSTMENT
+    p += delta
+    deltas.push({ label: subject.pool ? 'Subject has pool, comp does not' : 'Comp has pool, subject does not', amount: delta })
+  }
+
+  const subjCars = subject.garageCars === '' || subject.garageCars == null ? null : parseInt(subject.garageCars)
+  const compCars = comp.garageCars === '' || comp.garageCars == null ? null : parseInt(comp.garageCars)
+  if (subjCars !== null && compCars !== null && !isNaN(subjCars) && !isNaN(compCars) && subjCars !== compCars) {
+    const diff = subjCars - compCars
+    const delta = diff * PER_GARAGE_SPACE
+    p += delta
+    deltas.push({ label: `Garage: subject ${subjCars}-car vs comp ${compCars}-car`, amount: delta })
+  }
+
+  if (subject.stories && comp.stories && subject.stories !== comp.stories) {
+    if (comp.stories === 'one' && subject.stories === 'two') {
+      const before = p
+      p = p / (1 + ONE_STORY_PREMIUM)
+      deltas.push({ label: 'Comp is one-story (premium), subject is two-story', amount: Math.round(p - before) })
+    } else if (comp.stories === 'two' && subject.stories === 'one') {
+      const before = p
+      p = p * (1 + ONE_STORY_PREMIUM)
+      deltas.push({ label: 'Subject is one-story (premium), comp is two-story', amount: Math.round(p - before) })
+    }
+  }
+
+  if (subject.condition && comp.condition && subject.condition !== comp.condition) {
+    const compPct = CONDITION_PCT[comp.condition] ?? 0
+    const subjPct = CONDITION_PCT[subject.condition] ?? 0
+    const before = p
+    p = (p / (1 + compPct)) * (1 + subjPct)
+    deltas.push({ label: `Condition: comp ${comp.condition} → subject ${subject.condition}`, amount: Math.round(p - before) })
+  }
+
+  return { adjustedPrice: p, deltas }
+}
+
+function getCompsStrength(validCount) {
+  if (validCount >= 5) return { tier: 'excellent', label: 'Excellent (defensible)', emoji: '🟢', color: '#16a34a' }
+  if (validCount >= 3) return { tier: 'good', label: 'Good (standard)', emoji: '🟡', color: '#d97706' }
+  return { tier: 'weak', label: 'Weak (inaccurate)', emoji: '🔴', color: '#dc2626' }
+}
+
+function CompFeatureToggle({ label, value, options, onChange }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="text-[11px] uppercase tracking-wide text-gray-400">{label}</span>
+      <span className="inline-flex rounded-md border border-gray-200 bg-white overflow-hidden">
+        {options.map((opt) => {
+          const selected = value === opt.v
+          return (
+            <button
+              key={String(opt.v)}
+              type="button"
+              onClick={() => onChange(opt.v)}
+              className="px-2 py-0.5 text-[11px] font-medium transition-colors"
+              style={
+                selected
+                  ? { backgroundColor: ACCENT, color: 'white' }
+                  : { backgroundColor: 'white', color: '#4b5563' }
+              }
+            >
+              {opt.l}
+            </button>
+          )
+        })}
+      </span>
+    </span>
+  )
+}
+
+function CompFeatureSelect({ label, value, options, onChange }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="text-[11px] uppercase tracking-wide text-gray-400">{label}</span>
+      <select
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value)}
+        className="border border-gray-200 rounded px-1.5 py-0.5 text-[11px] bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
+      >
+        {options.map((opt) => (
+          <option key={String(opt.v)} value={opt.v}>{opt.l}</option>
+        ))}
+      </select>
+    </span>
+  )
+}
 
 const PRO_TIPS = [
   { tip: 'Homes priced correctly sell 50% faster than overpriced ones', source: 'Zillow Research 2023' },
@@ -98,7 +245,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
   const [condition, setCondition] = useState('')
   const [stories, setStories] = useState(null)
   const [pool, setPool] = useState(null)
-  const [garage, setGarage] = useState(null)
+  const [garageCars, setGarageCars] = useState('')
   const [comps, setComps] = useState([
     { ...EMPTY_COMP },
     { ...EMPTY_COMP },
@@ -128,8 +275,10 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           if (s1.condition !== undefined) setCondition(s1.condition)
           if (s1.stories !== undefined) setStories(s1.stories)
           if (s1.pool !== undefined) setPool(s1.pool)
-          if (s1.garage !== undefined) setGarage(s1.garage)
-          if (s1.comps && s1.comps.length > 0) setComps(s1.comps)
+          if (s1.garageCars !== undefined) setGarageCars(s1.garageCars)
+          if (s1.comps && s1.comps.length > 0) {
+            setComps(s1.comps.map((c) => ({ ...EMPTY_COMP, ...c })))
+          }
           if (s1.renovations !== undefined) setRenovations(s1.renovations)
         }
       }
@@ -142,15 +291,15 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       const existing = saved ? JSON.parse(saved) : {}
       localStorage.setItem(
         'fsbo_stepData',
-        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garage, comps, renovations } })
+        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, comps, renovations } })
       )
       notifyStepDataChange()
     } catch {}
-  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garage, comps, renovations])
+  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, comps, renovations])
 
   useEffect(() => {
     setEstimateSaved(false)
-  }, [sqft, condition, stories, pool, renovations, comps])
+  }, [sqft, condition, stories, pool, garageCars, renovations, comps])
 
   const updateComp = (index, field, value) => {
     setComps((prev) => {
@@ -173,26 +322,35 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     })
   }
 
-  const getPpsf = (comp) => {
-    const price = parseFloat(comp.price)
-    const sf = parseFloat(comp.sqft)
-    if (price > 0 && sf > 0) return (price / sf).toFixed(2)
-    return null
-  }
+  const subject = { pool, garageCars, stories, condition }
 
-  const avgPpsf = (() => {
-    const valid = comps.filter((c) => getPpsf(c) !== null)
-    if (!valid.length) return null
-    const sum = valid.reduce((acc, c) => acc + parseFloat(c.price) / parseFloat(c.sqft), 0)
-    return (sum / valid.length).toFixed(2)
-  })()
+  const compStats = comps.map((comp) => {
+    const rawPrice = parseFloat(comp.price)
+    const sf = parseFloat(comp.sqft)
+    if (!(rawPrice > 0) || !(sf > 0)) {
+      return { rawPpsf: null, adjustedPpsf: null, deltas: [], adjustedPrice: null }
+    }
+    const rawPpsf = rawPrice / sf
+    const { adjustedPrice, deltas } = adjustCompPrice(comp, subject)
+    const finalPrice = adjustedPrice ?? rawPrice
+    return {
+      rawPpsf,
+      adjustedPpsf: finalPrice / sf,
+      adjustedPrice: finalPrice,
+      deltas,
+    }
+  })
+
+  const validStats = compStats.filter((s) => s.adjustedPpsf !== null)
+  const validCount = validStats.length
+  const compsStrength = getCompsStrength(validCount)
+
+  const adjustedAvgPpsf = validCount
+    ? validStats.reduce((acc, s) => acc + s.adjustedPpsf, 0) / validCount
+    : null
 
   const cleanedMedianPpsf = (() => {
-    const values = comps
-      .map((c) => getPpsf(c))
-      .filter((v) => v !== null)
-      .map((v) => parseFloat(v))
-      .sort((a, b) => a - b)
+    const values = validStats.map((s) => s.adjustedPpsf).sort((a, b) => a - b)
     if (!values.length) return null
     const mid = Math.floor(values.length / 2)
     const rawMedian =
@@ -205,38 +363,36 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
 
   const compTooltips = {
     comp_address: 'Find on Redfin or HAR.com under Recently Sold',
-    comp_price: 'Final sale price, not list price. Do not use Zestimate',
+    comp_price: 'In Texas, sold prices are private. Use the public List Price from Redfin / HAR / Zillow as the most reliable benchmark.',
     comp_sqft: 'Heated area only. On the listing or CAD record',
     comp_yr: 'Year the home was built. Find on the listing or CAD record',
     comp_dom: 'Under 14 days = sold fast. 14–30 = normal. 31–60 = took a while. Over 60 = may have had issues',
+    comp_features: 'Differences in pool, garage, stories, and condition are auto-adjusted to match your home before averaging $/sqft.',
   }
 
   const sqftNum = parseFloat(sqft)
-  const hasComps = avgPpsf !== null
-  const baseValue = hasComps && sqftNum > 0 ? parseFloat(avgPpsf) * sqftNum : null
+  const hasComps = adjustedAvgPpsf !== null
+  const baseValue = hasComps && sqftNum > 0 ? adjustedAvgPpsf * sqftNum : null
 
-  const condPct = CONDITION_PCT[condition] ?? null
-  const condAmt = baseValue && condPct !== null ? baseValue * condPct : 0
-  const poolAmt = baseValue && pool === true ? 20000 : 0
-  const storyAmt = baseValue && stories === 'one' ? baseValue * 0.02 : 0
   const renovationAmounts = baseValue
     ? RENOVATIONS.filter((r) => renovations[r.key]).map((r) => ({ ...r, amount: baseValue * r.pct }))
     : []
-  const calculatedValue = baseValue
-    ? baseValue + condAmt + poolAmt + storyAmt + renovationAmounts.reduce((acc, r) => acc + r.amount, 0)
-    : null
+  const renovationsTotal = renovationAmounts.reduce((acc, r) => acc + r.amount, 0)
+
+  const calculatedValue = baseValue ? baseValue + renovationsTotal : null
   const rangeMin = calculatedValue ? calculatedValue * 0.98 : null
   const rangeMax = calculatedValue ? calculatedValue * 1.02 : null
-  const tipPrice = calculatedValue ? Math.ceil(calculatedValue / 25000) * 25000 - 1000 : null
+  // Filter-aware list price: round up to next $25k bucket, then knock $100 under
+  // (e.g. $624,000 → $625,000 → $624,900) to land just under common Zillow/Redfin filters.
+  const suggestedListPrice = calculatedValue
+    ? Math.ceil(calculatedValue / 25000) * 25000 - 100
+    : null
 
   const handleSaveEstimate = () => {
     if (!calculatedValue) return
     const adjustments = [
-      { step: 1, reason: 'comp average', amount: Math.round(baseValue) },
+      { step: 1, reason: 'adjusted comp average', amount: Math.round(baseValue) },
     ]
-    if (condAmt !== 0) adjustments.push({ step: 1, reason: `condition (${condition})`, amount: Math.round(condAmt) })
-    if (poolAmt) adjustments.push({ step: 1, reason: 'pool', amount: poolAmt })
-    if (storyAmt) adjustments.push({ step: 1, reason: 'one-story premium', amount: Math.round(storyAmt) })
     renovationAmounts.forEach((r) =>
       adjustments.push({ step: 1, reason: r.label, amount: Math.round(r.amount) })
     )
@@ -244,6 +400,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       basePrice: Math.round(baseValue),
       adjustments,
       currentEstimate: Math.round(calculatedValue),
+      suggestedListPrice,
     }
     try {
       localStorage.setItem('fsbo_priceEstimate', JSON.stringify(estimate))
@@ -506,34 +663,28 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           </div>
 
           <div>
-            <div className="flex items-center mb-2">
-              <label className="text-sm font-medium text-gray-700">Garage</label>
-            </div>
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+              Garage (car spaces)
+              <HelpTip id="garageCars" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                Each garage space is worth roughly $5,000 in Texas. We use this to normalize comps that have a different number of spaces.
+              </HelpTip>
+            </label>
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setGarage(true)}
-                className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
-                style={
-                  garage === true
-                    ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
-                    : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
-                }
-              >
-                Yes
-              </button>
-              <button
-                type="button"
-                onClick={() => setGarage(false)}
-                className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
-                style={
-                  garage === false
-                    ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
-                    : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
-                }
-              >
-                No
-              </button>
+              {['0', '1', '2', '3'].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setGarageCars(n)}
+                  className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
+                  style={
+                    garageCars === n
+                      ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
+                      : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
+                  }
+                >
+                  {n === '3' ? '3+' : n}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -588,7 +739,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">Comparable sales</h3>
         <p className="text-sm text-gray-500 mb-4">
-          Enter 3–5 recent nearby sales to establish your price baseline.
+          Enter 3–5 recent nearby listings to establish your price baseline. Each comp&apos;s features are normalized to match your home before averaging.
         </p>
 
         <div className="flex flex-wrap gap-2 mb-5">
@@ -612,21 +763,46 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         </div>
 
         <p className="mb-4 text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded px-3 py-2">
-          ℹ️ Texas is a non-disclosure state. Enter prices from publicly available listing data (Redfin, HAR.com, Zillow). Displayed prices may not reflect final sold prices.
+          ℹ️ Texas is a non-disclosure state. Sold prices are private — use the public <span className="font-semibold">List Price</span> from Redfin, HAR, or Zillow as the most reliable benchmark. Avoid Zestimate.
         </p>
 
+        <div
+          className="mb-4 flex items-center justify-between rounded-lg border px-4 py-3"
+          style={{ borderColor: compsStrength.color + '55', backgroundColor: compsStrength.color + '0d' }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-lg" aria-hidden>{compsStrength.emoji}</span>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: compsStrength.color }}>
+                Comp strength: {compsStrength.label}
+              </p>
+              <p className="text-xs text-gray-600">
+                {validCount === 0 && 'Enter at least 3 valid comps (price + sqft) for a defensible baseline.'}
+                {validCount === 1 && '1 comp entered — add 2 more to reach Good.'}
+                {validCount === 2 && '2 comps entered — add 1 more to reach Good.'}
+                {validCount === 3 && '3 comps — meets the standard. Add 2 more for Excellent.'}
+                {validCount === 4 && '4 comps — strong. Add 1 more for Excellent.'}
+                {validCount >= 5 && 'You have a defensible spread. Drop weak ones rather than adding more.'}
+              </p>
+            </div>
+          </div>
+          <div className="text-xs font-semibold text-gray-500 whitespace-nowrap">
+            {validCount}/5
+          </div>
+        </div>
+
         <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <div className="min-w-[500px]">
+        <div className="min-w-[640px]">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 {[
                   { id: 'comp_address', label: 'Address', align: 'start' },
-                  { id: 'comp_price', label: 'Sale Price' },
+                  { id: 'comp_price', label: 'List Price' },
                   { id: 'comp_sqft', label: 'Sqft' },
                   { id: 'comp_yr', label: 'Yr Built' },
                   { id: 'comp_dom', label: 'DOM', align: 'end' },
-                  { id: null, label: '$/sqft' },
+                  { id: 'comp_features', label: 'Adj $/sqft' },
                   { id: null, label: '' },
                 ].map(({ id, label, align }) => (
                   <th key={label} className="text-left px-4 py-3 font-medium text-gray-600">
@@ -644,10 +820,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             </thead>
             <tbody>
               {comps.map((comp, i) => {
-                const ppsf = getPpsf(comp)
+                const stats = compStats[i]
+                const rawPpsf = stats.rawPpsf
+                const adjPpsf = stats.adjustedPpsf
 
-                const priceOutlier = ppsf !== null && cleanedMedianPpsf !== null
-                  && Math.abs(parseFloat(ppsf) / cleanedMedianPpsf - 1) > 0.15
+                const priceOutlier = adjPpsf !== null && cleanedMedianPpsf !== null
+                  && Math.abs(adjPpsf / cleanedMedianPpsf - 1) > 0.15
 
                 const compSqftNum = comp.sqft !== '' ? parseFloat(comp.sqft) : NaN
                 const sqftOutlier = sqftNum > 0 && !isNaN(compSqftNum)
@@ -666,6 +844,10 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 const domNote = showDomNote ? getDomNote(domNum) : null
 
                 const hasAnyNote = showDomNote || priceOutlier || sqftOutlier || yearBuiltNewer || yearBuiltOlder
+                const showFeatureRow = priceNum > 0 && parseFloat(comp.sqft) > 0
+                const ppsfDiffers = rawPpsf !== null && adjPpsf !== null
+                  && Math.abs(adjPpsf - rawPpsf) / rawPpsf > 0.005
+                const adjustedDirection = adjPpsf !== null && rawPpsf !== null && adjPpsf < rawPpsf ? 'down' : 'up'
 
                 return (
                   <Fragment key={i}>
@@ -715,11 +897,79 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                           className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
                         />
                       </td>
-                      <td className="px-4 py-2.5 text-xs font-semibold text-gray-700 whitespace-nowrap">
-                        {ppsf ? `$${ppsf}` : '—'}
+                      <td className="px-4 py-2.5 text-xs font-semibold whitespace-nowrap">
+                        {adjPpsf !== null ? (
+                          <div className="flex flex-col leading-tight">
+                            <span style={{ color: ppsfDiffers ? (adjustedDirection === 'up' ? ACCENT : '#dc2626') : '#374151' }}>
+                              ${adjPpsf.toFixed(2)}
+                            </span>
+                            {ppsfDiffers && (
+                              <span className="text-[10px] font-normal text-gray-400">
+                                raw ${rawPpsf.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </td>
                       <td className="px-2 py-2.5" />
                     </tr>
+                    {showFeatureRow && (
+                      <tr className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
+                        <td colSpan={7} className="px-4 pb-3 pt-0">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600">
+                            <span className="font-medium text-gray-500">Comp features:</span>
+
+                            <CompFeatureToggle
+                              label="Pool"
+                              value={comp.pool}
+                              options={[{ v: true, l: 'Yes' }, { v: false, l: 'No' }]}
+                              onChange={(v) => updateComp(i, 'pool', v)}
+                            />
+
+                            <CompFeatureSelect
+                              label="Garage"
+                              value={comp.garageCars}
+                              options={[
+                                { v: '', l: '—' },
+                                { v: '0', l: '0' },
+                                { v: '1', l: '1' },
+                                { v: '2', l: '2' },
+                                { v: '3', l: '3+' },
+                              ]}
+                              onChange={(v) => updateComp(i, 'garageCars', v)}
+                            />
+
+                            <CompFeatureToggle
+                              label="Stories"
+                              value={comp.stories}
+                              options={[{ v: 'one', l: '1' }, { v: 'two', l: '2' }]}
+                              onChange={(v) => updateComp(i, 'stories', v)}
+                            />
+
+                            <CompFeatureSelect
+                              label="Cond."
+                              value={comp.condition}
+                              options={[
+                                { v: '', l: '—' },
+                                { v: 'Excellent', l: 'Excellent' },
+                                { v: 'Good', l: 'Good' },
+                                { v: 'Average', l: 'Average' },
+                                { v: 'Fair', l: 'Fair' },
+                              ]}
+                              onChange={(v) => updateComp(i, 'condition', v)}
+                            />
+
+                            {stats.deltas.length > 0 && (
+                              <span className="text-[11px] text-gray-500 italic">
+                                Adjusted to match your home: {stats.deltas.map((d) => `${d.amount >= 0 ? '+' : '-'}$${formatDollars(Math.abs(d.amount))}`).join(', ')}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                     {hasAnyNote && (
                       <tr className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
                         <td colSpan={7} className="px-4 pb-2 pt-0">
@@ -728,7 +978,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                               <p style={{ fontSize: '12px', color: domNote.color }}>{domNote.text}</p>
                             )}
                             {priceOutlier && (
-                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ Price/sqft differs significantly from other comps — may skew your estimate</p>
+                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ Adjusted $/sqft differs significantly from other comps — may skew your estimate</p>
                             )}
                             {sqftOutlier && (
                               <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ This comp is significantly different in size from your home — may not be a reliable benchmark</p>
@@ -749,12 +999,13 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             </tbody>
             <tfoot>
               <tr className="border-t border-gray-200 bg-gray-50">
-                <td colSpan={6} className="px-4 py-3 text-xs font-semibold text-gray-500 text-right">
-                  Average price per sqft
+                <td colSpan={5} className="px-4 py-3 text-xs font-semibold text-gray-500 text-right">
+                  Average adjusted $/sqft
                 </td>
                 <td className="px-4 py-3 text-sm font-bold" style={{ color: ACCENT }}>
-                  {avgPpsf ? `$${avgPpsf}` : '—'}
+                  {adjustedAvgPpsf ? `$${adjustedAvgPpsf.toFixed(2)}` : '—'}
                 </td>
+                <td className="px-2 py-3" />
               </tr>
             </tfoot>
           </table>
@@ -792,93 +1043,88 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">What have you updated?</h3>
         <p className="text-sm text-gray-500 mb-5">
-          Check everything that applies. These adjustments will be reflected in your price estimate below.
+          Check everything that applies. Subject-home features (pool, garage, stories, condition) are already baked in via the comp normalization in step 2 — these are upgrades and concerns on top of that.
         </p>
-        <div className="space-y-3">
-          {RENOVATIONS.map((item) => (
-            <label key={item.key} className="flex items-start gap-3 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={renovations[item.key] || false}
-                onChange={(e) => handleRenovationChange(item.key, e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer"
-                style={{ accentColor: ACCENT }}
-              />
-              <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-                <span className="text-sm text-gray-800">{item.label}</span>
-                <span
-                  className="text-sm font-semibold"
-                  style={{ color: item.pct > 0 ? ACCENT : '#dc2626' }}
-                >
-                  {item.pct > 0 ? '+' : ''}{(item.pct * 100) % 1 === 0 ? item.pct * 100 : (item.pct * 100).toFixed(2).replace(/0+$/, '')}%
-                </span>
-                <span className="text-xs text-gray-400">
-                  — {SOURCE_DATA[item.source] ? (
-                    <button
-                      type="button"
-                      onClick={() => openDrawer(item.source)}
-                      className="underline underline-offset-2 hover:text-gray-600 transition-colors"
-                    >
-                      {item.source}
-                    </button>
-                  ) : item.source}
-                </span>
+        <div className="space-y-6">
+          {RENOVATION_GROUPS.map((group) => (
+            <div key={group.label}>
+              <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">
+                {group.label}
+              </h4>
+              <div className="space-y-3">
+                {group.items.map((item) => (
+                  <label key={item.key} className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={renovations[item.key] || false}
+                      onChange={(e) => handleRenovationChange(item.key, e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer"
+                      style={{ accentColor: ACCENT }}
+                    />
+                    <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                      <span className="text-sm text-gray-800">{item.label}</span>
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: item.pct > 0 ? ACCENT : '#dc2626' }}
+                      >
+                        {item.pct > 0 ? '+' : ''}{(item.pct * 100) % 1 === 0 ? item.pct * 100 : (item.pct * 100).toFixed(2).replace(/0+$/, '')}%
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        — {SOURCE_DATA[item.source] ? (
+                          <button
+                            type="button"
+                            onClick={() => openDrawer(item.source)}
+                            className="underline underline-offset-2 hover:text-gray-600 transition-colors"
+                          >
+                            {item.source}
+                          </button>
+                        ) : item.source}
+                      </span>
+                    </div>
+                  </label>
+                ))}
               </div>
-            </label>
+            </div>
           ))}
         </div>
       </section>
 
       {hasComps && baseValue && (
         <section className="mb-10">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Calculated Price Range</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Suggested List Price</h3>
+
+          <div
+            className="rounded-xl border-2 px-6 py-6 mb-4"
+            style={{ borderColor: ACCENT, backgroundColor: '#f0fdf4' }}
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#166534' }}>
+              Recommended list price
+            </p>
+            <p className="text-4xl font-bold mb-2" style={{ color: '#14532d' }}>
+              ${formatDollars(suggestedListPrice)}
+            </p>
+            <p className="text-sm" style={{ color: '#166534' }}>
+              Calculated range: <span className="font-semibold">${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}</span>
+            </p>
+            <p className="mt-3 text-xs" style={{ color: '#166534' }}>
+              💡 Priced just under the next $25k bucket to land inside Zillow and Redfin search filters (e.g. buyers searching &quot;under $625k&quot; will see a $624,900 listing).
+            </p>
+          </div>
+
+          {validCount < 3 && (
+            <div className="mb-4 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a', color: '#92400e' }}>
+              ⚠ This estimate is based on only {validCount} comp{validCount === 1 ? '' : 's'}. We recommend at least 3 to defend the price against buyer pushback.
+            </div>
+          )}
 
           <div className="rounded-lg border border-gray-200 overflow-hidden">
             <div className="divide-y divide-gray-100">
               <div className="flex items-center justify-between px-5 py-3 bg-white">
                 <span className="text-sm text-gray-600">
-                  Base value: avg ${avgPpsf}/sqft × {Number(sqft).toLocaleString()} sqft
+                  Adjusted comp average: ${adjustedAvgPpsf.toFixed(2)}/sqft × {Number(sqft).toLocaleString()} sqft
                 </span>
                 <span className="text-sm font-semibold text-gray-900">${formatDollars(baseValue)}</span>
               </div>
-
-              {condition && condPct !== null && condAmt !== 0 && (
-                <div className="flex items-center justify-between px-5 py-3 bg-white">
-                  <span className="text-sm text-gray-600">
-                    Condition ({condition}): {condPct > 0 ? '+' : ''}{condPct * 100}%
-                  </span>
-                  <span
-                    className="text-sm font-semibold"
-                    style={{ color: condAmt >= 0 ? ACCENT : '#dc2626' }}
-                  >
-                    {condAmt >= 0 ? '+' : '-'}${formatDollars(Math.abs(condAmt))}
-                  </span>
-                </div>
-              )}
-              {condition === 'Good' && (
-                <div className="flex items-center justify-between px-5 py-3 bg-white">
-                  <span className="text-sm text-gray-600">Condition (Good): 0%</span>
-                  <span className="text-sm font-semibold text-gray-500">$0</span>
-                </div>
-              )}
-
-              {pool === true && (
-                <div className="flex items-center justify-between px-5 py-3 bg-white">
-                  <span className="text-sm text-gray-600">
-                    Pool (TX adds $15K–$30K regardless of home price)
-                  </span>
-                  <span className="text-sm font-semibold" style={{ color: ACCENT }}>+$20,000</span>
-                </div>
-              )}
-
-              {stories === 'one' && (
-                <div className="flex items-center justify-between px-5 py-3 bg-white">
-                  <span className="text-sm text-gray-600">One-story premium: +2%</span>
-                  <span className="text-sm font-semibold" style={{ color: ACCENT }}>
-                    +${formatDollars(storyAmt)}
-                  </span>
-                </div>
-              )}
 
               {renovationAmounts.map((r) => (
                 <div key={r.key} className="flex items-center justify-between px-5 py-3 bg-white">
@@ -894,9 +1140,10 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 </div>
               ))}
 
-              <div className="flex items-center justify-end px-5 py-4 bg-gray-50">
+              <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
+                <span className="text-sm font-semibold text-gray-700">Calculated value</span>
                 <span className="text-sm font-bold text-gray-900">
-                  ${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}
+                  ${formatDollars(calculatedValue)}
                 </span>
               </div>
             </div>
@@ -905,17 +1152,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           <p className="mt-3 text-xs text-gray-500">
             📊 This is an AI-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
           </p>
-
-          <div
-            className="mt-4 rounded-lg px-4 py-3"
-            style={{ backgroundColor: '#f0fdf4', borderWidth: 1, borderStyle: 'solid', borderColor: '#bbf7d0' }}
-          >
-            <p className="text-sm" style={{ color: '#166534' }}>
-              <span className="font-semibold">Tip:</span> Price at{' '}
-              <span className="font-semibold">${formatDollars(tipPrice)}</span> to appear in more
-              search filters on Zillow and Redfin
-            </p>
-          </div>
 
           <div className="mt-4">
             {estimateSaved ? (
