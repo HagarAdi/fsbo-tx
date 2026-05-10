@@ -7,6 +7,7 @@ import { notifyStepDataChange } from '../../utils/notifyStepData'
 const ACCENT = '#16a34a'
 const EMPTY_COMP = {
   address: '', price: '', sqft: '', yearBuilt: '', dom: '',
+  bedrooms: '', bathrooms: '',
   pool: null, garageCars: '', stories: '', condition: '',
 }
 
@@ -826,11 +827,21 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 const yearBuiltOlder = !isNaN(compYearBuiltNum) && !isNaN(homeYearBuiltNum)
                   && compYearBuiltNum < homeYearBuiltNum - 15
 
+                const compBedrooms = (comp.bedrooms || '') !== '' ? parseInt(comp.bedrooms) : NaN
+                const subjBedrooms = bedrooms !== '' ? parseInt(bedrooms) : NaN
+                const bedroomsMismatch = !isNaN(compBedrooms) && !isNaN(subjBedrooms)
+                  && Math.abs(compBedrooms - subjBedrooms) >= 1
+
+                const compBathrooms = (comp.bathrooms || '') !== '' ? parseFloat(comp.bathrooms) : NaN
+                const subjBathrooms = bathrooms !== '' ? parseFloat(bathrooms) : NaN
+                const bathroomsMismatch = !isNaN(compBathrooms) && !isNaN(subjBathrooms)
+                  && Math.abs(compBathrooms - subjBathrooms) >= 1
+
                 const priceNum = parseFloat(comp.price)
                 const domNum = parseFloat(comp.dom)
                 const domNote = priceNum > 0 && domNum > 0 ? getDomNote(domNum) : null
 
-                const hasAnyNote = !!domNote || sqftOutlier || yearBuiltNewer || yearBuiltOlder
+                const hasAnyNote = !!domNote || sqftOutlier || yearBuiltNewer || yearBuiltOlder || bedroomsMismatch || bathroomsMismatch
                 const showFeatureRow = priceNum > 0 && parseFloat(comp.sqft) > 0
                 const ppsfDiffers = rawPpsf !== null && adjPpsf !== null
                   && Math.abs(adjPpsf - rawPpsf) / rawPpsf > 0.005
@@ -912,6 +923,30 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600">
                             <span className="font-medium text-gray-500">Comp features:</span>
 
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="text-[11px] uppercase tracking-wide text-gray-400">BR</span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={comp.bedrooms}
+                                onChange={(e) => updateComp(i, 'bedrooms', e.target.value)}
+                                className="w-12 border border-gray-200 rounded px-1.5 py-0.5 text-[11px] bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
+                              />
+                            </span>
+
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="text-[11px] uppercase tracking-wide text-gray-400">BA</span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.5"
+                                value={comp.bathrooms}
+                                onChange={(e) => updateComp(i, 'bathrooms', e.target.value)}
+                                className="w-14 border border-gray-200 rounded px-1.5 py-0.5 text-[11px] bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
+                              />
+                            </span>
+
                             <CompFeatureToggle
                               label="Pool"
                               value={comp.pool}
@@ -990,6 +1025,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                             )}
                             {yearBuiltOlder && (
                               <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ Built 15+ years older than your home — find a closer-year comp</p>
+                            )}
+                            {bedroomsMismatch && (
+                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ This comp has {compBedrooms} bedroom{compBedrooms === 1 ? '' : 's'} vs your home&apos;s {subjBedrooms} — bedroom count is a major buyer filter; find a closer match</p>
+                            )}
+                            {bathroomsMismatch && (
+                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ This comp has {compBathrooms} bathroom{compBathrooms === 1 ? '' : 's'} vs your home&apos;s {subjBathrooms} — find a closer match</p>
                             )}
                           </div>
                         </td>
