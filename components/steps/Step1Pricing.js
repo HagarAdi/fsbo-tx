@@ -281,7 +281,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             setComps(s1.comps.map((c) => ({ ...EMPTY_COMP, ...c })))
           }
           if (s1.renovations !== undefined) setRenovations(s1.renovations)
-          if (s1.showMath !== undefined) setShowMath(s1.showMath)
         }
       }
     } catch {}
@@ -293,11 +292,11 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       const existing = saved ? JSON.parse(saved) : {}
       localStorage.setItem(
         'fsbo_stepData',
-        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, comps, renovations, showMath } })
+        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, comps, renovations } })
       )
       notifyStepDataChange()
     } catch {}
-  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, comps, renovations, showMath])
+  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, comps, renovations])
 
   useEffect(() => {
     setEstimateSaved(false)
