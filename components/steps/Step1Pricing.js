@@ -1,6 +1,5 @@
 import { useState, useEffect, Fragment } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import SourceDrawer from '../SourceDrawer'
 import HelpTip from '../Tooltip'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
 
@@ -10,84 +9,6 @@ const EMPTY_COMP = {
   bedrooms: '', bathrooms: '', lotAcres: '',
   pool: null, garageCars: '', stories: '', condition: '',
 }
-
-const SOURCE_DATA = {
-  'NAR Remodeling Impact Report': {
-    title: 'NAR Remodeling Impact Report',
-    year: '2023',
-    keyFinding: 'Homeowners recover an average of 100% of the cost of a new roof at resale. Kitchen upgrades recover 67% and bathroom renovations recover 71% on average.',
-    whyItMatters: 'In the Texas market, roof condition is one of the top buyer concerns — especially with hail season. A new roof removes a major negotiating point.',
-    fullReportUrl: 'https://www.nar.realtor/research-and-statistics/research-reports/remodeling-impact',
-  },
-  'Zillow Research': {
-    title: 'Zillow Paint Color Analysis',
-    year: '2023',
-    keyFinding: 'Homes with specific paint colors sell for more than expected. Fresh interior paint in neutral tones consistently ranks as one of the highest-ROI pre-listing improvements.',
-    whyItMatters: 'Texas buyers touring multiple homes respond strongly to fresh, neutral paint — it signals a well-maintained home and helps buyers visualize themselves in the space.',
-    fullReportUrl: 'https://www.zillow.com/research',
-  },
-  'HomeLight Agent Survey': {
-    title: 'HomeLight Top Agent Insights',
-    year: '2024',
-    keyFinding: 'Agents report that HVAC condition is one of the top buyer concerns, especially in hot climates. Homes with documented HVAC service sell faster and with fewer inspection concessions.',
-    whyItMatters: 'In Texas where AC runs 8+ months a year, HVAC age and condition is the #1 question buyers ask. A service receipt costs $150 and removes a major objection.',
-    fullReportUrl: 'https://www.homelight.com/blog/top-agent-insights',
-  },
-  'Texas appraisal guidelines': {
-    title: 'Texas Appraisal Practice — Foundation & Soil',
-    year: '2024',
-    keyFinding: 'In Central Texas expansive-clay regions, documented foundation work with a transferable warranty typically restores 80–100% of value vs. an undocumented home with visible movement, which sees 1–3% buyer-driven discounts.',
-    whyItMatters: 'Foundation is the #1 inspection objection in Texas. Documented repair receipts and transferable warranties remove the negotiation entirely.',
-    fullReportUrl: 'https://www.trec.texas.gov',
-  },
-}
-
-const RENOVATION_GROUPS = [
-  {
-    label: 'Big-ticket upgrades',
-    items: [
-      { key: 'newRoof', label: 'New roof (last 5 years)', pct: 0.015, source: 'NAR Remodeling Impact Report' },
-      { key: 'updatedKitchen', label: 'Updated kitchen', pct: 0.03, source: 'NAR Remodeling Impact Report' },
-      { key: 'updatedBathrooms', label: 'Updated bathrooms', pct: 0.02, source: 'NAR Remodeling Impact Report' },
-      { key: 'newWindows', label: 'New windows (energy-efficient)', pct: 0.0075, source: 'NAR Remodeling Impact Report' },
-      { key: 'newFlooring', label: 'New flooring', pct: 0.015, source: 'NAR Remodeling Impact Report' },
-      { key: 'freshPaint', label: 'Fresh interior paint', pct: 0.0075, source: 'Zillow Research' },
-    ],
-  },
-  {
-    label: 'Mechanical, electrical & plumbing',
-    items: [
-      { key: 'newHvac', label: 'New HVAC (last 5 years)', pct: 0.015, source: 'HomeLight Agent Survey' },
-      { key: 'tanklessWaterHeater', label: 'Tankless water heater', pct: 0.005, source: 'Industry best practice' },
-      { key: 'updatedElectricalPanel', label: 'Updated electrical panel (200 amp)', pct: 0.0075, source: 'Industry best practice' },
-      { key: 'replumbed', label: 'Replumbed (no polybutylene / galvanized)', pct: 0.01, source: 'Industry best practice' },
-      { key: 'waterSoftener', label: 'Water softener installed', pct: 0.0025, source: 'Industry best practice' },
-    ],
-  },
-  {
-    label: 'Texas-specific value adds',
-    items: [
-      { key: 'solarPanelsOwned', label: 'Solar panels (owned, not leased)', pct: 0.015, source: 'Industry best practice' },
-      { key: 'wholeHomeGenerator', label: 'Whole-home generator (post-2021 freeze)', pct: 0.01, source: 'Industry best practice' },
-      { key: 'foundationDocumented', label: 'Foundation work documented (transferable warranty)', pct: 0.01, source: 'Texas appraisal guidelines' },
-      { key: 'radiantBarrier', label: 'Radiant barrier or spray-foam attic insulation', pct: 0.005, source: 'Industry best practice' },
-      { key: 'sprinklerSystem', label: 'Sprinkler / irrigation system', pct: 0.005, source: 'Industry best practice' },
-      { key: 'evCharger', label: 'EV charger (240V) installed', pct: 0.005, source: 'Industry best practice' },
-      { key: 'smartHome', label: 'Smart home features (Nest, Ring, etc.)', pct: 0.0025, source: 'Industry best practice' },
-    ],
-  },
-  {
-    label: 'Concerns buyers will discount for',
-    items: [
-      { key: 'hvacOld', label: 'HVAC over 15 years old', pct: -0.015, source: 'HomeLight Agent Survey' },
-      { key: 'roofOld', label: 'Roof over 20 years old', pct: -0.015, source: 'HomeLight Agent Survey' },
-      { key: 'foundationIssues', label: 'Visible foundation movement (no documentation)', pct: -0.02, source: 'Texas appraisal guidelines' },
-      { key: 'polybutylenePlumbing', label: 'Polybutylene plumbing', pct: -0.015, source: 'Industry best practice' },
-      { key: 'aluminumWiring', label: 'Aluminum wiring', pct: -0.01, source: 'Industry best practice' },
-    ],
-  },
-]
-const RENOVATIONS = RENOVATION_GROUPS.flatMap((g) => g.items)
 
 const CONDITION_PCT = { Excellent: 0.04, Good: 0, Average: -0.03, Fair: -0.06 }
 
@@ -223,7 +144,6 @@ const COMPS_TIPS = [
 const SUB_STEPS = [
   { id: 1, label: 'Property Details' },
   { id: 2, label: 'Market Comps' },
-  { id: 3, label: 'Value Additions' },
 ]
 
 const slideVariants = {
@@ -244,13 +164,6 @@ function formatDollars(n) {
 
 export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep }) {
   const [activeTooltip, setActiveTooltip] = useState(null)
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [drawerSource, setDrawerSource] = useState(null)
-
-  const openDrawer = (sourceKey) => {
-    setDrawerSource(SOURCE_DATA[sourceKey] ?? null)
-    setDrawerOpen(true)
-  }
 
   const [sqft, setSqft] = useState('')
   const [bedrooms, setBedrooms] = useState('')
@@ -266,9 +179,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     { ...EMPTY_COMP },
     { ...EMPTY_COMP },
   ])
-  const [renovations, setRenovations] = useState({})
   const [showMath, setShowMath] = useState(false)
-  const [breakdownExpanded, setBreakdownExpanded] = useState(false)
   const [derivationExpanded, setDerivationExpanded] = useState(false)
   const [estimateSaved, setEstimateSaved] = useState(false)
   const [activeSubStep, setActiveSubStep] = useState(1)
@@ -298,7 +209,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           if (s1.comps && s1.comps.length > 0) {
             setComps(s1.comps.map((c) => ({ ...EMPTY_COMP, ...c })))
           }
-          if (s1.renovations !== undefined) setRenovations(s1.renovations)
         }
       }
     } catch {}
@@ -310,15 +220,15 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       const existing = saved ? JSON.parse(saved) : {}
       localStorage.setItem(
         'fsbo_stepData',
-        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, comps, renovations } })
+        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, comps } })
       )
       notifyStepDataChange()
     } catch {}
-  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, comps, renovations])
+  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, comps])
 
   useEffect(() => {
     setEstimateSaved(false)
-  }, [sqft, condition, stories, pool, garageCars, lotAcres, renovations, comps])
+  }, [sqft, condition, stories, pool, garageCars, lotAcres, comps])
 
   const updateComp = (index, field, value) => {
     setComps((prev) => {
@@ -330,15 +240,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
 
   const addComp = () => {
     if (comps.length < 5) setComps((prev) => [...prev, { ...EMPTY_COMP }])
-  }
-
-  const handleRenovationChange = (key, checked) => {
-    setRenovations((prev) => {
-      const next = { ...prev, [key]: checked }
-      if (checked && key === 'newRoof') next.roofOld = false
-      if (checked && key === 'roofOld') next.newRoof = false
-      return next
-    })
   }
 
   const subject = { pool, garageCars, stories, condition, lotAcres }
@@ -381,32 +282,18 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
   const hasComps = adjustedAvgPpsf !== null
   const baseValue = hasComps && sqftNum > 0 ? adjustedAvgPpsf * sqftNum : null
 
-  const renovationAmounts = baseValue
-    ? RENOVATIONS.filter((r) => renovations[r.key]).map((r) => ({ ...r, amount: baseValue * r.pct }))
-    : []
-  const renovationsTotal = renovationAmounts.reduce((acc, r) => acc + r.amount, 0)
-
-  const calculatedValue = baseValue ? baseValue + renovationsTotal : null
-  const rangeMin = calculatedValue ? calculatedValue * 0.98 : null
-  const rangeMax = calculatedValue ? calculatedValue * 1.02 : null
+  const rangeMin = baseValue ? baseValue * 0.98 : null
+  const rangeMax = baseValue ? baseValue * 1.02 : null
   // Filter-aware list price: round up to next $25k bucket, then knock $100 under
   // (e.g. $624,000 → $625,000 → $624,900) to land just under common Zillow/Redfin filters.
-  const suggestedListPrice = calculatedValue
-    ? Math.ceil(calculatedValue / 25000) * 25000 - 100
+  const suggestedListPrice = baseValue
+    ? Math.ceil(baseValue / 25000) * 25000 - 100
     : null
 
   const handleSaveEstimate = () => {
-    if (!calculatedValue) return
-    const adjustments = [
-      { step: 1, reason: 'adjusted comp average', amount: Math.round(baseValue) },
-    ]
-    renovationAmounts.forEach((r) =>
-      adjustments.push({ step: 1, reason: r.label, amount: Math.round(r.amount) })
-    )
+    if (!baseValue) return
     const estimate = {
-      basePrice: Math.round(baseValue),
-      adjustments,
-      currentEstimate: Math.round(calculatedValue),
+      currentEstimate: Math.round(baseValue),
       suggestedListPrice,
     }
     try {
@@ -1126,144 +1013,36 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         )}
       </section>
 
-        <div className="mt-8 flex justify-end">
-          <button
-            type="button"
-            onClick={() => goTo(3)}
-            className="px-6 py-3 rounded-lg text-sm font-semibold text-white flex items-center gap-2 transition-opacity hover:opacity-90"
-            style={{ backgroundColor: ACCENT }}
-          >
-            Continue: Value Additions →
-          </button>
-        </div>
-      </div>
-      )}
+        {hasComps && baseValue && (
+          <section className="mb-10">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Suggested List Price</h3>
 
-      {/* ── CARD 3: Value Additions ── */}
-      {activeSubStep === 3 && (
-      <div>
-      <section className="mb-10">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">What have you updated?</h3>
-        <p className="text-sm text-gray-500 mb-5">
-          Check everything that applies. Subject-home features (pool, garage, stories, condition) are already baked in via the comp normalization in step 2 — these are upgrades and concerns on top of that.
-        </p>
-        <div className="space-y-6">
-          {RENOVATION_GROUPS.map((group) => (
-            <div key={group.label}>
-              <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">
-                {group.label}
-              </h4>
-              <div className="space-y-3">
-                {group.items.map((item) => (
-                  <label key={item.key} className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={renovations[item.key] || false}
-                      onChange={(e) => handleRenovationChange(item.key, e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer"
-                      style={{ accentColor: ACCENT }}
-                    />
-                    <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-                      <span className="text-sm text-gray-800">{item.label}</span>
-                      <span
-                        className="text-sm font-semibold"
-                        style={{ color: item.pct > 0 ? ACCENT : '#dc2626' }}
-                      >
-                        {item.pct > 0 ? '+' : ''}{(item.pct * 100) % 1 === 0 ? item.pct * 100 : (item.pct * 100).toFixed(2).replace(/0+$/, '')}%
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        — {SOURCE_DATA[item.source] ? (
-                          <button
-                            type="button"
-                            onClick={() => openDrawer(item.source)}
-                            className="underline underline-offset-2 hover:text-gray-600 transition-colors"
-                          >
-                            {item.source}
-                          </button>
-                        ) : item.source}
-                      </span>
-                    </div>
-                  </label>
-                ))}
+            <div
+              className="rounded-xl border-2 px-6 py-6 mb-4"
+              style={{ borderColor: ACCENT, backgroundColor: '#f0fdf4' }}
+            >
+              <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#166534' }}>
+                Recommended list price
+              </p>
+              <p className="text-4xl font-bold mb-2" style={{ color: '#14532d' }}>
+                ${formatDollars(suggestedListPrice)}
+              </p>
+              <p className="text-sm" style={{ color: '#166534' }}>
+                Calculated range: <span className="font-semibold">${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}</span>
+              </p>
+              <p className="mt-3 text-xs" style={{ color: '#166534' }}>
+                💡 Priced just under the next $25k bucket to land inside Zillow and Redfin search filters (e.g. buyers searching &quot;under $625k&quot; will see a $624,900 listing).
+              </p>
+            </div>
+
+            {validCount < 3 && (
+              <div className="mb-4 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a', color: '#92400e' }}>
+                ⚠ This estimate is based on only {validCount} comp{validCount === 1 ? '' : 's'}. We recommend at least 3 to defend the price against buyer pushback.
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            )}
 
-      {hasComps && baseValue && (
-        <section className="mb-10">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Suggested List Price</h3>
-
-          <div
-            className="rounded-xl border-2 px-6 py-6 mb-4"
-            style={{ borderColor: ACCENT, backgroundColor: '#f0fdf4' }}
-          >
-            <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#166534' }}>
-              Recommended list price
-            </p>
-            <p className="text-4xl font-bold mb-2" style={{ color: '#14532d' }}>
-              ${formatDollars(suggestedListPrice)}
-            </p>
-            <p className="text-sm" style={{ color: '#166534' }}>
-              Calculated range: <span className="font-semibold">${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}</span>
-            </p>
-            <p className="mt-3 text-xs" style={{ color: '#166534' }}>
-              💡 Priced just under the next $25k bucket to land inside Zillow and Redfin search filters (e.g. buyers searching &quot;under $625k&quot; will see a $624,900 listing).
-            </p>
-          </div>
-
-          {validCount < 3 && (
-            <div className="mb-4 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a', color: '#92400e' }}>
-              ⚠ This estimate is based on only {validCount} comp{validCount === 1 ? '' : 's'}. We recommend at least 3 to defend the price against buyer pushback.
-            </div>
-          )}
-
-          {showMath && (
-            <>
+            {showMath && (
               <div className="rounded-lg border border-gray-200 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setBreakdownExpanded((v) => !v)}
-                  className="w-full flex items-center justify-between px-5 py-3 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
-                >
-                  <span className="text-sm font-semibold text-gray-700">Calculation breakdown</span>
-                  <span className="text-sm text-gray-500">{breakdownExpanded ? '▴' : '▾'}</span>
-                </button>
-                {breakdownExpanded && (
-                  <div className="divide-y divide-gray-100 border-t border-gray-100">
-                    <div className="flex items-center justify-between px-5 py-3 bg-white">
-                      <span className="text-sm text-gray-600">
-                        Adjusted comp average: ${adjustedAvgPpsf.toFixed(2)}/sqft × {Number(sqft).toLocaleString()} sqft
-                      </span>
-                      <span className="text-sm font-semibold text-gray-900">${formatDollars(baseValue)}</span>
-                    </div>
-
-                    {renovationAmounts.map((r) => (
-                      <div key={r.key} className="flex items-center justify-between px-5 py-3 bg-white">
-                        <span className="text-sm text-gray-600">
-                          {r.label}: {r.pct > 0 ? '+' : ''}{(r.pct * 100) % 1 === 0 ? r.pct * 100 : (r.pct * 100).toFixed(2).replace(/0+$/, '')}%
-                        </span>
-                        <span
-                          className="text-sm font-semibold"
-                          style={{ color: r.amount >= 0 ? ACCENT : '#dc2626' }}
-                        >
-                          {r.amount >= 0 ? '+' : '-'}${formatDollars(Math.abs(r.amount))}
-                        </span>
-                      </div>
-                    ))}
-
-                    <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
-                      <span className="text-sm font-semibold text-gray-700">Calculated value</span>
-                      <span className="text-sm font-bold text-gray-900">
-                        ${formatDollars(calculatedValue)}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="rounded-lg border border-gray-200 overflow-hidden mt-3">
                 <button
                   type="button"
                   onClick={() => setDerivationExpanded((v) => !v)}
@@ -1275,12 +1054,14 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 {derivationExpanded && (
                   <div className="divide-y divide-gray-100 border-t border-gray-100">
                     <div className="flex items-center justify-between px-5 py-3 bg-white">
-                      <span className="text-sm text-gray-600">Calculated value</span>
-                      <span className="text-sm font-semibold text-gray-900">${formatDollars(calculatedValue)}</span>
+                      <span className="text-sm text-gray-600">
+                        Adjusted comp average: ${adjustedAvgPpsf.toFixed(2)}/sqft × {Number(sqft).toLocaleString()} sqft
+                      </span>
+                      <span className="text-sm font-semibold text-gray-900">${formatDollars(baseValue)}</span>
                     </div>
                     <div className="flex items-center justify-between px-5 py-3 bg-white">
                       <span className="text-sm text-gray-600">Round up to the next $25k bucket</span>
-                      <span className="text-sm font-semibold text-gray-900">${formatDollars(Math.ceil(calculatedValue / 25000) * 25000)}</span>
+                      <span className="text-sm font-semibold text-gray-900">${formatDollars(Math.ceil(baseValue / 25000) * 25000)}</span>
                     </div>
                     <div className="flex items-center justify-between px-5 py-3 bg-white">
                       <span className="text-sm text-gray-600">Subtract $100 to land under the filter</span>
@@ -1291,68 +1072,60 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                       <span className="text-sm font-bold" style={{ color: ACCENT }}>${formatDollars(suggestedListPrice)}</span>
                     </div>
                     <div className="flex items-center justify-between px-5 py-3 bg-white">
-                      <span className="text-sm text-gray-600">Calculated range (Calculated value ± 2%)</span>
+                      <span className="text-sm text-gray-600">Calculated range (Adjusted comp value ± 2%)</span>
                       <span className="text-sm font-semibold text-gray-900">${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}</span>
                     </div>
                   </div>
                 )}
               </div>
-            </>
-          )}
+            )}
 
-          <p className="mt-3 text-xs text-gray-500">
-            📊 This is an AI-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
-          </p>
+            <p className="mt-3 text-xs text-gray-500">
+              📊 This is an AI-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
+            </p>
 
+            <button
+              type="button"
+              onClick={() => setShowMath((v) => !v)}
+              className="mt-3 text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700 transition-colors"
+            >
+              {showMath ? 'Hide how this was calculated ▴' : 'Show how this was calculated ▾'}
+            </button>
+
+            <div className="mt-4">
+              {estimateSaved ? (
+                <span className="text-sm font-semibold" style={{ color: ACCENT }}>
+                  ✓ Estimate saved
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSaveEstimate}
+                  className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: ACCENT }}
+                >
+                  Save my calculation
+                </button>
+              )}
+            </div>
+          </section>
+        )}
+
+        <div className="pt-6 border-t border-gray-100">
           <button
             type="button"
-            onClick={() => setShowMath((v) => !v)}
-            className="mt-3 text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700 transition-colors"
+            onClick={() => onSelectStep && onSelectStep(2)}
+            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
+            style={{ backgroundColor: ACCENT }}
           >
-            {showMath ? 'Hide how this was calculated ▴' : 'Show how this was calculated ▾'}
+            Next: Step 2 — Repairs &amp; Pre-Listing Fixes →
           </button>
-
-          <div className="mt-4">
-            {estimateSaved ? (
-              <span className="text-sm font-semibold" style={{ color: ACCENT }}>
-                ✓ Estimate saved
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSaveEstimate}
-                className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: ACCENT }}
-              >
-                Save my calculation
-              </button>
-            )}
-          </div>
-        </section>
-      )}
-
-      <div className="pt-6 border-t border-gray-100">
-        <button
-          type="button"
-          onClick={() => onSelectStep && onSelectStep(2)}
-          className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
-          style={{ backgroundColor: ACCENT }}
-        >
-          Next: Step 2 — Repairs &amp; Pre-Listing Fixes →
-        </button>
-      </div>
-
+        </div>
       </div>
       )}
 
         </motion.div>
       </AnimatePresence>
-
-      <SourceDrawer
-        isOpen={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        source={drawerSource}
-      />
       </div>{/* end left column */}
 
       {/* Right: context-aware sticky panel */}
