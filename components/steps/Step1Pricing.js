@@ -105,7 +105,7 @@ function adjustCompPrice(comp, subject) {
   if (subject.pool !== null && comp.pool !== null && subject.pool !== comp.pool) {
     const delta = subject.pool ? POOL_ADJUSTMENT : -POOL_ADJUSTMENT
     p += delta
-    deltas.push({ label: subject.pool ? 'Subject has pool, comp does not' : 'Comp has pool, subject does not', amount: delta })
+    deltas.push({ category: 'pool', label: subject.pool ? 'Subject has pool, comp does not' : 'Comp has pool, subject does not', amount: delta })
   }
 
   const subjCars = subject.garageCars === '' || subject.garageCars == null ? null : parseInt(subject.garageCars)
@@ -114,18 +114,18 @@ function adjustCompPrice(comp, subject) {
     const diff = subjCars - compCars
     const delta = diff * PER_GARAGE_SPACE
     p += delta
-    deltas.push({ label: `Garage: subject ${subjCars}-car vs comp ${compCars}-car`, amount: delta })
+    deltas.push({ category: 'garage', label: `Garage: subject ${subjCars}-car vs comp ${compCars}-car`, amount: delta })
   }
 
   if (subject.stories && comp.stories && subject.stories !== comp.stories) {
     if (comp.stories === 'one' && subject.stories === 'two') {
       const before = p
       p = p / (1 + ONE_STORY_PREMIUM)
-      deltas.push({ label: 'Comp is one-story (premium), subject is two-story', amount: Math.round(p - before) })
+      deltas.push({ category: 'stories', label: 'Comp is one-story (premium), subject is two-story', amount: Math.round(p - before) })
     } else if (comp.stories === 'two' && subject.stories === 'one') {
       const before = p
       p = p * (1 + ONE_STORY_PREMIUM)
-      deltas.push({ label: 'Subject is one-story (premium), comp is two-story', amount: Math.round(p - before) })
+      deltas.push({ category: 'stories', label: 'Subject is one-story (premium), comp is two-story', amount: Math.round(p - before) })
     }
   }
 
@@ -134,7 +134,7 @@ function adjustCompPrice(comp, subject) {
     const subjPct = CONDITION_PCT[subject.condition] ?? 0
     const before = p
     p = (p / (1 + compPct)) * (1 + subjPct)
-    deltas.push({ label: `Condition: comp ${comp.condition} → subject ${subject.condition}`, amount: Math.round(p - before) })
+    deltas.push({ category: 'condition', label: `Condition: comp ${comp.condition} → subject ${subject.condition}`, amount: Math.round(p - before) })
   }
 
   return { adjustedPrice: p, deltas }
@@ -962,8 +962,22 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                             />
 
                             {stats.deltas.length > 0 && (
-                              <span className="text-[11px] text-gray-500 italic">
-                                Adjusted to match your home: {stats.deltas.map((d) => `${d.amount >= 0 ? '+' : '-'}$${formatDollars(Math.abs(d.amount))}`).join(', ')}
+                              <span className="basis-full inline-flex flex-wrap items-center gap-x-1 text-[11px] text-gray-500 italic">
+                                <span>Comp price normalized to match your home</span>
+                                <HelpTip
+                                  id={`comp_deltas_${i}`}
+                                  activeTooltip={activeTooltip}
+                                  setActiveTooltip={setActiveTooltip}
+                                  align="start"
+                                >
+                                  +$ means the comp lacked a feature your home has, so we bump it up. −$ means the comp had something your home doesn&apos;t, so we strip its value out. The average $/sqft below is computed from these normalized prices.
+                                </HelpTip>
+                                <span>:</span>
+                                {stats.deltas.map((d, di) => (
+                                  <span key={d.category} title={d.label}>
+                                    {d.category} {d.amount >= 0 ? '+' : '−'}${formatDollars(Math.abs(d.amount))}{di < stats.deltas.length - 1 ? ',' : ''}
+                                  </span>
+                                ))}
                               </span>
                             )}
                           </div>
