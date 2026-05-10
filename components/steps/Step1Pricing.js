@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import HelpTip from '../Tooltip'
+import AppraiserPanel from '../AppraiserPanel'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
 
 const ACCENT = '#16a34a'
@@ -139,6 +140,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
   const [estimateSaved, setEstimateSaved] = useState(false)
   const [activeSubStep, setActiveSubStep] = useState(1)
   const [direction, setDirection] = useState(1)
+  const [appraiserPanelOpen, setAppraiserPanelOpen] = useState(false)
 
   const goTo = (step) => {
     setDirection(step > activeSubStep ? 1 : -1)
@@ -1013,7 +1015,16 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 <span className="font-semibold">Reality check:</span> comps anchor your baseline, but they&apos;re a snapshot of past sales. Interest-rate moves, new construction nearby, school-rating shifts, and neighborhood inventory can move the actual clearing price ±5–10% beyond this estimate.
               </p>
               <p className="mt-2 text-xs text-gray-500 leading-relaxed">
-                💡 Want more certainty before listing? A <span className="font-semibold">pre-listing appraisal ($300–400)</span> gives you a defensible third-party number you can show buyers and lean on during negotiation.
+                💡 Want more certainty before listing? A{' '}
+                <button
+                  type="button"
+                  onClick={() => setAppraiserPanelOpen(true)}
+                  className="font-semibold underline underline-offset-2 hover:opacity-80 transition-opacity"
+                  style={{ color: ACCENT }}
+                >
+                  pre-listing appraisal ($300–400)
+                </button>{' '}
+                gives you a defensible third-party number you can show buyers and lean on during negotiation.
               </p>
             </div>
 
@@ -1126,6 +1137,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       </aside>
 
       </div>{/* end flex row */}
+
+      <AppraiserPanel
+        open={appraiserPanelOpen}
+        onClose={() => setAppraiserPanelOpen(false)}
+        homeAddress={homeAddress}
+      />
     </div>
   )
 }
