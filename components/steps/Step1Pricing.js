@@ -237,8 +237,8 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
   const hasComps = adjustedAvgPpsf !== null
   const baseValue = hasComps && sqftNum > 0 ? adjustedAvgPpsf * sqftNum : null
 
-  const rangeMin = baseValue ? baseValue * 0.98 : null
-  const rangeMax = baseValue ? baseValue * 1.02 : null
+  const rangeMin = baseValue ? baseValue * 0.95 : null
+  const rangeMax = baseValue ? baseValue * 1.05 : null
   // Filter-aware list price: round up to next $25k bucket, then knock $100 under
   // (e.g. $624,000 → $625,000 → $624,900) to land just under common Zillow/Redfin filters.
   const suggestedListPrice = baseValue
@@ -647,9 +647,9 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 {validCount === 0 && 'Enter at least 3 valid comps (price + sqft) for a defensible baseline.'}
                 {validCount === 1 && '1 comp entered — add 2 more to reach Good.'}
                 {validCount === 2 && '2 comps entered — add 1 more to reach Good.'}
-                {validCount === 3 && '3 comps — meets the standard. Add 2 more for Excellent.'}
-                {validCount === 4 && '4 comps — strong. Add 1 more for Excellent.'}
-                {validCount >= 5 && 'You have a defensible spread. Drop weak ones rather than adding more.'}
+                {validCount === 3 && '3 comps — enough for a defensible price. A 4th adds extra confidence if you can find a close match.'}
+                {validCount === 4 && '4 comps — strong baseline. A 5th is optional and only worth adding if it\'s a clean match.'}
+                {validCount >= 5 && '5 comps — excellent spread. Drop weak ones rather than adding more.'}
               </p>
             </div>
           </div>
@@ -981,7 +981,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             className="mt-3 text-sm font-medium underline underline-offset-2 transition-colors"
             style={{ color: ACCENT }}
           >
-            + Add comp
+            {validCount >= 3 ? '+ Add another (optional)' : '+ Add comp'}
           </button>
         )}
       </section>
@@ -1005,6 +1005,15 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
               </p>
               <p className="mt-3 text-xs" style={{ color: '#166534' }}>
                 💡 Priced just under the next $25k bucket to land inside Zillow and Redfin search filters (e.g. buyers searching &quot;under $625k&quot; will see a $624,900 listing).
+              </p>
+            </div>
+
+            <div className="mb-4 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                <span className="font-semibold">Reality check:</span> comps anchor your baseline, but they&apos;re a snapshot of past sales. Interest-rate moves, new construction nearby, school-rating shifts, and neighborhood inventory can move the actual clearing price ±5–10% beyond this estimate.
+              </p>
+              <p className="mt-2 text-xs text-gray-500 leading-relaxed">
+                💡 Want more certainty before listing? A <span className="font-semibold">pre-listing appraisal ($300–400)</span> gives you a defensible third-party number you can show buyers and lean on during negotiation.
               </p>
             </div>
 
@@ -1045,7 +1054,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                       <span className="text-sm font-bold" style={{ color: ACCENT }}>${formatDollars(suggestedListPrice)}</span>
                     </div>
                     <div className="flex items-center justify-between px-5 py-3 bg-white">
-                      <span className="text-sm text-gray-600">Calculated range (Adjusted comp value ± 2%)</span>
+                      <span className="text-sm text-gray-600">Calculated range (Adjusted comp value ± 5%, accounting for market noise)</span>
                       <span className="text-sm font-semibold text-gray-900">${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}</span>
                     </div>
                   </div>
