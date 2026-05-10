@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import HelpTip from '../Tooltip'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
@@ -80,51 +80,6 @@ function getCompsStrength(validCount) {
   if (validCount >= 5) return { tier: 'excellent', label: 'Excellent (defensible)', emoji: '🟢', color: '#16a34a' }
   if (validCount >= 3) return { tier: 'good', label: 'Good (standard)', emoji: '🟡', color: '#d97706' }
   return { tier: 'weak', label: 'Weak (inaccurate)', emoji: '🔴', color: '#dc2626' }
-}
-
-function CompFeatureToggle({ label, value, options, onChange }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="text-[11px] uppercase tracking-wide text-gray-400">{label}</span>
-      <span className="inline-flex rounded-md border border-gray-200 bg-white overflow-hidden">
-        {options.map((opt) => {
-          const selected = value === opt.v
-          return (
-            <button
-              key={String(opt.v)}
-              type="button"
-              onClick={() => onChange(opt.v)}
-              className="px-2 py-0.5 text-[11px] font-medium transition-colors"
-              style={
-                selected
-                  ? { backgroundColor: ACCENT, color: 'white' }
-                  : { backgroundColor: 'white', color: '#4b5563' }
-              }
-            >
-              {opt.l}
-            </button>
-          )
-        })}
-      </span>
-    </span>
-  )
-}
-
-function CompFeatureSelect({ label, value, options, onChange }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="text-[11px] uppercase tracking-wide text-gray-400">{label}</span>
-      <select
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value)}
-        className="border border-gray-200 rounded px-1.5 py-0.5 text-[11px] bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
-      >
-        {options.map((opt) => (
-          <option key={String(opt.v)} value={opt.v}>{opt.l}</option>
-        ))}
-      </select>
-    </span>
-  )
 }
 
 const PRO_TIPS = [
@@ -275,7 +230,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     comp_sqft: 'Heated area only. On the listing or CAD record',
     comp_yr: 'Year the home was built. Find on the listing or CAD record',
     comp_dom: 'Under 14 days = sold fast. 14–30 = normal. 31–60 = took a while. Over 60 = may have had issues',
-    comp_features: 'Differences in pool, garage, stories, and condition are auto-adjusted to match your home before averaging $/sqft.',
+    comp_features: 'Differences in pool, garage, stories, condition, and lot size are auto-adjusted to match your home before averaging $/sqft.',
   }
 
   const sqftNum = parseFloat(sqft)
@@ -703,303 +658,321 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <div className="min-w-[640px]">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                {[
-                  { id: 'comp_address', label: 'Address', align: 'start' },
-                  { id: 'comp_price', label: 'List Price' },
-                  { id: 'comp_sqft', label: 'Sqft' },
-                  { id: 'comp_yr', label: 'Yr Built' },
-                  { id: 'comp_dom', label: 'DOM' },
-                  ...(showMath ? [
-                    { id: 'comp_features', label: 'Adj $/sqft', align: 'end' },
-                    { id: null, label: '' },
-                  ] : []),
-                ].map(({ id, label, align }) => (
-                  <th key={label} className="text-left px-4 py-3 font-medium text-gray-600">
-                    <div className="flex items-center gap-0.5">
-                      {label}
-                      {id && (
-                        <HelpTip id={id} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} placement="bottom" align={align}>
-                          {compTooltips[id]}
-                        </HelpTip>
+        <div className="space-y-3">
+          {comps.map((comp, i) => {
+            const stats = compStats[i]
+            const rawPpsf = stats.rawPpsf
+            const adjPpsf = stats.adjustedPpsf
+
+            const compSqftNum = comp.sqft !== '' ? parseFloat(comp.sqft) : NaN
+            const sqftOutlier = sqftNum > 0 && !isNaN(compSqftNum)
+              && Math.abs(compSqftNum / sqftNum - 1) > 0.25
+
+            const compYearBuiltNum = (comp.yearBuilt || '') !== '' ? parseInt(comp.yearBuilt) : NaN
+            const homeYearBuiltNum = yearBuilt !== '' ? parseInt(yearBuilt) : NaN
+            const yearBuiltNewer = !isNaN(compYearBuiltNum) && !isNaN(homeYearBuiltNum)
+              && compYearBuiltNum > homeYearBuiltNum + 15
+            const yearBuiltOlder = !isNaN(compYearBuiltNum) && !isNaN(homeYearBuiltNum)
+              && compYearBuiltNum < homeYearBuiltNum - 15
+
+            const compBedrooms = (comp.bedrooms || '') !== '' ? parseInt(comp.bedrooms) : NaN
+            const subjBedrooms = bedrooms !== '' ? parseInt(bedrooms) : NaN
+            const bedroomsMismatch = !isNaN(compBedrooms) && !isNaN(subjBedrooms)
+              && Math.abs(compBedrooms - subjBedrooms) >= 1
+
+            const compBathrooms = (comp.bathrooms || '') !== '' ? parseFloat(comp.bathrooms) : NaN
+            const subjBathrooms = bathrooms !== '' ? parseFloat(bathrooms) : NaN
+            const bathroomsMismatch = !isNaN(compBathrooms) && !isNaN(subjBathrooms)
+              && Math.abs(compBathrooms - subjBathrooms) >= 1
+
+            const compLotAcres = (comp.lotAcres || '') !== '' ? parseFloat(comp.lotAcres) : NaN
+            const subjLotAcres = lotAcres !== '' ? parseFloat(lotAcres) : NaN
+            const lotMismatch = !isNaN(compLotAcres) && !isNaN(subjLotAcres)
+              && subjLotAcres > 0 && compLotAcres > 0
+              && Math.abs(compLotAcres / subjLotAcres - 1) > 0.5
+
+            const priceNum = parseFloat(comp.price)
+            const domNum = parseFloat(comp.dom)
+            const domNote = priceNum > 0 && domNum > 0 ? getDomNote(domNum) : null
+
+            const hasAnyNote = !!domNote || sqftOutlier || yearBuiltNewer || yearBuiltOlder || bedroomsMismatch || bathroomsMismatch || lotMismatch
+            const showFeatureRow = priceNum > 0 && parseFloat(comp.sqft) > 0
+            const ppsfDiffers = rawPpsf !== null && adjPpsf !== null
+              && Math.abs(adjPpsf - rawPpsf) / rawPpsf > 0.005
+            const adjustedDirection = adjPpsf !== null && rawPpsf !== null && adjPpsf < rawPpsf ? 'down' : 'up'
+
+            const fieldInput = "border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
+            const fieldLabel = "block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1"
+
+            return (
+              <div key={i} className="rounded-lg border border-gray-200 bg-white p-5">
+                <div className="flex items-start justify-between mb-4">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Comp {i + 1} of {comps.length}
+                  </span>
+                  {showMath && adjPpsf !== null && (
+                    <div className="text-right leading-tight">
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                        Adj $/sqft
+                      </div>
+                      <div className="text-sm font-semibold" style={{ color: ppsfDiffers ? (adjustedDirection === 'up' ? ACCENT : '#dc2626') : '#374151' }}>
+                        ${adjPpsf.toFixed(2)}
+                      </div>
+                      {ppsfDiffers && (
+                        <div className="text-[10px] font-normal text-gray-400">
+                          raw ${rawPpsf.toFixed(2)}
+                        </div>
                       )}
                     </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {comps.map((comp, i) => {
-                const stats = compStats[i]
-                const rawPpsf = stats.rawPpsf
-                const adjPpsf = stats.adjustedPpsf
+                  )}
+                </div>
 
-                const compSqftNum = comp.sqft !== '' ? parseFloat(comp.sqft) : NaN
-                const sqftOutlier = sqftNum > 0 && !isNaN(compSqftNum)
-                  && Math.abs(compSqftNum / sqftNum - 1) > 0.25
+                <div className="mb-4">
+                  <label className={fieldLabel + " flex items-center"}>
+                    Address
+                    <HelpTip id={`comp_address_${i}`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} align="start">
+                      {compTooltips.comp_address}
+                    </HelpTip>
+                  </label>
+                  <input
+                    type="text"
+                    value={comp.address}
+                    onChange={(e) => updateComp(i, 'address', e.target.value)}
+                    placeholder="456 Oak St, Round Rock TX"
+                    className={"w-full " + fieldInput}
+                  />
+                </div>
 
-                const compYearBuiltNum = (comp.yearBuilt || '') !== '' ? parseInt(comp.yearBuilt) : NaN
-                const homeYearBuiltNum = yearBuilt !== '' ? parseInt(yearBuilt) : NaN
-                const yearBuiltNewer = !isNaN(compYearBuiltNum) && !isNaN(homeYearBuiltNum)
-                  && compYearBuiltNum > homeYearBuiltNum + 15
-                const yearBuiltOlder = !isNaN(compYearBuiltNum) && !isNaN(homeYearBuiltNum)
-                  && compYearBuiltNum < homeYearBuiltNum - 15
+                <div className="flex flex-wrap gap-x-5 gap-y-3 mb-4">
+                  <div>
+                    <label className={fieldLabel + " flex items-center"}>
+                      List Price
+                      <HelpTip id={`comp_price_${i}`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                        {compTooltips.comp_price}
+                      </HelpTip>
+                    </label>
+                    <input
+                      type="number"
+                      value={comp.price}
+                      onChange={(e) => updateComp(i, 'price', e.target.value)}
+                      placeholder="485000"
+                      className={"w-32 " + fieldInput}
+                    />
+                  </div>
+                  <div>
+                    <label className={fieldLabel + " flex items-center"}>
+                      Sqft
+                      <HelpTip id={`comp_sqft_${i}`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                        {compTooltips.comp_sqft}
+                      </HelpTip>
+                    </label>
+                    <input
+                      type="number"
+                      value={comp.sqft}
+                      onChange={(e) => updateComp(i, 'sqft', e.target.value)}
+                      placeholder="2050"
+                      className={"w-24 " + fieldInput}
+                    />
+                  </div>
+                  <div>
+                    <label className={fieldLabel + " flex items-center"}>
+                      Yr Built
+                      <HelpTip id={`comp_yr_${i}`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                        {compTooltips.comp_yr}
+                      </HelpTip>
+                    </label>
+                    <input
+                      type="number"
+                      value={comp.yearBuilt || ''}
+                      onChange={(e) => updateComp(i, 'yearBuilt', e.target.value)}
+                      placeholder="2005"
+                      className={"w-24 " + fieldInput}
+                    />
+                  </div>
+                  <div>
+                    <label className={fieldLabel + " flex items-center"}>
+                      DOM
+                      <HelpTip id={`comp_dom_${i}`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                        {compTooltips.comp_dom}
+                      </HelpTip>
+                    </label>
+                    <input
+                      type="number"
+                      value={comp.dom}
+                      onChange={(e) => updateComp(i, 'dom', e.target.value)}
+                      placeholder="12"
+                      className={"w-20 " + fieldInput}
+                    />
+                  </div>
+                </div>
 
-                const compBedrooms = (comp.bedrooms || '') !== '' ? parseInt(comp.bedrooms) : NaN
-                const subjBedrooms = bedrooms !== '' ? parseInt(bedrooms) : NaN
-                const bedroomsMismatch = !isNaN(compBedrooms) && !isNaN(subjBedrooms)
-                  && Math.abs(compBedrooms - subjBedrooms) >= 1
-
-                const compBathrooms = (comp.bathrooms || '') !== '' ? parseFloat(comp.bathrooms) : NaN
-                const subjBathrooms = bathrooms !== '' ? parseFloat(bathrooms) : NaN
-                const bathroomsMismatch = !isNaN(compBathrooms) && !isNaN(subjBathrooms)
-                  && Math.abs(compBathrooms - subjBathrooms) >= 1
-
-                const compLotAcres = (comp.lotAcres || '') !== '' ? parseFloat(comp.lotAcres) : NaN
-                const subjLotAcres = lotAcres !== '' ? parseFloat(lotAcres) : NaN
-                const lotMismatch = !isNaN(compLotAcres) && !isNaN(subjLotAcres)
-                  && subjLotAcres > 0 && compLotAcres > 0
-                  && Math.abs(compLotAcres / subjLotAcres - 1) > 0.5
-
-                const priceNum = parseFloat(comp.price)
-                const domNum = parseFloat(comp.dom)
-                const domNote = priceNum > 0 && domNum > 0 ? getDomNote(domNum) : null
-
-                const hasAnyNote = !!domNote || sqftOutlier || yearBuiltNewer || yearBuiltOlder || bedroomsMismatch || bathroomsMismatch || lotMismatch
-                const showFeatureRow = priceNum > 0 && parseFloat(comp.sqft) > 0
-                const ppsfDiffers = rawPpsf !== null && adjPpsf !== null
-                  && Math.abs(adjPpsf - rawPpsf) / rawPpsf > 0.005
-                const adjustedDirection = adjPpsf !== null && rawPpsf !== null && adjPpsf < rawPpsf ? 'down' : 'up'
-
-                return (
-                  <Fragment key={i}>
-                    <tr className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
-                      <td className="px-4 py-2.5">
-                        <input
-                          type="text"
-                          value={comp.address}
-                          onChange={(e) => updateComp(i, 'address', e.target.value)}
-                          placeholder="456 Oak St, Round Rock TX"
-                          className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                        />
-                      </td>
-                      <td className="px-4 py-2.5">
+                {showFeatureRow && (
+                  <div>
+                    <p className="flex items-center text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+                      Comp features
+                      <HelpTip id={`comp_features_${i}`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} align="start">
+                        {compTooltips.comp_features}
+                      </HelpTip>
+                    </p>
+                    <div className="flex flex-wrap gap-x-5 gap-y-3">
+                      <div>
+                        <label className={fieldLabel}>Bedrooms</label>
                         <input
                           type="number"
-                          value={comp.price}
-                          onChange={(e) => updateComp(i, 'price', e.target.value)}
-                          placeholder="485000"
-                          className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
+                          min="0"
+                          step="1"
+                          value={comp.bedrooms}
+                          onChange={(e) => updateComp(i, 'bedrooms', e.target.value)}
+                          className={"w-16 " + fieldInput}
                         />
-                      </td>
-                      <td className="px-4 py-2.5">
+                      </div>
+                      <div>
+                        <label className={fieldLabel}>Bathrooms</label>
                         <input
                           type="number"
-                          value={comp.sqft}
-                          onChange={(e) => updateComp(i, 'sqft', e.target.value)}
-                          placeholder="2050"
-                          className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
+                          min="0"
+                          step="0.5"
+                          value={comp.bathrooms}
+                          onChange={(e) => updateComp(i, 'bathrooms', e.target.value)}
+                          className={"w-16 " + fieldInput}
                         />
-                      </td>
-                      <td className="px-4 py-2.5">
+                      </div>
+                      <div>
+                        <label className={fieldLabel}>Lot (acres)</label>
                         <input
                           type="number"
-                          value={comp.yearBuilt || ''}
-                          onChange={(e) => updateComp(i, 'yearBuilt', e.target.value)}
-                          placeholder="2005"
-                          className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
+                          min="0"
+                          step="0.01"
+                          value={comp.lotAcres}
+                          onChange={(e) => updateComp(i, 'lotAcres', e.target.value)}
+                          placeholder="0.15"
+                          className={"w-20 " + fieldInput}
                         />
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <input
-                          type="number"
-                          value={comp.dom}
-                          onChange={(e) => updateComp(i, 'dom', e.target.value)}
-                          placeholder="12"
-                          className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
-                        />
-                      </td>
-                      {showMath && (
-                        <>
-                          <td className="px-4 py-2.5 text-xs font-semibold whitespace-nowrap">
-                            {adjPpsf !== null ? (
-                              <div className="flex flex-col leading-tight">
-                                <span style={{ color: ppsfDiffers ? (adjustedDirection === 'up' ? ACCENT : '#dc2626') : '#374151' }}>
-                                  ${adjPpsf.toFixed(2)}
-                                </span>
-                                {ppsfDiffers && (
-                                  <span className="text-[10px] font-normal text-gray-400">
-                                    raw ${rawPpsf.toFixed(2)}
-                                  </span>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-gray-400">—</span>
-                            )}
-                          </td>
-                          <td className="px-2 py-2.5" />
-                        </>
+                      </div>
+                      <div>
+                        <label className={fieldLabel}>Pool</label>
+                        <div className="inline-flex rounded-md border border-gray-200 bg-white overflow-hidden">
+                          {[{ v: true, l: 'Yes' }, { v: false, l: 'No' }].map((opt) => {
+                            const selected = comp.pool === opt.v
+                            return (
+                              <button
+                                key={String(opt.v)}
+                                type="button"
+                                onClick={() => updateComp(i, 'pool', opt.v)}
+                                className="px-3 py-1.5 text-xs font-medium transition-colors"
+                                style={selected ? { backgroundColor: ACCENT, color: 'white' } : { backgroundColor: 'white', color: '#4b5563' }}
+                              >
+                                {opt.l}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <div>
+                        <label className={fieldLabel}>Garage</label>
+                        <select
+                          value={comp.garageCars ?? ''}
+                          onChange={(e) => updateComp(i, 'garageCars', e.target.value)}
+                          className={"w-20 " + fieldInput}
+                        >
+                          {[{ v: '', l: '—' }, { v: '0', l: '0' }, { v: '1', l: '1' }, { v: '2', l: '2' }, { v: '3', l: '3+' }].map((opt) => (
+                            <option key={String(opt.v)} value={opt.v}>{opt.l}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={fieldLabel}>Stories</label>
+                        <div className="inline-flex rounded-md border border-gray-200 bg-white overflow-hidden">
+                          {[{ v: 'one', l: '1' }, { v: 'two', l: '2' }].map((opt) => {
+                            const selected = comp.stories === opt.v
+                            return (
+                              <button
+                                key={String(opt.v)}
+                                type="button"
+                                onClick={() => updateComp(i, 'stories', opt.v)}
+                                className="px-3 py-1.5 text-xs font-medium transition-colors"
+                                style={selected ? { backgroundColor: ACCENT, color: 'white' } : { backgroundColor: 'white', color: '#4b5563' }}
+                              >
+                                {opt.l}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <div>
+                        <label className={fieldLabel}>Condition</label>
+                        <select
+                          value={comp.condition ?? ''}
+                          onChange={(e) => updateComp(i, 'condition', e.target.value)}
+                          className={"w-32 " + fieldInput}
+                        >
+                          {[{ v: '', l: '—' }, { v: 'Excellent', l: 'Excellent' }, { v: 'Good', l: 'Good' }, { v: 'Average', l: 'Average' }, { v: 'Fair', l: 'Fair' }].map((opt) => (
+                            <option key={String(opt.v)} value={opt.v}>{opt.l}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {hasAnyNote && (
+                  <div className="mt-4 rounded-md border border-orange-200 bg-orange-50 px-3 py-2.5">
+                    <ul className="space-y-1 text-[12px] text-orange-700">
+                      {domNote && (
+                        <li style={{ color: domNote.color }}>{domNote.text}</li>
                       )}
-                    </tr>
-                    {showFeatureRow && (
-                      <tr className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
-                        <td colSpan={showMath ? 7 : 5} className="px-4 pb-3 pt-0">
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600">
-                            <span className="font-medium text-gray-500">Comp features:</span>
+                      {sqftOutlier && (
+                        <li>⚠ This comp is significantly different in size from your home — may not be a reliable benchmark</li>
+                      )}
+                      {yearBuiltNewer && (
+                        <li>⚠ Built 15+ years newer than your home — find a closer-year comp</li>
+                      )}
+                      {yearBuiltOlder && (
+                        <li>⚠ Built 15+ years older than your home — find a closer-year comp</li>
+                      )}
+                      {bedroomsMismatch && (
+                        <li>⚠ This comp has {compBedrooms} bedroom{compBedrooms === 1 ? '' : 's'} vs your home&apos;s {subjBedrooms} — bedroom count is a major buyer filter; find a closer match</li>
+                      )}
+                      {bathroomsMismatch && (
+                        <li>⚠ This comp has {compBathrooms} bathroom{compBathrooms === 1 ? '' : 's'} vs your home&apos;s {subjBathrooms} — find a closer match</li>
+                      )}
+                      {lotMismatch && (
+                        <li>⚠ This comp&apos;s lot is {compLotAcres} acres vs your home&apos;s {subjLotAcres} — find a closer match for accurate pricing</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
 
-                            <span className="inline-flex items-center gap-1.5">
-                              <span className="text-[11px] uppercase tracking-wide text-gray-400">BR</span>
-                              <input
-                                type="number"
-                                min="0"
-                                step="1"
-                                value={comp.bedrooms}
-                                onChange={(e) => updateComp(i, 'bedrooms', e.target.value)}
-                                className="w-12 border border-gray-200 rounded px-1.5 py-0.5 text-[11px] bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
-                              />
-                            </span>
-
-                            <span className="inline-flex items-center gap-1.5">
-                              <span className="text-[11px] uppercase tracking-wide text-gray-400">BA</span>
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.5"
-                                value={comp.bathrooms}
-                                onChange={(e) => updateComp(i, 'bathrooms', e.target.value)}
-                                className="w-14 border border-gray-200 rounded px-1.5 py-0.5 text-[11px] bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
-                              />
-                            </span>
-
-                            <span className="inline-flex items-center gap-1.5">
-                              <span className="text-[11px] uppercase tracking-wide text-gray-400">Lot (ac)</span>
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={comp.lotAcres}
-                                onChange={(e) => updateComp(i, 'lotAcres', e.target.value)}
-                                placeholder="0.15"
-                                className="w-16 border border-gray-200 rounded px-1.5 py-0.5 text-[11px] bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
-                              />
-                            </span>
-
-                            <CompFeatureToggle
-                              label="Pool"
-                              value={comp.pool}
-                              options={[{ v: true, l: 'Yes' }, { v: false, l: 'No' }]}
-                              onChange={(v) => updateComp(i, 'pool', v)}
-                            />
-
-                            <CompFeatureSelect
-                              label="Garage"
-                              value={comp.garageCars}
-                              options={[
-                                { v: '', l: '—' },
-                                { v: '0', l: '0' },
-                                { v: '1', l: '1' },
-                                { v: '2', l: '2' },
-                                { v: '3', l: '3+' },
-                              ]}
-                              onChange={(v) => updateComp(i, 'garageCars', v)}
-                            />
-
-                            <CompFeatureToggle
-                              label="Stories"
-                              value={comp.stories}
-                              options={[{ v: 'one', l: '1' }, { v: 'two', l: '2' }]}
-                              onChange={(v) => updateComp(i, 'stories', v)}
-                            />
-
-                            <CompFeatureSelect
-                              label="Cond."
-                              value={comp.condition}
-                              options={[
-                                { v: '', l: '—' },
-                                { v: 'Excellent', l: 'Excellent' },
-                                { v: 'Good', l: 'Good' },
-                                { v: 'Average', l: 'Average' },
-                                { v: 'Fair', l: 'Fair' },
-                              ]}
-                              onChange={(v) => updateComp(i, 'condition', v)}
-                            />
-
-                            {showMath && stats.deltas.length > 0 && (
-                              <span className="basis-full inline-flex flex-wrap items-center gap-x-1 text-[11px] text-gray-500 italic">
-                                <span>Comp price normalized to match your home</span>
-                                <HelpTip
-                                  id={`comp_deltas_${i}`}
-                                  activeTooltip={activeTooltip}
-                                  setActiveTooltip={setActiveTooltip}
-                                  align="start"
-                                >
-                                  +$ means the comp lacked a feature your home has, so we bump it up. −$ means the comp had something your home doesn&apos;t, so we strip its value out. The average $/sqft below is computed from these normalized prices.
-                                </HelpTip>
-                                <span>:</span>
-                                {stats.deltas.map((d, di) => (
-                                  <span key={d.category} title={d.label}>
-                                    {d.category} {d.amount >= 0 ? '+' : '−'}${formatDollars(Math.abs(d.amount))}{di < stats.deltas.length - 1 ? ',' : ''}
-                                  </span>
-                                ))}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                    {hasAnyNote && (
-                      <tr className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
-                        <td colSpan={showMath ? 7 : 5} className="px-4 pb-2 pt-0">
-                          <div className="space-y-0.5">
-                            {domNote && (
-                              <p style={{ fontSize: '12px', color: domNote.color }}>{domNote.text}</p>
-                            )}
-                            {sqftOutlier && (
-                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ This comp is significantly different in size from your home — may not be a reliable benchmark</p>
-                            )}
-                            {yearBuiltNewer && (
-                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ Built 15+ years newer than your home — find a closer-year comp</p>
-                            )}
-                            {yearBuiltOlder && (
-                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ Built 15+ years older than your home — find a closer-year comp</p>
-                            )}
-                            {bedroomsMismatch && (
-                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ This comp has {compBedrooms} bedroom{compBedrooms === 1 ? '' : 's'} vs your home&apos;s {subjBedrooms} — bedroom count is a major buyer filter; find a closer match</p>
-                            )}
-                            {bathroomsMismatch && (
-                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ This comp has {compBathrooms} bathroom{compBathrooms === 1 ? '' : 's'} vs your home&apos;s {subjBathrooms} — find a closer match</p>
-                            )}
-                            {lotMismatch && (
-                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ This comp&apos;s lot is {compLotAcres} acres vs your home&apos;s {subjLotAcres} — find a closer match for accurate pricing</p>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                )
-              })}
-            </tbody>
-            {showMath && (
-              <tfoot>
-                <tr className="border-t border-gray-200 bg-gray-50">
-                  <td colSpan={5} className="px-4 py-3 text-xs font-semibold text-gray-500 text-right">
-                    Average adjusted $/sqft
-                  </td>
-                  <td className="px-4 py-3 text-sm font-bold" style={{ color: ACCENT }}>
-                    {adjustedAvgPpsf ? `$${adjustedAvgPpsf.toFixed(2)}` : '—'}
-                  </td>
-                  <td className="px-2 py-3" />
-                </tr>
-              </tfoot>
-            )}
-          </table>
+                {showMath && stats.deltas.length > 0 && (
+                  <p className="mt-3 inline-flex flex-wrap items-center gap-x-1 text-[11px] text-gray-500 italic">
+                    <span>Comp price normalized to match your home</span>
+                    <HelpTip
+                      id={`comp_deltas_${i}`}
+                      activeTooltip={activeTooltip}
+                      setActiveTooltip={setActiveTooltip}
+                      align="start"
+                    >
+                      +$ means the comp lacked a feature your home has, so we bump it up. −$ means the comp had something your home doesn&apos;t, so we strip its value out. The average $/sqft below is computed from these normalized prices.
+                    </HelpTip>
+                    <span>:</span>
+                    {stats.deltas.map((d, di) => (
+                      <span key={d.category} title={d.label}>
+                        {d.category} {d.amount >= 0 ? '+' : '−'}${formatDollars(Math.abs(d.amount))}{di < stats.deltas.length - 1 ? ',' : ''}
+                      </span>
+                    ))}
+                  </p>
+                )}
+              </div>
+            )
+          })}
         </div>
-        </div>
+
+        {showMath && adjustedAvgPpsf !== null && (
+          <div className="mt-4 flex items-center justify-end gap-3 text-sm">
+            <span className="text-gray-500">Average adjusted $/sqft</span>
+            <span className="font-bold" style={{ color: ACCENT }}>${adjustedAvgPpsf.toFixed(2)}</span>
+          </div>
+        )}
 
         {comps.length < 5 && (
           <button
