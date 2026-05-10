@@ -136,7 +136,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     { ...EMPTY_COMP },
   ])
   const [showMath, setShowMath] = useState(false)
-  const [derivationExpanded, setDerivationExpanded] = useState(false)
   const [estimateSaved, setEstimateSaved] = useState(false)
   const [activeSubStep, setActiveSubStep] = useState(1)
   const [direction, setDirection] = useState(1)
@@ -1035,41 +1034,29 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             )}
 
             {showMath && (
-              <div className="rounded-lg border border-gray-200 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setDerivationExpanded((v) => !v)}
-                  className="w-full flex items-center justify-between px-5 py-3 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
-                >
-                  <span className="text-sm font-semibold text-gray-700">How we got to your list price</span>
-                  <span className="text-sm text-gray-500">{derivationExpanded ? '▴' : '▾'}</span>
-                </button>
-                {derivationExpanded && (
-                  <div className="divide-y divide-gray-100 border-t border-gray-100">
-                    <div className="flex items-center justify-between px-5 py-3 bg-white">
-                      <span className="text-sm text-gray-600">
-                        Adjusted comp average: ${adjustedAvgPpsf.toFixed(2)}/sqft × {Number(sqft).toLocaleString()} sqft
-                      </span>
-                      <span className="text-sm font-semibold text-gray-900">${formatDollars(baseValue)}</span>
-                    </div>
-                    <div className="flex items-center justify-between px-5 py-3 bg-white">
-                      <span className="text-sm text-gray-600">Round up to the next $25k bucket</span>
-                      <span className="text-sm font-semibold text-gray-900">${formatDollars(Math.ceil(baseValue / 25000) * 25000)}</span>
-                    </div>
-                    <div className="flex items-center justify-between px-5 py-3 bg-white">
-                      <span className="text-sm text-gray-600">Subtract $100 to land under the filter</span>
-                      <span className="text-sm font-semibold" style={{ color: '#dc2626' }}>−$100</span>
-                    </div>
-                    <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
-                      <span className="text-sm font-semibold text-gray-700">Recommended list price</span>
-                      <span className="text-sm font-bold" style={{ color: ACCENT }}>${formatDollars(suggestedListPrice)}</span>
-                    </div>
-                    <div className="flex items-center justify-between px-5 py-3 bg-white">
-                      <span className="text-sm text-gray-600">Calculated range (Adjusted comp value ± 5%, accounting for market noise)</span>
-                      <span className="text-sm font-semibold text-gray-900">${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}</span>
-                    </div>
-                  </div>
-                )}
+              <div className="rounded-lg border border-gray-200 overflow-hidden divide-y divide-gray-100">
+                <div className="flex items-center justify-between px-5 py-3 bg-white">
+                  <span className="text-sm text-gray-600">
+                    Adjusted comp average: ${adjustedAvgPpsf.toFixed(2)}/sqft × {Number(sqft).toLocaleString()} sqft
+                  </span>
+                  <span className="text-sm font-semibold text-gray-900">${formatDollars(baseValue)}</span>
+                </div>
+                <div className="flex items-center justify-between px-5 py-3 bg-white">
+                  <span className="text-sm text-gray-600">Round up to the next $25k bucket</span>
+                  <span className="text-sm font-semibold text-gray-900">${formatDollars(Math.ceil(baseValue / 25000) * 25000)}</span>
+                </div>
+                <div className="flex items-center justify-between px-5 py-3 bg-white">
+                  <span className="text-sm text-gray-600">Subtract $100 to land under the filter</span>
+                  <span className="text-sm font-semibold" style={{ color: '#dc2626' }}>−$100</span>
+                </div>
+                <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
+                  <span className="text-sm font-semibold text-gray-700">Recommended list price</span>
+                  <span className="text-sm font-bold" style={{ color: ACCENT }}>${formatDollars(suggestedListPrice)}</span>
+                </div>
+                <div className="flex items-center justify-between px-5 py-3 bg-white">
+                  <span className="text-sm text-gray-600">Calculated range (Adjusted comp value ± 5%, accounting for market noise)</span>
+                  <span className="text-sm font-semibold text-gray-900">${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}</span>
+                </div>
               </div>
             )}
 
