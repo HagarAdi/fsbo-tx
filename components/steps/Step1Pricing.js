@@ -251,6 +251,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     { ...EMPTY_COMP },
   ])
   const [renovations, setRenovations] = useState({})
+  const [showMath, setShowMath] = useState(false)
   const [estimateSaved, setEstimateSaved] = useState(false)
   const [activeSubStep, setActiveSubStep] = useState(1)
   const [direction, setDirection] = useState(1)
@@ -279,6 +280,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             setComps(s1.comps.map((c) => ({ ...EMPTY_COMP, ...c })))
           }
           if (s1.renovations !== undefined) setRenovations(s1.renovations)
+          if (s1.showMath !== undefined) setShowMath(s1.showMath)
         }
       }
     } catch {}
@@ -290,11 +292,11 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       const existing = saved ? JSON.parse(saved) : {}
       localStorage.setItem(
         'fsbo_stepData',
-        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, comps, renovations } })
+        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, comps, renovations, showMath } })
       )
       notifyStepDataChange()
     } catch {}
-  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, comps, renovations])
+  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, comps, renovations, showMath])
 
   useEffect(() => {
     setEstimateSaved(false)
@@ -789,8 +791,10 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                   { id: 'comp_sqft', label: 'Sqft' },
                   { id: 'comp_yr', label: 'Yr Built' },
                   { id: 'comp_dom', label: 'DOM' },
-                  { id: 'comp_features', label: 'Adj $/sqft', align: 'end' },
-                  { id: null, label: '' },
+                  ...(showMath ? [
+                    { id: 'comp_features', label: 'Adj $/sqft', align: 'end' },
+                    { id: null, label: '' },
+                  ] : []),
                 ].map(({ id, label, align }) => (
                   <th key={label} className="text-left px-4 py-3 font-medium text-gray-600">
                     <div className="flex items-center gap-0.5">
@@ -880,27 +884,31 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                           className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-500 bg-transparent"
                         />
                       </td>
-                      <td className="px-4 py-2.5 text-xs font-semibold whitespace-nowrap">
-                        {adjPpsf !== null ? (
-                          <div className="flex flex-col leading-tight">
-                            <span style={{ color: ppsfDiffers ? (adjustedDirection === 'up' ? ACCENT : '#dc2626') : '#374151' }}>
-                              ${adjPpsf.toFixed(2)}
-                            </span>
-                            {ppsfDiffers && (
-                              <span className="text-[10px] font-normal text-gray-400">
-                                raw ${rawPpsf.toFixed(2)}
-                              </span>
+                      {showMath && (
+                        <>
+                          <td className="px-4 py-2.5 text-xs font-semibold whitespace-nowrap">
+                            {adjPpsf !== null ? (
+                              <div className="flex flex-col leading-tight">
+                                <span style={{ color: ppsfDiffers ? (adjustedDirection === 'up' ? ACCENT : '#dc2626') : '#374151' }}>
+                                  ${adjPpsf.toFixed(2)}
+                                </span>
+                                {ppsfDiffers && (
+                                  <span className="text-[10px] font-normal text-gray-400">
+                                    raw ${rawPpsf.toFixed(2)}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">—</span>
                             )}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="px-2 py-2.5" />
+                          </td>
+                          <td className="px-2 py-2.5" />
+                        </>
+                      )}
                     </tr>
                     {showFeatureRow && (
                       <tr className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
-                        <td colSpan={7} className="px-4 pb-3 pt-0">
+                        <td colSpan={showMath ? 7 : 5} className="px-4 pb-3 pt-0">
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600">
                             <span className="font-medium text-gray-500">Comp features:</span>
 
@@ -944,7 +952,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                               onChange={(v) => updateComp(i, 'condition', v)}
                             />
 
-                            {stats.deltas.length > 0 && (
+                            {showMath && stats.deltas.length > 0 && (
                               <span className="basis-full inline-flex flex-wrap items-center gap-x-1 text-[11px] text-gray-500 italic">
                                 <span>Comp price normalized to match your home</span>
                                 <HelpTip
@@ -969,7 +977,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                     )}
                     {hasAnyNote && (
                       <tr className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'}>
-                        <td colSpan={7} className="px-4 pb-2 pt-0">
+                        <td colSpan={showMath ? 7 : 5} className="px-4 pb-2 pt-0">
                           <div className="space-y-0.5">
                             {domNote && (
                               <p style={{ fontSize: '12px', color: domNote.color }}>{domNote.text}</p>
@@ -991,17 +999,19 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 )
               })}
             </tbody>
-            <tfoot>
-              <tr className="border-t border-gray-200 bg-gray-50">
-                <td colSpan={5} className="px-4 py-3 text-xs font-semibold text-gray-500 text-right">
-                  Average adjusted $/sqft
-                </td>
-                <td className="px-4 py-3 text-sm font-bold" style={{ color: ACCENT }}>
-                  {adjustedAvgPpsf ? `$${adjustedAvgPpsf.toFixed(2)}` : '—'}
-                </td>
-                <td className="px-2 py-3" />
-              </tr>
-            </tfoot>
+            {showMath && (
+              <tfoot>
+                <tr className="border-t border-gray-200 bg-gray-50">
+                  <td colSpan={5} className="px-4 py-3 text-xs font-semibold text-gray-500 text-right">
+                    Average adjusted $/sqft
+                  </td>
+                  <td className="px-4 py-3 text-sm font-bold" style={{ color: ACCENT }}>
+                    {adjustedAvgPpsf ? `$${adjustedAvgPpsf.toFixed(2)}` : '—'}
+                  </td>
+                  <td className="px-2 py-3" />
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
         </div>
@@ -1115,7 +1125,9 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             <div className="divide-y divide-gray-100">
               <div className="flex items-center justify-between px-5 py-3 bg-white">
                 <span className="text-sm text-gray-600">
-                  Adjusted comp average: ${adjustedAvgPpsf.toFixed(2)}/sqft × {Number(sqft).toLocaleString()} sqft
+                  {showMath
+                    ? <>Adjusted comp average: ${adjustedAvgPpsf.toFixed(2)}/sqft × {Number(sqft).toLocaleString()} sqft</>
+                    : <>Comp baseline ({validCount} comp{validCount === 1 ? '' : 's'})</>}
                 </span>
                 <span className="text-sm font-semibold text-gray-900">${formatDollars(baseValue)}</span>
               </div>
@@ -1146,6 +1158,14 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           <p className="mt-3 text-xs text-gray-500">
             📊 This is an AI-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
           </p>
+
+          <button
+            type="button"
+            onClick={() => setShowMath((v) => !v)}
+            className="mt-3 text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700 transition-colors"
+          >
+            {showMath ? 'Hide how this was calculated ▴' : 'Show how this was calculated ▾'}
+          </button>
 
           <div className="mt-4">
             {estimateSaved ? (
