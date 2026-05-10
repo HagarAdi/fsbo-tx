@@ -1121,39 +1121,69 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             </div>
           )}
 
-          <div className="rounded-lg border border-gray-200 overflow-hidden">
-            <div className="divide-y divide-gray-100">
-              <div className="flex items-center justify-between px-5 py-3 bg-white">
-                <span className="text-sm text-gray-600">
-                  {showMath
-                    ? <>Adjusted comp average: ${adjustedAvgPpsf.toFixed(2)}/sqft × {Number(sqft).toLocaleString()} sqft</>
-                    : <>Comp baseline ({validCount} comp{validCount === 1 ? '' : 's'})</>}
-                </span>
-                <span className="text-sm font-semibold text-gray-900">${formatDollars(baseValue)}</span>
-              </div>
+          {showMath && (
+            <>
+              <div className="rounded-lg border border-gray-200 overflow-hidden">
+                <div className="divide-y divide-gray-100">
+                  <div className="flex items-center justify-between px-5 py-3 bg-white">
+                    <span className="text-sm text-gray-600">
+                      Adjusted comp average: ${adjustedAvgPpsf.toFixed(2)}/sqft × {Number(sqft).toLocaleString()} sqft
+                    </span>
+                    <span className="text-sm font-semibold text-gray-900">${formatDollars(baseValue)}</span>
+                  </div>
 
-              {renovationAmounts.map((r) => (
-                <div key={r.key} className="flex items-center justify-between px-5 py-3 bg-white">
-                  <span className="text-sm text-gray-600">
-                    {r.label}: {r.pct > 0 ? '+' : ''}{(r.pct * 100) % 1 === 0 ? r.pct * 100 : (r.pct * 100).toFixed(2).replace(/0+$/, '')}%
-                  </span>
-                  <span
-                    className="text-sm font-semibold"
-                    style={{ color: r.amount >= 0 ? ACCENT : '#dc2626' }}
-                  >
-                    {r.amount >= 0 ? '+' : '-'}${formatDollars(Math.abs(r.amount))}
-                  </span>
+                  {renovationAmounts.map((r) => (
+                    <div key={r.key} className="flex items-center justify-between px-5 py-3 bg-white">
+                      <span className="text-sm text-gray-600">
+                        {r.label}: {r.pct > 0 ? '+' : ''}{(r.pct * 100) % 1 === 0 ? r.pct * 100 : (r.pct * 100).toFixed(2).replace(/0+$/, '')}%
+                      </span>
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: r.amount >= 0 ? ACCENT : '#dc2626' }}
+                      >
+                        {r.amount >= 0 ? '+' : '-'}${formatDollars(Math.abs(r.amount))}
+                      </span>
+                    </div>
+                  ))}
+
+                  <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
+                    <span className="text-sm font-semibold text-gray-700">Calculated value</span>
+                    <span className="text-sm font-bold text-gray-900">
+                      ${formatDollars(calculatedValue)}
+                    </span>
+                  </div>
                 </div>
-              ))}
-
-              <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
-                <span className="text-sm font-semibold text-gray-700">Calculated value</span>
-                <span className="text-sm font-bold text-gray-900">
-                  ${formatDollars(calculatedValue)}
-                </span>
               </div>
-            </div>
-          </div>
+
+              <div className="rounded-lg border border-gray-200 overflow-hidden mt-3">
+                <div className="divide-y divide-gray-100">
+                  <div className="px-5 py-3 bg-gray-50">
+                    <span className="text-sm font-semibold text-gray-700">How we got to your list price</span>
+                  </div>
+                  <div className="flex items-center justify-between px-5 py-3 bg-white">
+                    <span className="text-sm text-gray-600">Calculated value</span>
+                    <span className="text-sm font-semibold text-gray-900">${formatDollars(calculatedValue)}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-5 py-3 bg-white">
+                    <span className="text-sm text-gray-600">Round up to the next $25k bucket</span>
+                    <span className="text-sm font-semibold text-gray-900">${formatDollars(Math.ceil(calculatedValue / 25000) * 25000)}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-5 py-3 bg-white">
+                    <span className="text-sm text-gray-600">Subtract $100 to land under the filter</span>
+                    <span className="text-sm font-semibold" style={{ color: '#dc2626' }}>−$100</span>
+                  </div>
+                  <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
+                    <span className="text-sm font-semibold text-gray-700">Recommended list price</span>
+                    <span className="text-sm font-bold" style={{ color: ACCENT }}>${formatDollars(suggestedListPrice)}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-5 py-3 bg-white">
+                    <span className="text-sm text-gray-600">Calculated range (Calculated value ± 2%)</span>
+                    <span className="text-sm font-semibold text-gray-900">${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           <p className="mt-3 text-xs text-gray-500">
             📊 This is an AI-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
