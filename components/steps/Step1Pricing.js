@@ -7,7 +7,7 @@ import { notifyStepDataChange } from '../../utils/notifyStepData'
 const ACCENT = '#16a34a'
 const EMPTY_COMP = {
   address: '', price: '', sqft: '', yearBuilt: '', dom: '',
-  bedrooms: '', bathrooms: '',
+  bedrooms: '', bathrooms: '', lotAcres: '',
   pool: null, garageCars: '', stories: '', condition: '',
 }
 
@@ -96,6 +96,9 @@ const CONDITION_PCT = { Excellent: 0.04, Good: 0, Average: -0.03, Fair: -0.06 }
 const POOL_ADJUSTMENT = 20000
 const PER_GARAGE_SPACE = 5000
 const ONE_STORY_PREMIUM = 0.02
+// In TX suburbs, land typically represents ~20% of total home value.
+const LOT_VALUE_PCT = 0.20
+const SQFT_PER_ACRE = 43560
 
 function adjustCompPrice(comp, subject) {
   const price = parseFloat(comp.price)
@@ -136,6 +139,17 @@ function adjustCompPrice(comp, subject) {
     const before = p
     p = (p / (1 + compPct)) * (1 + subjPct)
     deltas.push({ category: 'condition', label: `Condition: comp ${comp.condition} → subject ${subject.condition}`, amount: Math.round(p - before) })
+  }
+
+  const subjLotAcres = parseFloat(subject.lotAcres)
+  const compLotAcres = parseFloat(comp.lotAcres)
+  if (subjLotAcres > 0 && compLotAcres > 0 && subjLotAcres !== compLotAcres) {
+    const compLotSqft = compLotAcres * SQFT_PER_ACRE
+    const subjLotSqft = subjLotAcres * SQFT_PER_ACRE
+    const lotValuePerSqft = (LOT_VALUE_PCT * price) / compLotSqft
+    const delta = Math.round(lotValuePerSqft * (subjLotSqft - compLotSqft))
+    p += delta
+    deltas.push({ category: 'lot', label: `Lot: subject ${subjLotAcres} ac vs comp ${compLotAcres} ac`, amount: delta })
   }
 
   return { adjustedPrice: p, deltas }
@@ -246,6 +260,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
   const [stories, setStories] = useState(null)
   const [pool, setPool] = useState(null)
   const [garageCars, setGarageCars] = useState('')
+  const [lotAcres, setLotAcres] = useState('')
   const [comps, setComps] = useState([
     { ...EMPTY_COMP },
     { ...EMPTY_COMP },
@@ -279,6 +294,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           if (s1.stories !== undefined) setStories(s1.stories)
           if (s1.pool !== undefined) setPool(s1.pool)
           if (s1.garageCars !== undefined) setGarageCars(s1.garageCars)
+          if (s1.lotAcres !== undefined) setLotAcres(s1.lotAcres)
           if (s1.comps && s1.comps.length > 0) {
             setComps(s1.comps.map((c) => ({ ...EMPTY_COMP, ...c })))
           }
@@ -294,15 +310,15 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       const existing = saved ? JSON.parse(saved) : {}
       localStorage.setItem(
         'fsbo_stepData',
-        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, comps, renovations } })
+        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, comps, renovations } })
       )
       notifyStepDataChange()
     } catch {}
-  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, comps, renovations])
+  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, comps, renovations])
 
   useEffect(() => {
     setEstimateSaved(false)
-  }, [sqft, condition, stories, pool, garageCars, renovations, comps])
+  }, [sqft, condition, stories, pool, garageCars, lotAcres, renovations, comps])
 
   const updateComp = (index, field, value) => {
     setComps((prev) => {
@@ -325,7 +341,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     })
   }
 
-  const subject = { pool, garageCars, stories, condition }
+  const subject = { pool, garageCars, stories, condition, lotAcres }
 
   const compStats = comps.map((comp) => {
     const rawPrice = parseFloat(comp.price)
@@ -621,7 +637,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           <div>
             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
               Pool
-              <HelpTip id="pool" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+              <HelpTip id="pool" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} align="start">
                 In Texas, a pool adds $15,000–$30,000 depending on neighborhood
               </HelpTip>
             </label>
@@ -677,6 +693,24 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 </button>
               ))}
             </div>
+          </div>
+
+          <div>
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+              Lot size (acres)
+              <HelpTip id="lotAcres" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                Find on Zillow under Property Details, or Redfin&apos;s Home facts. Enter as acres (e.g. 0.15 for ~6,500 sqft, 0.5 for ~21,780 sqft, 1.0 for an acre). 1 acre = 43,560 sqft.
+              </HelpTip>
+            </label>
+            <input
+              type="number"
+              value={lotAcres}
+              onChange={(e) => setLotAcres(e.target.value)}
+              placeholder="e.g. 0.15"
+              step="0.01"
+              min="0"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
           </div>
         </div>
 
@@ -838,11 +872,17 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 const bathroomsMismatch = !isNaN(compBathrooms) && !isNaN(subjBathrooms)
                   && Math.abs(compBathrooms - subjBathrooms) >= 1
 
+                const compLotAcres = (comp.lotAcres || '') !== '' ? parseFloat(comp.lotAcres) : NaN
+                const subjLotAcres = lotAcres !== '' ? parseFloat(lotAcres) : NaN
+                const lotMismatch = !isNaN(compLotAcres) && !isNaN(subjLotAcres)
+                  && subjLotAcres > 0 && compLotAcres > 0
+                  && Math.abs(compLotAcres / subjLotAcres - 1) > 0.5
+
                 const priceNum = parseFloat(comp.price)
                 const domNum = parseFloat(comp.dom)
                 const domNote = priceNum > 0 && domNum > 0 ? getDomNote(domNum) : null
 
-                const hasAnyNote = !!domNote || sqftOutlier || yearBuiltNewer || yearBuiltOlder || bedroomsMismatch || bathroomsMismatch
+                const hasAnyNote = !!domNote || sqftOutlier || yearBuiltNewer || yearBuiltOlder || bedroomsMismatch || bathroomsMismatch || lotMismatch
                 const showFeatureRow = priceNum > 0 && parseFloat(comp.sqft) > 0
                 const ppsfDiffers = rawPpsf !== null && adjPpsf !== null
                   && Math.abs(adjPpsf - rawPpsf) / rawPpsf > 0.005
@@ -948,6 +988,19 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                               />
                             </span>
 
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="text-[11px] uppercase tracking-wide text-gray-400">Lot (ac)</span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={comp.lotAcres}
+                                onChange={(e) => updateComp(i, 'lotAcres', e.target.value)}
+                                placeholder="0.15"
+                                className="w-16 border border-gray-200 rounded px-1.5 py-0.5 text-[11px] bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
+                              />
+                            </span>
+
                             <CompFeatureToggle
                               label="Pool"
                               value={comp.pool}
@@ -1032,6 +1085,9 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                             )}
                             {bathroomsMismatch && (
                               <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ This comp has {compBathrooms} bathroom{compBathrooms === 1 ? '' : 's'} vs your home&apos;s {subjBathrooms} — find a closer match</p>
+                            )}
+                            {lotMismatch && (
+                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ This comp&apos;s lot is {compLotAcres} acres vs your home&apos;s {subjLotAcres} — find a closer match for accurate pricing</p>
                             )}
                           </div>
                         </td>
