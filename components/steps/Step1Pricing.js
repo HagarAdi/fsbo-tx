@@ -218,10 +218,9 @@ const slideVariants = {
 }
 
 function getDomNote(domNum) {
-  if (domNum < 14) return { text: '✓ Sold fast — strong reliable comp', color: '#16a34a' }
-  if (domNum <= 30) return { text: '✓ Normal market time — decent comp', color: '#2563eb' }
-  if (domNum <= 60) return { text: '⚠ Took some time to sell — verify condition and location before using', color: '#d97706' }
-  return { text: '⚠ Sat a long time — may have had pricing, condition, or location issues. Consider a different comp', color: '#dc2626' }
+  if (domNum > 60) return { text: '⚠ Sat a long time — may have had pricing, condition, or location issues. Consider a different comp', color: '#dc2626' }
+  if (domNum > 30) return { text: '⚠ Took some time to sell — verify condition and location before using', color: '#d97706' }
+  return null
 }
 
 function formatDollars(n) {
@@ -348,18 +347,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
   const adjustedAvgPpsf = validCount
     ? validStats.reduce((acc, s) => acc + s.adjustedPpsf, 0) / validCount
     : null
-
-  const cleanedMedianPpsf = (() => {
-    const values = validStats.map((s) => s.adjustedPpsf).sort((a, b) => a - b)
-    if (!values.length) return null
-    const mid = Math.floor(values.length / 2)
-    const rawMedian =
-      values.length % 2 !== 0 ? values[mid] : (values[mid - 1] + values[mid]) / 2
-    const cleaned = values.filter((v) => Math.abs(v / rawMedian - 1) <= 0.5)
-    if (!cleaned.length) return rawMedian
-    const cMid = Math.floor(cleaned.length / 2)
-    return cleaned.length % 2 !== 0 ? cleaned[cMid] : (cleaned[cMid - 1] + cleaned[cMid]) / 2
-  })()
 
   const compTooltips = {
     comp_address: 'Find on Redfin or HAR.com under Recently Sold',
@@ -824,9 +811,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 const rawPpsf = stats.rawPpsf
                 const adjPpsf = stats.adjustedPpsf
 
-                const priceOutlier = adjPpsf !== null && cleanedMedianPpsf !== null
-                  && Math.abs(adjPpsf / cleanedMedianPpsf - 1) > 0.15
-
                 const compSqftNum = comp.sqft !== '' ? parseFloat(comp.sqft) : NaN
                 const sqftOutlier = sqftNum > 0 && !isNaN(compSqftNum)
                   && Math.abs(compSqftNum / sqftNum - 1) > 0.25
@@ -840,10 +824,9 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
 
                 const priceNum = parseFloat(comp.price)
                 const domNum = parseFloat(comp.dom)
-                const showDomNote = priceNum > 0 && domNum > 0
-                const domNote = showDomNote ? getDomNote(domNum) : null
+                const domNote = priceNum > 0 && domNum > 0 ? getDomNote(domNum) : null
 
-                const hasAnyNote = showDomNote || priceOutlier || sqftOutlier || yearBuiltNewer || yearBuiltOlder
+                const hasAnyNote = !!domNote || sqftOutlier || yearBuiltNewer || yearBuiltOlder
                 const showFeatureRow = priceNum > 0 && parseFloat(comp.sqft) > 0
                 const ppsfDiffers = rawPpsf !== null && adjPpsf !== null
                   && Math.abs(adjPpsf - rawPpsf) / rawPpsf > 0.005
@@ -991,17 +974,14 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                             {domNote && (
                               <p style={{ fontSize: '12px', color: domNote.color }}>{domNote.text}</p>
                             )}
-                            {priceOutlier && (
-                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ Adjusted $/sqft differs significantly from other comps — may skew your estimate</p>
-                            )}
                             {sqftOutlier && (
                               <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ This comp is significantly different in size from your home — may not be a reliable benchmark</p>
                             )}
                             {yearBuiltNewer && (
-                              <p style={{ fontSize: '12px', color: '#6b7280' }}>ℹ Much newer than your home — buyers may compare it to newer builds</p>
+                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ Built 15+ years newer than your home — find a closer-year comp</p>
                             )}
                             {yearBuiltOlder && (
-                              <p style={{ fontSize: '12px', color: '#6b7280' }}>ℹ Much older than your home — may not reflect current market value</p>
+                              <p style={{ fontSize: '12px', color: '#ea580c' }}>⚠ Built 15+ years older than your home — find a closer-year comp</p>
                             )}
                           </div>
                         </td>
