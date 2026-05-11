@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
+import InspectorPanel from '../InspectorPanel'
 
 const ACCENT = '#16a34a'
 
@@ -220,6 +221,7 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
   const [photos, setPhotos] = useState({ bathrooms: [], kitchen: [], front: [], other: [] })
   const [analyzing, setAnalyzing] = useState(false)
   const [analyzeError, setAnalyzeError] = useState(null)
+  const [inspectorPanelOpen, setInspectorPanelOpen] = useState(false)
   const [activeSubStep, setActiveSubStep] = useState(1)
   const [direction, setDirection] = useState(1)
   const [expandedCategories, setExpandedCategories] = useState(new Set())
@@ -400,6 +402,7 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
   }
 
   return (
+    <>
     <div className="px-4 py-8 md:px-10 md:py-12">
       {/* Static header */}
       <div className="mb-3">
@@ -472,9 +475,9 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
               {/* Card 1: Photo Assessment */}
               {activeSubStep === 1 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Let&apos;s see what your home needs</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">What&apos;s worth a checkbook to upgrade before listing?</h3>
                   <p className="text-sm text-gray-500 mb-6">
-                    We&apos;ll guide you room by room. Upload a photo or skip — your choice.
+                    We&apos;ll guide you room by room. Upload a photo and our AI flags dated or worn cosmetic items with rough $ estimates — or skip and use the checklist below.
                   </p>
 
                   {!wizardDone ? (
@@ -561,14 +564,21 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
                   {/* AI findings */}
                   {aiFindings && aiFindings.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="text-base font-semibold text-gray-900 mb-4">📷 AI spotted these in your photos:</h3>
+                      <h3 className="text-base font-semibold text-gray-900 mb-4">💰 Cosmetic upgrades worth a checkbook:</h3>
                       <div className="space-y-3">
                         {aiFindings.map((finding, i) => {
                           const style = AI_PRIORITY_STYLE[finding.priority] || AI_PRIORITY_STYLE['Optional']
                           return (
                             <div key={i} className="rounded-lg border p-4" style={{ borderColor: style.border, backgroundColor: style.bg }}>
-                              <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <div className="flex flex-wrap items-center gap-2 mb-1.5">
                                 <span className="text-sm font-semibold text-gray-900">{finding.issue}</span>
+                                {finding.costRange && (
+                                  <span
+                                    className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-300"
+                                  >
+                                    {finding.costRange}
+                                  </span>
+                                )}
                                 <span
                                   className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
                                   style={{ backgroundColor: style.bg, color: style.text, border: `1px solid ${style.border}` }}
@@ -577,7 +587,6 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
                                 </span>
                                 <span className="text-xs text-gray-400 ml-auto">{finding.room}</span>
                               </div>
-                              <p className="text-xs font-medium text-gray-600 mb-0.5">{finding.costRange}</p>
                               <p className="text-xs text-gray-500 italic">&ldquo;{finding.whyItMatters}&rdquo;</p>
                             </div>
                           )
@@ -602,6 +611,15 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
               {/* Card 2: Repair Checklist */}
               {activeSubStep === 2 && (
                 <div>
+                  <div className="mb-6 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                    <p className="text-base font-semibold text-gray-900">
+                      Fix it now → keep your price. Fix it later → negotiate it.
+                    </p>
+                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                      Visible issues scare off buyers before they ever make an offer. Hidden ones become negotiation leverage after the buyer&apos;s inspector finds them — fixing them now keeps that leverage off the table.
+                    </p>
+                  </div>
+
                   {/* Must-Fix progress pill */}
                   <div className="flex items-center gap-2 mb-4">
                     <span className="text-lg font-semibold text-gray-900">Your pre-listing checklist</span>
@@ -741,6 +759,27 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
                     </div>
                   )}
 
+                  <div className="mb-6 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                    <p className="text-base font-semibold text-gray-900">
+                      AI can&apos;t see leaks, wiring, or HVAC.
+                    </p>
+                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                      A pre-listing inspection is usually the highest-leverage spend in this step — it surfaces the negotiation-leverage items a buyer&apos;s inspector would find later, while you still control the timing.
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+                      <button
+                        type="button"
+                        onClick={() => setInspectorPanelOpen(true)}
+                        className="inline-flex items-center gap-1 rounded-md px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+                        style={{ backgroundColor: ACCENT }}
+                      >
+                        Find a pre-listing inspector
+                        <span aria-hidden="true">→</span>
+                      </button>
+                      <span className="text-xs text-gray-500">$350–500</span>
+                    </div>
+                  </div>
+
                   <div className="pt-4 border-t border-gray-100">
                     <div className="flex items-center justify-between">
                       <button
@@ -821,5 +860,11 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
         </aside>
       </div>
     </div>
+    <InspectorPanel
+      open={inspectorPanelOpen}
+      onClose={() => setInspectorPanelOpen(false)}
+      homeAddress={null}
+    />
+    </>
   )
 }

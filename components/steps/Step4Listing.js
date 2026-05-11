@@ -105,7 +105,7 @@ function UploadZone({ photos, onAdd, maxPhotos }) {
   const handleFiles = (files) => {
     const valid = Array.from(files).filter(f => ['image/jpeg', 'image/png', 'image/webp'].includes(f.type))
     const remaining = maxPhotos - photos.length
-    const toAdd = valid.slice(0, remaining).map(f => ({ name: f.name, url: URL.createObjectURL(f) }))
+    const toAdd = valid.slice(0, remaining).map(f => ({ name: f.name, url: URL.createObjectURL(f), file: f }))
     if (toAdd.length > 0) onAdd(toAdd)
   }
 
@@ -223,7 +223,9 @@ export default function Step4Listing({ onSelectStep }) {
   const [wizardStage, setWizardStage] = useState(0)
   const [wizardDone, setWizardDone] = useState(false)
   const [photos, setPhotos] = useState({ living: [], kitchen: [], bathrooms: [], exterior: [] })
-  const [showAiTooltip, setShowAiTooltip] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analyzeError, setAnalyzeError] = useState(null)
+  const [aiFeedback, setAiFeedback] = useState(null)
   const [beforeWizardComplete, setBeforeWizardComplete] = useState(false)
 
   // After wizard
@@ -231,7 +233,79 @@ export default function Step4Listing({ onSelectStep }) {
   const [afterWizardStage, setAfterWizardStage] = useState(0)
   const [afterWizardDone, setAfterWizardDone] = useState(false)
   const [afterPhotos, setAfterPhotos] = useState({ living: [], kitchen: [], bathrooms: [], exterior: [] })
-  const [showCompareTooltip, setShowCompareTooltip] = useState(false)
+  const [comparing, setComparing] = useState(false)
+  const [compareError, setCompareError] = useState(null)
+  const [compareResults, setCompareResults] = useState(null)
+
+  const toBase64Compressed = (file) => new Promise(resolve => {
+    const canvas = document.createElement('canvas')
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const maxW = 800
+      const scale = Math.min(1, maxW / img.width)
+      canvas.width = img.width * scale
+      canvas.height = img.height * scale
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1]
+      URL.revokeObjectURL(url)
+      resolve(base64)
+    }
+    img.src = url
+  })
+
+  const handleAnalyzePhotos = async () => {
+    const allFiles = Object.values(photos).flat().map(p => p.file).filter(Boolean)
+    if (allFiles.length === 0) {
+      setAnalyzeError('Upload a practice shot first, or skip to Your Listing.')
+      return
+    }
+    setAnalyzing(true)
+    setAiFeedback(null)
+    setAnalyzeError(null)
+    try {
+      const base64Images = await Promise.all(allFiles.map(toBase64Compressed))
+      const res = await fetch('/api/analyze-photography', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: base64Images }),
+      })
+      const data = await res.json()
+      setAiFeedback(data.findings || [])
+    } catch {
+      setAnalyzeError("Couldn't analyze photos — try again, or skip ahead.")
+    } finally {
+      setAnalyzing(false)
+    }
+  }
+
+  const handleCompare = async () => {
+    const beforeFiles = Object.values(photos).flat().map(p => p.file).filter(Boolean)
+    const afterFiles = Object.values(afterPhotos).flat().map(p => p.file).filter(Boolean)
+    if (beforeFiles.length === 0 || afterFiles.length === 0) {
+      setCompareError('Upload both practice and final shots to compare.')
+      return
+    }
+    setComparing(true)
+    setCompareResults(null)
+    setCompareError(null)
+    try {
+      const allFiles = [...beforeFiles, ...afterFiles]
+      const base64Images = await Promise.all(allFiles.map(toBase64Compressed))
+      const res = await fetch('/api/analyze-photography', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: base64Images, mode: 'compare' }),
+      })
+      const data = await res.json()
+      setCompareResults(data.findings || [])
+    } catch {
+      setCompareError("Couldn't compare photos — try again, or skip ahead.")
+    } finally {
+      setComparing(false)
+    }
+  }
 
   // Listing description
   const [step1Data] = useState(() => {
@@ -455,21 +529,52 @@ export default function Step4Listing({ onSelectStep }) {
                           : "No photos uploaded — that's okay, you can still move forward."}
                       </p>
                       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                        <div className="relative">
-                          <button type="button" disabled onMouseEnter={() => setShowAiTooltip(true)} onMouseLeave={() => setShowAiTooltip(false)} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white cursor-not-allowed opacity-60" style={{ backgroundColor: ACCENT }}>
-                            Get AI feedback →
+                        <div>
+                          <button
+                            type="button"
+                            onClick={handleAnalyzePhotos}
+                            disabled={analyzing}
+                            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ backgroundColor: ACCENT }}
+                          >
+                            {analyzing ? 'Analyzing your shots... 🔍' : 'Get AI feedback →'}
                           </button>
-                          {showAiTooltip && (
-                            <div className="absolute bottom-full left-0 mb-2 w-52 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg z-10 pointer-events-none">
-                              AI feedback coming soon
-                              <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-800" />
-                            </div>
-                          )}
+                          {analyzeError && <p className="mt-2 text-sm text-gray-500">{analyzeError}</p>}
                         </div>
                         <button type="button" onClick={() => goTo(2)} className="text-sm text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors">
                           Skip — go to Your Listing
                         </button>
                       </div>
+
+                      {aiFeedback && aiFeedback.length > 0 && (
+                        <div className="mt-6">
+                          <h4 className="text-sm font-semibold text-gray-900 mb-3">📸 Technique feedback:</h4>
+                          <div className="space-y-3">
+                            {aiFeedback.map((f, i) => {
+                              const sev = f.severity || 'Improve'
+                              const sevStyle =
+                                sev === 'Reshoot' ? { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' } :
+                                sev === 'Looks Good' ? { bg: '#f0fdf4', text: '#15803d', border: '#bbf7d0' } :
+                                { bg: '#fefce8', text: '#ca8a04', border: '#fef08a' }
+                              return (
+                                <div key={i} className="rounded-lg border border-gray-200 bg-white p-4">
+                                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                    <span className="text-sm font-semibold text-gray-900">{f.shot}</span>
+                                    <span
+                                      className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                                      style={{ backgroundColor: sevStyle.bg, color: sevStyle.text, border: `1px solid ${sevStyle.border}` }}
+                                    >
+                                      {sev}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-gray-600">{f.feedback}</p>
+                                  {f.fix && <p className="mt-1 text-xs text-gray-500 italic">Fix: {f.fix}</p>}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -492,17 +597,48 @@ export default function Step4Listing({ onSelectStep }) {
                               ? `You uploaded ${totalAfterPhotos} final photo${totalAfterPhotos !== 1 ? 's' : ''} across ${afterUploadedRooms.length} room${afterUploadedRooms.length !== 1 ? 's' : ''}`
                               : "No final photos uploaded — that's okay, you can still move forward."}
                           </p>
-                          <div className="relative inline-block">
-                            <button type="button" disabled onMouseEnter={() => setShowCompareTooltip(true)} onMouseLeave={() => setShowCompareTooltip(false)} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white cursor-not-allowed opacity-60" style={{ backgroundColor: ACCENT }}>
-                              Compare before &amp; after →
+                          <div>
+                            <button
+                              type="button"
+                              onClick={handleCompare}
+                              disabled={comparing}
+                              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                              style={{ backgroundColor: ACCENT }}
+                            >
+                              {comparing ? 'Comparing your shots... 🔍' : 'Compare before & after →'}
                             </button>
-                            {showCompareTooltip && (
-                              <div className="absolute bottom-full left-0 mb-2 w-52 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg z-10 pointer-events-none">
-                                AI comparison coming soon
-                                <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-800" />
-                              </div>
-                            )}
+                            {compareError && <p className="mt-2 text-sm text-gray-500">{compareError}</p>}
                           </div>
+
+                          {compareResults && compareResults.length > 0 && (
+                            <div className="mt-6">
+                              <h4 className="text-sm font-semibold text-gray-900 mb-3">📊 Before vs. after:</h4>
+                              <div className="space-y-3">
+                                {compareResults.map((r, i) => {
+                                  const v = r.verdict || 'Similar'
+                                  const vStyle =
+                                    v === 'Much Better' || v === 'Better' ? { bg: '#f0fdf4', text: '#15803d', border: '#bbf7d0' } :
+                                    v === 'Worse' ? { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' } :
+                                    { bg: '#f9fafb', text: '#6b7280', border: '#e5e7eb' }
+                                  return (
+                                    <div key={i} className="rounded-lg border border-gray-200 bg-white p-4">
+                                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                        <span className="text-sm font-semibold text-gray-900">{r.room}</span>
+                                        <span
+                                          className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                                          style={{ backgroundColor: vStyle.bg, color: vStyle.text, border: `1px solid ${vStyle.border}` }}
+                                        >
+                                          {v}
+                                        </span>
+                                      </div>
+                                      {r.whatImproved && <p className="text-xs text-gray-600">✓ {r.whatImproved}</p>}
+                                      {r.stillNeedsWork && <p className="mt-1 text-xs text-gray-500 italic">Still needs work: {r.stillNeedsWork}</p>}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

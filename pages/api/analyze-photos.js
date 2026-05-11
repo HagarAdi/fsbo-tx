@@ -23,15 +23,19 @@ export default async function handler(req, res) {
               }
             })),
             {
-              text: `You are a friendly real estate expert helping a Texas homeowner prepare their home for sale.
-              Look at these photos and identify what should be fixed before listing.
-              Be specific but encouraging — most issues are easy to fix.
+              text: `You are advising a Texas FSBO seller on COSMETIC UPGRADES worth a checkbook before listing.
+              Look at these photos and identify dated, worn, or visually unappealing elements that money can fix:
+              dated cooktops/appliances, beige or scuffed walls, brass/dated fixtures, worn carpet, dated tile,
+              old caulking, dingy grout, dated cabinet hardware, builder-grade light fixtures, etc.
+              IGNORE anything mechanical, structural, electrical, plumbing, HVAC, roof, or foundation —
+              you cannot see those from photos and a pre-listing inspector covers that territory.
+              Be specific and honest. If a room looks great, return fewer items rather than padding.
               Return ONLY a valid JSON array with no other text, markdown, or explanation.
               Each item must have exactly these fields:
-              - issue: short name of the problem (string)
+              - issue: short name of the cosmetic problem (string, e.g. "Dated brass bathroom fixtures")
               - priority: exactly one of "Must Fix", "Recommended", or "Optional" (string)
-              - costRange: estimated cost range e.g. "$20-50 DIY" (string)
-              - whyItMatters: one friendly sentence explaining why buyers care (string)
+              - costRange: rough $ estimate range as a short string (e.g. "$50–150", "$300–800", "$1,500+")
+              - whyItMatters: one friendly sentence explaining how this affects buyer perception or offer price (string)
               - room: exactly one of "Bathroom", "Kitchen", "Exterior", "Interior", "Other" (string)`
             }
           ]
