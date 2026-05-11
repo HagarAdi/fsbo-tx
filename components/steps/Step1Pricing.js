@@ -1051,20 +1051,20 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
 
             <div className="mb-4 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
               <p className="text-sm text-gray-700 leading-relaxed">
-                <span className="font-semibold">Reality check:</span> comps anchor your baseline, but they&apos;re a snapshot of past sales. Interest-rate moves, new construction nearby, school-rating shifts, and neighborhood inventory can move the actual clearing price ±5–10% beyond this estimate.
+                Comps give you a defensible baseline, but the market can swing the actual sale price 5–10% either way.
               </p>
-              <p className="mt-2 text-xs text-gray-500 leading-relaxed">
-                💡 Want more certainty before listing? A{' '}
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
                 <button
                   type="button"
                   onClick={() => setAppraiserPanelOpen(true)}
-                  className="font-semibold underline underline-offset-2 hover:opacity-80 transition-opacity"
-                  style={{ color: ACCENT }}
+                  className="inline-flex items-center gap-1 rounded-md px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: ACCENT }}
                 >
-                  pre-listing appraisal ($300–400)
-                </button>{' '}
-                gives you a defensible third-party number you can show buyers and lean on during negotiation.
-              </p>
+                  Get a pre-listing appraisal
+                  <span aria-hidden="true">→</span>
+                </button>
+                <span className="text-xs text-gray-500">$300–400</span>
+              </div>
             </div>
 
             {validCount < 3 && (
