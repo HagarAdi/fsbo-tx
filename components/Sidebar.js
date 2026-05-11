@@ -55,7 +55,7 @@ function PhaseGroup({ phase, steps, activeId, stepStatuses, onClose }) {
 
 export default function Sidebar({ onClose, onCollapse }) {
   const router = useRouter()
-  const { stepStatuses, priceEstimate } = useAppStateContext()
+  const { stepStatuses } = useAppStateContext()
   const activeId = router.query.id ? parseInt(router.query.id, 10) : null
 
   const statuses = stepStatuses || {}
@@ -131,28 +131,6 @@ export default function Sidebar({ onClose, onCollapse }) {
             style={{ width: `${pct}%`, backgroundColor: ACCENT }}
           />
         </div>
-        {/* Estimated price */}
-        {priceEstimate?.currentEstimate ? (
-          <div className="mt-3 rounded-lg px-3 py-2" style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-            <p className="text-xs text-gray-500 mb-0.5">Your Estimate</p>
-            <p className="text-sm font-bold" style={{ color: ACCENT }}>
-              ${priceEstimate.currentEstimate.toLocaleString()}
-            </p>
-          </div>
-        ) : (
-          <p className="text-xs text-gray-400 mt-2">Your Estimate: —</p>
-        )}
-
-        {priceEstimate?.protectedValue && (
-          <div className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
-            🛡️ ${priceEstimate.protectedValue.toLocaleString()} protected
-          </div>
-        )}
-        {priceEstimate?.stagingValue && (
-          <div className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
-            🏠 ${priceEstimate.stagingValue.toLocaleString()} show-ready
-          </div>
-        )}
       </div>
     </div>
   )
