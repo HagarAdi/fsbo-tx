@@ -8,7 +8,7 @@ const ACCENT = '#16a34a'
 const EMPTY_COMP = {
   address: '', price: '', sqft: '', yearBuilt: '', dom: '',
   bedrooms: '', bathrooms: '', lotAcres: '',
-  pool: null, garageCars: '', stories: '', condition: '',
+  pool: null, garageCars: '', stories: '', condition: '', propertyType: '',
 }
 
 const CONDITION_PCT = { Excellent: 0.04, Good: 0, Average: -0.03, Fair: -0.06 }
@@ -21,6 +21,14 @@ const ONE_STORY_PREMIUM = 0.02
 // In TX suburbs, land typically represents ~20% of total home value.
 const LOT_VALUE_PCT = 0.20
 const SQFT_PER_ACRE = 43560
+
+const PROPERTY_TYPE_OPTIONS = [
+  { value: 'single', label: 'Single family' },
+  { value: 'town', label: 'Townhouse' },
+  { value: 'condo', label: 'Condo' },
+  { value: 'multi', label: 'Multi-family' },
+]
+const PROPERTY_TYPE_LABELS = Object.fromEntries(PROPERTY_TYPE_OPTIONS.map((o) => [o.value, o.label]))
 
 function adjustCompPrice(comp, subject) {
   const price = parseFloat(comp.price)
@@ -130,9 +138,8 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
   const [pool, setPool] = useState(null)
   const [garageCars, setGarageCars] = useState('')
   const [lotAcres, setLotAcres] = useState('')
-  const [propertyType, setPropertyType] = useState('') // reserved for future comp matching
+  const [propertyType, setPropertyType] = useState('')
   const [lotUnit, setLotUnit] = useState('acres')
-  const [editingField, setEditingField] = useState(null)
   const [comps, setComps] = useState([
     { ...EMPTY_COMP },
     { ...EMPTY_COMP },
@@ -150,9 +157,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
 
   const fieldInput = "border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
   const fieldLabel = "block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1"
-
-  const isUnset = (v) => v === null || v === undefined || v === ''
-  const isExpanded = (fieldName, value) => isUnset(value) || editingField === fieldName
 
   const displayLotValue = lotUnit === 'sqft'
     ? (lotAcres ? Math.round(parseFloat(lotAcres) * SQFT_PER_ACRE).toString() : '')
@@ -216,7 +220,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     if (comps.length < 5) setComps((prev) => [...prev, { ...EMPTY_COMP }])
   }
 
-  const subject = { pool, garageCars, stories, condition, lotAcres }
+  const subject = { pool, garageCars, stories, condition, lotAcres, propertyType }
 
   const compStats = comps.map((comp) => {
     const rawPrice = parseFloat(comp.price)
@@ -225,6 +229,9 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       return { rawPpsf: null, adjustedPpsf: null, deltas: [], adjustedPrice: null }
     }
     const rawPpsf = rawPrice / sf
+    if (comp.propertyType && subject.propertyType && comp.propertyType !== subject.propertyType) {
+      return { rawPpsf, adjustedPpsf: null, deltas: [], adjustedPrice: null }
+    }
     const { adjustedPrice, deltas } = adjustCompPrice(comp, subject)
     const finalPrice = adjustedPrice ?? rawPrice
     return {
@@ -424,58 +431,24 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
               />
             </div>
 
-            {(() => {
-              const PROPERTY_TYPE_OPTIONS = [
-                { value: 'single', label: 'Single family' },
-                { value: 'town', label: 'Townhouse' },
-                { value: 'condo', label: 'Condo' },
-                { value: 'multi', label: 'Multi-family' },
-              ]
-              const labelMap = Object.fromEntries(PROPERTY_TYPE_OPTIONS.map((o) => [o.value, o.label]))
-              const expanded = isExpanded('propertyType', propertyType)
-              return (
-                <div>
-                  <label className={fieldLabel + " flex items-center"}>
-                    Property type
-                    <HelpTip id="propertyType" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                      Buyers filter by type. Comps should match — a townhouse doesn&apos;t compare to a single-family home.
-                    </HelpTip>
-                  </label>
-                  {expanded ? (
-                    <div id="propertyType-pills" role="group"className="grid grid-cols-2 gap-2">
-                      {PROPERTY_TYPE_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => { setPropertyType(opt.value); setEditingField(null) }}
-                          className="py-2 rounded-lg text-sm font-medium border transition-colors"
-                          style={
-                            propertyType === opt.value
-                              ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
-                              : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
-                          }
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <span className="font-medium">{labelMap[propertyType] || propertyType}</span>
-                      <button
-                        type="button"
-                        onClick={() => setEditingField('propertyType')}
-                        aria-expanded={false}
-                        aria-controls="propertyType-pills"
-                        className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
+            <div>
+              <label className={fieldLabel + " flex items-center"}>
+                Property type
+                <HelpTip id="propertyType" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  Buyers filter by type. Comps should match — a townhouse doesn&apos;t compare to a single-family home.
+                </HelpTip>
+              </label>
+              <select
+                value={propertyType}
+                onChange={(e) => setPropertyType(e.target.value)}
+                className={"w-full " + fieldInput}
+              >
+                <option value="">Select type</option>
+                {PROPERTY_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
 
             <div>
               <label className={fieldLabel + " flex items-center"}>
@@ -513,164 +486,64 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
               </select>
             </div>
 
-            {(() => {
-              const labelMap = { one: 'One-story', two: 'Two-story' }
-              const expanded = isExpanded('stories', stories)
-              return (
-                <div>
-                  <label className={fieldLabel + " flex items-center"}>
-                    Stories
-                    <HelpTip id="stories" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                      In Texas, single-story homes typically sell faster and for more per sqft, especially for buyers over 50
-                    </HelpTip>
-                  </label>
-                  {expanded ? (
-                    <div id="stories-pills" role="group"className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => { setStories('one'); setEditingField(null) }}
-                        className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
-                        style={
-                          stories === 'one'
-                            ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
-                            : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
-                        }
-                      >
-                        One-story
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setStories('two'); setEditingField(null) }}
-                        className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
-                        style={
-                          stories === 'two'
-                            ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
-                            : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
-                        }
-                      >
-                        Two-story
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <span className="font-medium">{labelMap[stories]}</span>
-                      <button
-                        type="button"
-                        onClick={() => setEditingField('stories')}
-                        aria-expanded={false}
-                        aria-controls="stories-pills"
-                        className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
+            <div>
+              <label className={fieldLabel + " flex items-center"}>
+                Stories
+                <HelpTip id="stories" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  In Texas, single-story homes typically sell faster and for more per sqft, especially for buyers over 50
+                </HelpTip>
+              </label>
+              <select
+                value={stories ?? ''}
+                onChange={(e) => setStories(e.target.value || null)}
+                className={"w-full " + fieldInput}
+              >
+                <option value="">Select</option>
+                <option value="one">One-story</option>
+                <option value="two">Two-story</option>
+              </select>
+            </div>
 
-            {(() => {
-              const expanded = isExpanded('pool', pool)
-              const label = pool === true ? 'Yes' : pool === false ? 'No' : ''
-              return (
-                <div>
-                  <label className={fieldLabel + " flex items-center"}>
-                    Pool
-                    <HelpTip id="pool" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} align="start">
-                      In Texas, a pool adds $15,000–$30,000 depending on neighborhood
-                    </HelpTip>
-                  </label>
-                  {expanded ? (
-                    <div id="pool-pills" role="group"className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => { setPool(true); setEditingField(null) }}
-                        className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
-                        style={
-                          pool === true
-                            ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
-                            : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
-                        }
-                      >
-                        Yes
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setPool(false); setEditingField(null) }}
-                        className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
-                        style={
-                          pool === false
-                            ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
-                            : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
-                        }
-                      >
-                        No
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <span className="font-medium">{label}</span>
-                      <button
-                        type="button"
-                        onClick={() => setEditingField('pool')}
-                        aria-expanded={false}
-                        aria-controls="pool-pills"
-                        className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
+            <div>
+              <label className={fieldLabel + " flex items-center"}>
+                Pool
+                <HelpTip id="pool" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} align="start">
+                  In Texas, a pool adds $15,000–$30,000 depending on neighborhood
+                </HelpTip>
+              </label>
+              <select
+                value={pool === null ? '' : String(pool)}
+                onChange={(e) => {
+                  const v = e.target.value
+                  setPool(v === '' ? null : v === 'true')
+                }}
+                className={"w-full " + fieldInput}
+              >
+                <option value="">Select</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
 
-            {(() => {
-              const expanded = isExpanded('garage', garageCars)
-              const label = garageCars === '3' ? '3+ spaces' : (garageCars ? `${garageCars} space${garageCars === '1' ? '' : 's'}` : '')
-              return (
-                <div>
-                  <label className={fieldLabel + " flex items-center"}>
-                    Garage (car spaces)
-                    <HelpTip id="garageCars" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                      Each garage space is worth roughly $5,000 in Texas. We use this to normalize comps that have a different number of spaces.
-                    </HelpTip>
-                  </label>
-                  {expanded ? (
-                    <div id="garage-pills" role="group"className="flex gap-2">
-                      {['0', '1', '2', '3'].map((n) => (
-                        <button
-                          key={n}
-                          type="button"
-                          onClick={() => { setGarageCars(n); setEditingField(null) }}
-                          className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
-                          style={
-                            garageCars === n
-                              ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
-                              : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
-                          }
-                        >
-                          {n === '3' ? '3+' : n}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <span className="font-medium">{label}</span>
-                      <button
-                        type="button"
-                        onClick={() => setEditingField('garage')}
-                        aria-expanded={false}
-                        aria-controls="garage-pills"
-                        className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
+            <div>
+              <label className={fieldLabel + " flex items-center"}>
+                Garage (car spaces)
+                <HelpTip id="garageCars" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  Each garage space is worth roughly $5,000 in Texas. We use this to normalize comps that have a different number of spaces.
+                </HelpTip>
+              </label>
+              <select
+                value={garageCars}
+                onChange={(e) => setGarageCars(e.target.value)}
+                className={"w-full " + fieldInput}
+              >
+                <option value="">Select</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3+</option>
+              </select>
+            </div>
 
             <div>
               <label className={fieldLabel + " flex items-center"}>
@@ -857,7 +730,8 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             const domNum = parseFloat(comp.dom)
             const domNote = priceNum > 0 && domNum > 0 ? getDomNote(domNum) : null
 
-            const hasAnyNote = !!domNote || sqftOutlier || yearBuiltNewer || yearBuiltOlder || bedroomsMismatch || bathroomsMismatch || lotMismatch
+            const propertyTypeMismatch = !!comp.propertyType && !!propertyType && comp.propertyType !== propertyType
+            const hasAnyNote = propertyTypeMismatch || !!domNote || sqftOutlier || yearBuiltNewer || yearBuiltOlder || bedroomsMismatch || bathroomsMismatch || lotMismatch
             const showFeatureRow = priceNum > 0 && parseFloat(comp.sqft) > 0
             const ppsfDiffers = rawPpsf !== null && adjPpsf !== null
               && Math.abs(adjPpsf - rawPpsf) / rawPpsf > 0.005
@@ -975,6 +849,19 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                     </p>
                     <div className="flex flex-wrap gap-x-5 gap-y-3">
                       <div>
+                        <label className={fieldLabel}>Property type</label>
+                        <select
+                          value={comp.propertyType ?? ''}
+                          onChange={(e) => updateComp(i, 'propertyType', e.target.value)}
+                          className={"w-36 " + fieldInput}
+                        >
+                          <option value="">—</option>
+                          {PROPERTY_TYPE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
                         <label className={fieldLabel}>Bedrooms</label>
                         <input
                           type="number"
@@ -1010,22 +897,18 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                       </div>
                       <div>
                         <label className={fieldLabel}>Pool</label>
-                        <div className="inline-flex rounded-md border border-gray-200 bg-white overflow-hidden">
-                          {[{ v: true, l: 'Yes' }, { v: false, l: 'No' }].map((opt) => {
-                            const selected = comp.pool === opt.v
-                            return (
-                              <button
-                                key={String(opt.v)}
-                                type="button"
-                                onClick={() => updateComp(i, 'pool', opt.v)}
-                                className="px-3 py-1.5 text-xs font-medium transition-colors"
-                                style={selected ? { backgroundColor: ACCENT, color: 'white' } : { backgroundColor: 'white', color: '#4b5563' }}
-                              >
-                                {opt.l}
-                              </button>
-                            )
-                          })}
-                        </div>
+                        <select
+                          value={comp.pool === null ? '' : String(comp.pool)}
+                          onChange={(e) => {
+                            const v = e.target.value
+                            updateComp(i, 'pool', v === '' ? null : v === 'true')
+                          }}
+                          className={"w-20 " + fieldInput}
+                        >
+                          <option value="">—</option>
+                          <option value="true">Yes</option>
+                          <option value="false">No</option>
+                        </select>
                       </div>
                       <div>
                         <label className={fieldLabel}>Garage</label>
@@ -1041,22 +924,15 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                       </div>
                       <div>
                         <label className={fieldLabel}>Stories</label>
-                        <div className="inline-flex rounded-md border border-gray-200 bg-white overflow-hidden">
-                          {[{ v: 'one', l: '1' }, { v: 'two', l: '2' }].map((opt) => {
-                            const selected = comp.stories === opt.v
-                            return (
-                              <button
-                                key={String(opt.v)}
-                                type="button"
-                                onClick={() => updateComp(i, 'stories', opt.v)}
-                                className="px-3 py-1.5 text-xs font-medium transition-colors"
-                                style={selected ? { backgroundColor: ACCENT, color: 'white' } : { backgroundColor: 'white', color: '#4b5563' }}
-                              >
-                                {opt.l}
-                              </button>
-                            )
-                          })}
-                        </div>
+                        <select
+                          value={comp.stories ?? ''}
+                          onChange={(e) => updateComp(i, 'stories', e.target.value)}
+                          className={"w-24 " + fieldInput}
+                        >
+                          <option value="">—</option>
+                          <option value="one">1</option>
+                          <option value="two">2</option>
+                        </select>
                       </div>
                       <div>
                         <label className={fieldLabel}>Condition</label>
@@ -1077,26 +953,32 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 {hasAnyNote && (
                   <div className="mt-4 rounded-md border border-orange-200 bg-orange-50 px-3 py-2.5">
                     <ul className="space-y-1 text-[12px] text-orange-700">
-                      {domNote && (
-                        <li style={{ color: domNote.color }}>{domNote.text}</li>
-                      )}
-                      {sqftOutlier && (
-                        <li>⚠ This comp is significantly different in size from your home — may not be a reliable benchmark</li>
-                      )}
-                      {yearBuiltNewer && (
-                        <li>⚠ Built 15+ years newer than your home — find a closer-year comp</li>
-                      )}
-                      {yearBuiltOlder && (
-                        <li>⚠ Built 15+ years older than your home — find a closer-year comp</li>
-                      )}
-                      {bedroomsMismatch && (
-                        <li>⚠ This comp has {compBedrooms} bedroom{compBedrooms === 1 ? '' : 's'} vs your home&apos;s {subjBedrooms} — bedroom count is a major buyer filter; find a closer match</li>
-                      )}
-                      {bathroomsMismatch && (
-                        <li>⚠ This comp has {compBathrooms} bathroom{compBathrooms === 1 ? '' : 's'} vs your home&apos;s {subjBathrooms} — find a closer match</li>
-                      )}
-                      {lotMismatch && (
-                        <li>⚠ This comp&apos;s lot is {compLotAcres} acres vs your home&apos;s {subjLotAcres} — find a closer match for accurate pricing</li>
+                      {propertyTypeMismatch ? (
+                        <li>🚨 Property type mismatch ({PROPERTY_TYPE_LABELS[comp.propertyType]} vs your {PROPERTY_TYPE_LABELS[propertyType]}) — excluded from price calculation</li>
+                      ) : (
+                        <>
+                          {domNote && (
+                            <li style={{ color: domNote.color }}>{domNote.text}</li>
+                          )}
+                          {sqftOutlier && (
+                            <li>⚠ This comp is significantly different in size from your home — may not be a reliable benchmark</li>
+                          )}
+                          {yearBuiltNewer && (
+                            <li>⚠ Built 15+ years newer than your home — find a closer-year comp</li>
+                          )}
+                          {yearBuiltOlder && (
+                            <li>⚠ Built 15+ years older than your home — find a closer-year comp</li>
+                          )}
+                          {bedroomsMismatch && (
+                            <li>⚠ This comp has {compBedrooms} bedroom{compBedrooms === 1 ? '' : 's'} vs your home&apos;s {subjBedrooms} — bedroom count is a major buyer filter; find a closer match</li>
+                          )}
+                          {bathroomsMismatch && (
+                            <li>⚠ This comp has {compBathrooms} bathroom{compBathrooms === 1 ? '' : 's'} vs your home&apos;s {subjBathrooms} — find a closer match</li>
+                          )}
+                          {lotMismatch && (
+                            <li>⚠ This comp&apos;s lot is {compLotAcres} acres vs your home&apos;s {subjLotAcres} — find a closer match for accurate pricing</li>
+                          )}
+                        </>
                       )}
                     </ul>
                   </div>
