@@ -148,7 +148,73 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
   const [wizardStage, setWizardStage] = useState(0)
   const [wizardDone, setWizardDone] = useState(false)
   const [photos, setPhotos] = useState({ living: [], kitchen: [], bedroom: [], exterior: [] })
-  const [analyzeNote, setAnalyzeNote] = useState(null)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analyzeError, setAnalyzeError] = useState(null)
+  const [aiSuggestions, setAiSuggestions] = useState(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const saved = localStorage.getItem('fsbo_stepData')
+      if (saved) {
+        const data = JSON.parse(saved)
+        const findings = data?.step3?.aiSuggestions
+        if (Array.isArray(findings) && findings.length > 0) return findings
+      }
+    } catch {}
+    return null
+  })
+
+  const toBase64Compressed = (file) => new Promise(resolve => {
+    const canvas = document.createElement('canvas')
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const maxW = 800
+      const scale = Math.min(1, maxW / img.width)
+      canvas.width = img.width * scale
+      canvas.height = img.height * scale
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1]
+      URL.revokeObjectURL(url)
+      resolve(base64)
+    }
+    img.src = url
+  })
+
+  const handleAnalyze = async () => {
+    const allFiles = Object.values(photos).flat().map(p => p.file).filter(Boolean)
+    if (allFiles.length === 0) {
+      setAnalyzeError('Upload a photo first, or skip to the checklist.')
+      return
+    }
+    setAnalyzing(true)
+    setAiSuggestions(null)
+    setAnalyzeError(null)
+    try {
+      const base64Images = await Promise.all(allFiles.map(toBase64Compressed))
+      const res = await fetch('/api/analyze-staging', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: base64Images }),
+      })
+      const data = await res.json()
+      const findings = data.findings || []
+      setAiSuggestions(findings)
+      try {
+        const saved = localStorage.getItem('fsbo_stepData')
+        const existing = saved ? JSON.parse(saved) : {}
+        localStorage.setItem('fsbo_stepData', JSON.stringify({
+          ...existing,
+          step3: { ...existing.step3, aiSuggestions: findings },
+        }))
+        notifyStepDataChange()
+      } catch {}
+    } catch {
+      setAnalyzeError("Couldn't analyze photos — no worries, use the checklist below.")
+    } finally {
+      setAnalyzing(false)
+    }
+  }
 
   const addPhotos = (stageId, newPhotos) => setPhotos(prev => ({ ...prev, [stageId]: [...prev[stageId], ...newPhotos] }))
   const advanceWizard = () => { if (wizardStage < WIZARD_STAGES.length - 1) setWizardStage(s => s + 1); else setWizardDone(true) }
@@ -324,8 +390,10 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
               {/* Card 1: Photo Upload */}
               {activeSubStep === 1 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Let&apos;s see your home&apos;s current look</h3>
-                  <p className="text-sm text-gray-500 mb-6">Upload a photo of each room, or skip straight to the checklist.</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">What&apos;s worth a Saturday afternoon to spruce up?</h3>
+                  <p className="text-sm text-gray-500 mb-6">
+                    Upload a photo of each room and our AI flags clutter, rearranging, and quick wins with rough time estimates — or skip and use the checklist below.
+                  </p>
 
                   {!wizardDone ? (
                     <div className="rounded-xl border border-gray-200 bg-white overflow-hidden mb-6">
@@ -363,17 +431,52 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
                         <div>
                           <button
                             type="button"
-                            onClick={() => setAnalyzeNote("AI staging analysis coming soon — we'll wire this up once the API key is ready.")}
-                            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                            onClick={handleAnalyze}
+                            disabled={analyzing}
+                            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{ backgroundColor: ACCENT }}
                           >
-                            Analyze my photos →
+                            {analyzing ? 'Analyzing your photos... 🔍' : 'Analyze my photos →'}
                           </button>
-                          {analyzeNote && <p className="mt-2 text-sm text-gray-500">{analyzeNote}</p>}
+                          {analyzeError && <p className="mt-2 text-sm text-gray-500">{analyzeError}</p>}
                         </div>
                         <button type="button" onClick={() => goTo(2)} className="text-sm text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors">
                           Skip — go straight to checklist
                         </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI suggestions */}
+                  {aiSuggestions && aiSuggestions.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-base font-semibold text-gray-900 mb-4">⏱️ Time-cost staging wins:</h3>
+                      <div className="space-y-3">
+                        {aiSuggestions.map((s, i) => (
+                          <div key={i} className="rounded-lg border border-gray-200 bg-white p-4">
+                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                              <span className="text-sm font-semibold text-gray-900">{s.suggestion}</span>
+                              {s.effort && (
+                                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-300">
+                                  {s.effort}
+                                </span>
+                              )}
+                              {s.impact && (
+                                <span
+                                  className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                                  style={{
+                                    backgroundColor: s.impact === 'High' ? '#fef2f2' : s.impact === 'Medium' ? '#fefce8' : '#f9fafb',
+                                    color: s.impact === 'High' ? '#dc2626' : s.impact === 'Medium' ? '#ca8a04' : '#6b7280',
+                                    border: `1px solid ${s.impact === 'High' ? '#fecaca' : s.impact === 'Medium' ? '#fef08a' : '#e5e7eb'}`,
+                                  }}
+                                >
+                                  {s.impact} Impact
+                                </span>
+                              )}
+                              <span className="text-xs text-gray-400 ml-auto">{s.room}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
