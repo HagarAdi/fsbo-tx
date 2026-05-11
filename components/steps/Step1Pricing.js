@@ -1033,8 +1033,20 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
               </div>
             )}
 
+            <p className="mt-3 text-xs text-gray-500">
+              📊 This is an AI-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setShowMath((v) => !v)}
+              className="mt-3 text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700 transition-colors"
+            >
+              {showMath ? 'Hide how this was calculated ▴' : 'Show how this was calculated ▾'}
+            </button>
+
             {showMath && (
-              <div className="rounded-lg border border-gray-200 overflow-hidden divide-y divide-gray-100">
+              <div className="mt-3 rounded-lg border border-gray-200 overflow-hidden divide-y divide-gray-100">
                 <div className="flex items-center justify-between px-5 py-3 bg-white">
                   <span className="text-sm text-gray-600">
                     Adjusted comp average: ${adjustedAvgPpsf.toFixed(2)}/sqft × {Number(sqft).toLocaleString()} sqft
@@ -1059,18 +1071,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 </div>
               </div>
             )}
-
-            <p className="mt-3 text-xs text-gray-500">
-              📊 This is an AI-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setShowMath((v) => !v)}
-              className="mt-3 text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700 transition-colors"
-            >
-              {showMath ? 'Hide how this was calculated ▴' : 'Show how this was calculated ▾'}
-            </button>
 
             <div className="mt-4">
               {estimateSaved ? (
