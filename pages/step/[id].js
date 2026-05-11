@@ -52,8 +52,6 @@ export default function StepPage() {
   if (stepId === 2) return (
     <Step2Repairs
       onSelectStep={handleSelect}
-      onPriceUpdate={handlePriceUpdate}
-      priceEstimate={priceEstimate}
     />
   )
   if (stepId === 3) return (
