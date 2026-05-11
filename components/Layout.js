@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -6,8 +6,6 @@ import PasswordGate from './PasswordGate'
 import Sidebar from './Sidebar'
 import OnboardingModal from './OnboardingModal'
 import { useAppStateContext } from '../hooks/AppStateContext'
-
-const ACCENT = '#16a34a'
 
 const pageVariants = {
   initial: { opacity: 0, x: 16 },
@@ -19,18 +17,10 @@ export default function Layout({ children }) {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [mounted, setMounted] = useState(false)
-  const { homeAddress, showOnboarding, priceEstimate, handleAddressSave } =
+  const { homeAddress, showOnboarding, handleAddressSave } =
     useAppStateContext()
 
-  useEffect(() => setMounted(true), [])
-
   const closeMobileMenu = () => setMobileMenuOpen(false)
-
-  // Only computed after client hydration so localStorage values are available
-  const displaySavings = mounted && priceEstimate?.currentEstimate
-    ? Math.round(priceEstimate.currentEstimate * 0.03)
-    : null
 
   const isHome = router.pathname === '/'
 
@@ -88,19 +78,14 @@ export default function Layout({ children }) {
           {/* Main column */}
           <div className="flex-1 flex flex-col h-full overflow-hidden">
             {/* Cockpit header — hidden on home (WelcomeScreen has its own) */}
-            {!isHome && (homeAddress || displaySavings) && (
+            {!isHome && homeAddress && (
               <div
-                className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-gray-100 z-10"
+                className="flex-shrink-0 flex items-center px-4 py-2 border-b border-gray-100 z-10"
                 style={{ backgroundColor: '#f0fdf4' }}
               >
-                <span className="text-xs text-gray-500 truncate max-w-[55%]">
-                  📍 {homeAddress || 'No address set'}
+                <span className="text-xs text-gray-500 truncate">
+                  📍 {homeAddress}
                 </span>
-                {displaySavings && (
-                  <span className="text-xs font-semibold" style={{ color: ACCENT }}>
-                    💰 ${displaySavings.toLocaleString()} potential savings
-                  </span>
-                )}
               </div>
             )}
 

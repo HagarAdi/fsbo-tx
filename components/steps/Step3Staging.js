@@ -86,42 +86,55 @@ const CHECKLIST_CATEGORIES = [
   {
     label: 'Curb Appeal',
     items: [
-      { id: 'mow-lawn', name: 'Mow and edge lawn', priority: 'high', cost: '$50–100 hired', impact: 'Buyers preview photos online — curb appeal drives showings' },
-      { id: 'clean-walkway', name: 'Clean walkway and front door area', priority: 'high', cost: '$0–50 DIY', impact: 'First impression matters before they even enter' },
-      { id: 'fresh-mulch', name: 'Add fresh mulch to flower beds', priority: 'medium', cost: '$50–150', impact: 'Instantly makes landscaping look intentional' },
-      { id: 'seasonal-flowers', name: 'Add seasonal flowers or potted plants', priority: 'low', cost: '$20–60', impact: 'Adds color and warmth to exterior photos' },
+      { id: 'mow-lawn', kind: 'show-day', name: 'Mow and edge lawn', priority: 'high', cost: '$50–100 hired', impact: 'Buyers preview photos online — curb appeal drives showings' },
+      { id: 'clean-walkway', kind: 'show-day', name: 'Clean walkway and front door area', priority: 'high', cost: '$0–50 DIY', impact: 'First impression matters before they even enter' },
+      { id: 'fresh-mulch', kind: 'cosmetic-upgrade', name: 'Fresh mulch and trimmed hedges', priority: 'medium', cost: '$150–600 hired', estCost: 375, impact: 'Sets the tone before buyers even walk in' },
+      { id: 'seasonal-flowers', kind: 'show-day', name: 'Add seasonal flowers or potted plants', priority: 'low', cost: '$20–60', impact: 'Adds color and warmth to exterior photos' },
+      { id: 'pressure-wash', kind: 'cosmetic-upgrade', name: 'Pressure wash driveway', priority: 'medium', cost: '$150–400 hired', estCost: 275, impact: 'Instantly makes the home look cared for' },
+      { id: 'front-door', kind: 'cosmetic-upgrade', name: 'Paint front door a bold color (black, navy, red)', priority: 'medium', cost: '$50–150 DIY / $300–600 hired', estCost: 100, impact: 'One of the highest ROI things you can do' },
+      { id: 'mailbox', kind: 'cosmetic-upgrade', name: 'Replace broken mailbox', priority: 'low', cost: '$50–200', estCost: 125, impact: 'Buyers notice the small stuff' },
     ],
   },
   {
     label: 'Declutter & Depersonalize',
     items: [
-      { id: 'remove-photos', name: 'Remove family photos and personal items', priority: 'high', cost: 'Free', impact: 'Buyers need to visualize their own life here' },
-      { id: 'clear-countertops', name: 'Clear all countertops', priority: 'high', cost: 'Free', impact: 'Clear counters make kitchens look twice as big' },
-      { id: 'remove-furniture', name: 'Remove excess furniture to open up space', priority: 'medium', cost: 'Free / $100–200 storage', impact: 'Less furniture = larger-feeling rooms in photos' },
+      { id: 'remove-photos', kind: 'show-day', name: 'Remove family photos and personal items', priority: 'high', cost: 'Free', impact: 'Buyers need to visualize their own life here' },
+      { id: 'clear-countertops', kind: 'show-day', name: 'Clear all countertops', priority: 'high', cost: 'Free', impact: 'Clear counters make kitchens look twice as big' },
+      { id: 'remove-furniture', kind: 'show-day', name: 'Remove excess furniture to open up space', priority: 'medium', cost: 'Free / $100–200 storage', impact: 'Less furniture = larger-feeling rooms in photos' },
     ],
   },
   {
     label: 'Clean & Repair',
     items: [
-      { id: 'deep-clean', name: 'Deep clean all rooms', priority: 'high', cost: '$150–300 hired', impact: 'Buyers smell everything — clean homes feel cared for' },
-      { id: 'clean-windows', name: 'Clean windows inside and out', priority: 'high', cost: '$0–50 DIY', impact: 'Natural light is a top buyer priority in Texas' },
-      { id: 'touch-up-paint', name: 'Touch up paint scuffs and dings', priority: 'medium', cost: '$20–60 DIY', impact: 'Fresh paint signals a well-maintained home' },
+      { id: 'deep-clean', kind: 'show-day', name: 'Deep clean all rooms', priority: 'high', cost: '$150–300 hired', impact: 'Buyers smell everything — clean homes feel cared for' },
+      { id: 'clean-windows', kind: 'show-day', name: 'Clean windows inside and out', priority: 'high', cost: '$0–50 DIY', impact: 'Natural light is a top buyer priority in Texas' },
+      { id: 'touch-up-paint', kind: 'show-day', name: 'Touch up paint scuffs and dings', priority: 'medium', cost: '$20–60 DIY', impact: 'Fresh paint signals a well-maintained home' },
+      { id: 'squeaky', kind: 'cosmetic-upgrade', name: 'Fix squeaky doors and cabinets', priority: 'medium', cost: '$10–50 DIY / $150–300 hired', estCost: 30, impact: 'Squeaks feel like neglect' },
+      { id: 'interior-paint', kind: 'cosmetic-upgrade', name: 'Paint walls white or off-white (Sherwin-Williams Alabaster)', priority: 'medium', cost: '$300–600 DIY / $600–1,500 hired per room', estCost: 450, impact: 'Neutral walls help buyers picture their own life here' },
     ],
   },
   {
     label: 'Style & Neutralize',
     items: [
-      { id: 'neutral-pillows', name: 'Add neutral throw pillows and blankets', priority: 'medium', cost: '$40–100', impact: 'Photographs well and helps buyers see potential' },
-      { id: 'remove-bold-art', name: 'Remove bold wall art and decorations', priority: 'medium', cost: 'Free', impact: 'Neutral spaces feel larger and appeal to more buyers' },
-      { id: 'white-towels', name: 'Display fresh white towels in bathrooms', priority: 'low', cost: '$20–40', impact: 'The hotel towel trick — makes bathrooms feel spa-like' },
+      { id: 'neutral-pillows', kind: 'show-day', name: 'Add neutral throw pillows and blankets', priority: 'medium', cost: '$40–100', impact: 'Photographs well and helps buyers see potential' },
+      { id: 'remove-bold-art', kind: 'show-day', name: 'Remove bold wall art and decorations', priority: 'medium', cost: 'Free', impact: 'Neutral spaces feel larger and appeal to more buyers' },
+      { id: 'white-towels', kind: 'show-day', name: 'Display fresh white towels in bathrooms', priority: 'low', cost: '$20–40', impact: 'The hotel towel trick — makes bathrooms feel spa-like' },
     ],
   },
   {
     label: 'Lighting',
     items: [
-      { id: 'maximize-light', name: 'Open all blinds and curtains for photos', priority: 'high', cost: 'Free', impact: 'Bright photos get 3× more online views' },
-      { id: 'replace-bulbs', name: 'Replace dim bulbs with warm LED (2700K)', priority: 'medium', cost: '$20–50 DIY', impact: 'Warm lighting makes rooms feel inviting, not institutional' },
-      { id: 'add-lamp', name: 'Add floor lamp to any dark corners', priority: 'low', cost: '$30–80', impact: 'Eliminates the "cave effect" in listing photos' },
+      { id: 'maximize-light', kind: 'show-day', name: 'Open all blinds and curtains for photos', priority: 'high', cost: 'Free', impact: 'Bright photos get 3× more online views' },
+      { id: 'replace-bulbs', kind: 'show-day', name: 'Replace dim bulbs with warm LED (2700K)', priority: 'medium', cost: '$20–50 DIY', impact: 'Warm lighting makes rooms feel inviting, not institutional' },
+      { id: 'add-lamp', kind: 'show-day', name: 'Add floor lamp to any dark corners', priority: 'low', cost: '$30–80', impact: 'Eliminates the "cave effect" in listing photos' },
+    ],
+  },
+  {
+    label: 'Kitchen & Bath',
+    items: [
+      { id: 'vanities', kind: 'cosmetic-upgrade', name: 'Paint bathroom vanities navy, black, or forest green', priority: 'medium', cost: '$100–250 DIY / $400–800 hired', estCost: 175, impact: 'Photographs beautifully and feels renovated' },
+      { id: 'grout', kind: 'cosmetic-upgrade', name: 'Deep clean grout', priority: 'medium', cost: '$20–60 DIY / $200–500 hired', estCost: 40, impact: 'Clean grout reads as a fresh bathroom in photos' },
+      { id: 'hardware', kind: 'cosmetic-upgrade', name: 'Update cabinet hardware', priority: 'low', cost: '$100–400 DIY', estCost: 250, impact: 'New pulls can transform a kitchen' },
     ],
   },
 ]
@@ -144,7 +157,7 @@ function PriorityBadge({ priority }) {
   )
 }
 
-export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimate }) {
+export default function Step3Staging({ onSelectStep }) {
   const [wizardStage, setWizardStage] = useState(0)
   const [wizardDone, setWizardDone] = useState(false)
   const [photos, setPhotos] = useState({ living: [], kitchen: [], bedroom: [], exterior: [] })
@@ -258,32 +271,18 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
 
   const allChecklistItems = CHECKLIST_CATEGORIES.flatMap(c => c.items)
   const highItems = allChecklistItems.filter(i => i.priority === 'high')
-  const mediumItems = allChecklistItems.filter(i => i.priority === 'medium')
   const highDone = highItems.filter(i => checkedItems.has(i.id)).length
-  const mediumDone = mediumItems.filter(i => checkedItems.has(i.id)).length
   const allHighDone = highDone === highItems.length
-  const stagingValue = priceEstimate?.currentEstimate
-    ? Math.round(priceEstimate.currentEstimate * 0.01)
-    : null
-
-  useEffect(() => {
-    if (allHighDone && stagingValue) {
-      const updated = { ...priceEstimate, stagingValue }
-      localStorage.setItem('fsbo_priceEstimate', JSON.stringify(updated))
-      if (onPriceUpdate) onPriceUpdate(updated)
-    } else if (!allHighDone) {
-      const updated = { ...priceEstimate, stagingValue: null }
-      localStorage.setItem('fsbo_priceEstimate', JSON.stringify(updated))
-      if (onPriceUpdate) onPriceUpdate(updated)
-    }
-  }, [checkedItems]) // eslint-disable-line react-hooks/exhaustive-deps
+  const investment = allChecklistItems
+    .filter(i => i.kind === 'cosmetic-upgrade' && checkedItems.has(i.id))
+    .reduce((sum, i) => sum + (i.estCost ?? 0), 0)
 
   const motivatingMessage =
     highDone === 0
-      ? 'Start with High Impact tasks — buyers decide in the first 30 seconds'
+      ? 'Start with High Impact tasks — polished homes sell faster'
       : allHighDone
-      ? '✓ Your home is staged to impress'
-      : 'Good progress! Your home is getting show-ready'
+      ? '✓ Show-ready — polished homes sell faster and attract more offers'
+      : 'Good progress — polished homes sell faster'
   const motivatingColor =
     allHighDone ? '#166534' : highDone > 0 ? '#92400e' : '#1e40af'
 
@@ -505,21 +504,20 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
 
                   {/* Progress summary */}
                   <div className="rounded-xl border border-gray-200 bg-white p-4 mb-6">
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                        <p className="text-xl font-bold text-gray-900">${investment.toLocaleString()}</p>
+                        <p className="text-xs font-semibold mt-0.5 text-gray-700">Investment</p>
+                        <p className="text-xs text-gray-500 mt-0.5">to make it shine</p>
+                      </div>
                       <div className="rounded-lg bg-gray-50 px-3 py-2.5">
                         <p className="text-xl font-bold text-gray-900">{highDone}<span className="text-sm font-normal text-gray-400">/{highItems.length}</span></p>
-                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#dc2626' }}>High Impact</p>
-                      </div>
-                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <p className="text-xl font-bold text-gray-900">{mediumDone}<span className="text-sm font-normal text-gray-400">/{mediumItems.length}</span></p>
-                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#ca8a04' }}>Medium</p>
-                      </div>
-                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <p className="text-xl font-bold text-gray-900">{stagingValue ? `$${stagingValue.toLocaleString()}` : '—'}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Est. protected</p>
+                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#dc2626' }}>Show-ready progress</p>
+                        <p className="text-xs text-gray-500 mt-0.5">polished homes sell faster</p>
                       </div>
                     </div>
                     <p className="text-xs font-medium mt-3" style={{ color: motivatingColor }}>{motivatingMessage}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">Staged homes sell 73% faster than non-staged homes — NAR Profile of Home Staging</p>
                   </div>
 
                   {/* Accordion checklist */}
@@ -566,6 +564,11 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
                                         {item.name}
                                       </span>
                                       <PriorityBadge priority={item.priority} />
+                                      {item.kind === 'cosmetic-upgrade' && item.estCost > 0 && (
+                                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-300">
+                                          ~${item.estCost} to make ready
+                                        </span>
+                                      )}
                                     </div>
                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
                                       <span className="text-xs text-gray-500 font-medium">{item.cost}</span>
@@ -582,21 +585,9 @@ export default function Step3Staging({ onSelectStep, onPriceUpdate, priceEstimat
                     })}
                   </div>
 
-                  {/* Staging value alert */}
-                  {stagingValue && (
-                    <div className={`p-4 rounded-lg text-sm font-medium mb-6 ${allHighDone ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
-                      {allHighDone ? (
-                        <span>🎉 Your home is show-ready. You&apos;ve protected <strong>${stagingValue.toLocaleString()}</strong> from lowball offers.</span>
-                      ) : (
-                        <span>🏠 Complete all High Impact tasks to protect an estimated <strong>${stagingValue.toLocaleString()}</strong> of your asking price.
-                          <span className="ml-1 cursor-pointer group relative inline-block">
-                            ⓘ
-                            <span className="hidden group-hover:block absolute bottom-full left-0 w-64 p-2 bg-gray-800 text-white text-xs rounded z-10">
-                              Staged homes receive offers 1–5% higher than non-staged homes. We use the conservative floor of 1%. Source: NAR Profile of Home Staging.
-                            </span>
-                          </span>
-                        </span>
-                      )}
+                  {allHighDone && (
+                    <div className="p-4 rounded-lg text-sm font-medium mb-6 bg-green-50 text-green-800 border border-green-200">
+                      🎉 Show-ready. Polished homes like this sell faster and attract more offers.
                     </div>
                   )}
 
