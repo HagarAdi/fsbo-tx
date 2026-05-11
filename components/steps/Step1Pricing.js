@@ -824,7 +824,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                   </div>
                   <div>
                     <label className={fieldLabel + " flex items-center"}>
-                      DOM
+                      Days on market
                       <HelpTip id={`comp_dom_${i}`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
                         {compTooltips.comp_dom}
                       </HelpTip>
