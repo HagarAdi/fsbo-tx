@@ -68,47 +68,47 @@ const CHECKLIST_CATEGORIES = [
   {
     label: 'Curb Appeal',
     items: [
-      { id: 'fresh-mulch', name: 'Fresh mulch and trimmed hedges', priority: 'recommended', cost: '$150–600 hired', impact: 'Sets the tone before buyers even walk in' },
-      { id: 'pressure-wash', name: 'Pressure wash driveway', priority: 'recommended', cost: '$150–400 hired', impact: 'Instantly makes the home look cared for' },
-      { id: 'front-door', name: 'Paint front door a bold color (black, navy, red)', priority: 'recommended', cost: '$50–150 DIY / $300–600 hired', impact: 'One of the highest ROI things you can do' },
-      { id: 'mailbox', name: 'Replace broken mailbox', priority: 'optional', cost: '$50–200', impact: 'Buyers notice the small stuff' },
-      { id: 'gutters', name: 'Clean gutters', priority: 'recommended', cost: '$150–400 hired', impact: 'Tells buyers the home has been maintained' },
+      { id: 'fresh-mulch', name: 'Fresh mulch and trimmed hedges', priority: 'recommended', cost: '$150–600 hired', estCost: 375, impact: 'Sets the tone before buyers even walk in' },
+      { id: 'pressure-wash', name: 'Pressure wash driveway', priority: 'recommended', cost: '$150–400 hired', estCost: 275, impact: 'Instantly makes the home look cared for' },
+      { id: 'front-door', name: 'Paint front door a bold color (black, navy, red)', priority: 'recommended', cost: '$50–150 DIY / $300–600 hired', estCost: 100, impact: 'One of the highest ROI things you can do' },
+      { id: 'mailbox', name: 'Replace broken mailbox', priority: 'optional', cost: '$50–200', estCost: 125, impact: 'Buyers notice the small stuff' },
+      { id: 'gutters', name: 'Clean gutters', priority: 'recommended', cost: '$150–400 hired', estCost: 275, impact: 'Tells buyers the home has been maintained' },
     ],
   },
   {
     label: 'Interior',
     items: [
-      { id: 'patch-walls', name: 'Patch holes in walls', priority: 'must', cost: '$20–50 DIY / $200–500 hired', impact: 'Buyers mentally deduct $500+ per hole' },
-      { id: 'bulbs', name: 'Replace burned out bulbs with warm LED (2700K)', priority: 'must', cost: '$30–80 DIY', impact: 'Good lighting makes every room look better in photos' },
-      { id: 'squeaky', name: 'Fix squeaky doors and cabinets', priority: 'recommended', cost: '$10–50 DIY / $150–300 hired', impact: 'Squeaks feel like neglect' },
-      { id: 'interior-paint', name: 'Paint walls white or off-white (Sherwin-Williams Alabaster)', priority: 'recommended', cost: '$300–600 DIY / $600–1,500 hired per room', impact: 'Neutral walls help buyers picture their own life here', source: 'Zillow Research' },
-      { id: 'sticky-windows', name: 'Fix sticky windows or doors', priority: 'recommended', cost: '$50–200 DIY / $200–500 hired', impact: 'Buyers test everything' },
+      { id: 'patch-walls', name: 'Patch holes in walls', priority: 'must', cost: '$20–50 DIY / $200–500 hired', estCost: 35, impact: 'Buyers mentally deduct $500+ per hole' },
+      { id: 'bulbs', name: 'Replace burned out bulbs with warm LED (2700K)', priority: 'must', cost: '$30–80 DIY', estCost: 55, impact: 'Good lighting makes every room look better in photos' },
+      { id: 'squeaky', name: 'Fix squeaky doors and cabinets', priority: 'recommended', cost: '$10–50 DIY / $150–300 hired', estCost: 30, impact: 'Squeaks feel like neglect' },
+      { id: 'interior-paint', name: 'Paint walls white or off-white (Sherwin-Williams Alabaster)', priority: 'recommended', cost: '$300–600 DIY / $600–1,500 hired per room', estCost: 450, impact: 'Neutral walls help buyers picture their own life here', source: 'Zillow Research' },
+      { id: 'sticky-windows', name: 'Fix sticky windows or doors', priority: 'recommended', cost: '$50–200 DIY / $200–500 hired', estCost: 125, impact: 'Buyers test everything' },
     ],
   },
   {
     label: 'Kitchen & Bathrooms',
     items: [
-      { id: 'recaulk', name: 'Recaulk tubs, showers, and sinks', priority: 'must', cost: '$20–50 DIY / $200–400 hired', impact: 'A small fix that looks like a renovation' },
-      { id: 'faucets', name: 'Fix dripping faucets', priority: 'must', cost: '$20–100 DIY / $150–350 hired', impact: 'Drips make buyers wonder what else is wrong' },
-      { id: 'vanities', name: 'Paint bathroom vanities navy, black, or forest green', priority: 'recommended', cost: '$100–250 DIY / $400–800 hired', impact: 'Photographs beautifully and feels renovated', source: 'Zillow Research' },
-      { id: 'grout', name: 'Deep clean grout', priority: 'recommended', cost: '$20–60 DIY / $200–500 hired', impact: 'Clean grout = fresh bathroom' },
-      { id: 'hardware', name: 'Update cabinet hardware', priority: 'optional', cost: '$100–400 DIY', impact: 'New pulls can transform a kitchen' },
+      { id: 'recaulk', name: 'Recaulk tubs, showers, and sinks', priority: 'must', cost: '$20–50 DIY / $200–400 hired', estCost: 35, impact: 'A small fix that looks like a renovation' },
+      { id: 'faucets', name: 'Fix dripping faucets', priority: 'must', cost: '$20–100 DIY / $150–350 hired', estCost: 60, impact: 'Drips make buyers wonder what else is wrong' },
+      { id: 'vanities', name: 'Paint bathroom vanities navy, black, or forest green', priority: 'recommended', cost: '$100–250 DIY / $400–800 hired', estCost: 175, impact: 'Photographs beautifully and feels renovated', source: 'Zillow Research' },
+      { id: 'grout', name: 'Deep clean grout', priority: 'recommended', cost: '$20–60 DIY / $200–500 hired', estCost: 40, impact: 'Clean grout = fresh bathroom' },
+      { id: 'hardware', name: 'Update cabinet hardware', priority: 'optional', cost: '$100–400 DIY', estCost: 250, impact: 'New pulls can transform a kitchen' },
     ],
   },
   {
     label: 'Big Ticket Items',
     items: [
-      { id: 'hvac', name: 'HVAC service and new filter', priority: 'must', cost: '$150–300 hired', impact: 'Texas buyers always ask. Have the receipt ready.' },
-      { id: 'roof', name: 'Roof inspection', priority: 'recommended', cost: '$300–500 hired', impact: 'Know before they find out at inspection' },
-      { id: 'water-heater', name: 'Check water heater age', priority: 'recommended', cost: 'Free', impact: 'Over 15 years? Budget $800–1,500 to replace or be ready to negotiate' },
+      { id: 'hvac', name: 'HVAC service and new filter', priority: 'must', cost: '$150–300 hired', estCost: 225, impact: 'Texas buyers always ask. Have the receipt ready.' },
+      { id: 'roof', name: 'Roof inspection', priority: 'recommended', cost: '$300–500 hired', estCost: 400, impact: 'Know before they find out at inspection' },
+      { id: 'water-heater', name: 'Check water heater age', priority: 'recommended', cost: 'Free', estCost: 0, impact: 'Over 15 years? Budget $800–1,500 to replace or be ready to negotiate' },
     ],
   },
   {
     label: 'Safety',
     items: [
-      { id: 'smoke', name: 'Test smoke detectors', priority: 'must', cost: '$0–30 DIY', impact: 'Required by Texas law at closing' },
-      { id: 'gfci', name: 'Test GFCI outlets near water', priority: 'must', cost: '$0–50 DIY', impact: 'Inspectors check every one' },
-      { id: 'handrail', name: 'Check handrail stability', priority: 'must', cost: '$20–100 DIY / $150–300 hired', impact: 'Always flagged in inspection reports' },
+      { id: 'smoke', name: 'Test smoke detectors', priority: 'must', cost: '$0–30 DIY', estCost: 15, impact: 'Required by Texas law at closing' },
+      { id: 'gfci', name: 'Test GFCI outlets near water', priority: 'must', cost: '$0–50 DIY', estCost: 25, impact: 'Inspectors check every one' },
+      { id: 'handrail', name: 'Check handrail stability', priority: 'must', cost: '$20–100 DIY / $150–300 hired', estCost: 60, impact: 'Always flagged in inspection reports' },
     ],
   },
 ]
@@ -117,6 +117,15 @@ const PRIORITY_CONFIG = {
   must: { label: 'Must fix', bg: '#fef2f2', text: '#dc2626', border: '#fecaca' },
   recommended: { label: 'Recommended', bg: '#fefce8', text: '#ca8a04', border: '#fef08a' },
   optional: { label: 'Optional', bg: '#f9fafb', text: '#6b7280', border: '#e5e7eb' },
+}
+
+const RISK_MULTIPLIER = 8
+const MUST_FIX_RISK_FLOOR = 500
+
+function negotiationRisk(item) {
+  const base = (item.estCost ?? 0) * RISK_MULTIPLIER
+  if (item.priority === 'must') return Math.max(MUST_FIX_RISK_FLOOR, base)
+  return base
 }
 
 const AI_PRIORITY_STYLE = {
@@ -215,7 +224,7 @@ function UploadZone({ photos, onAdd, maxPhotos }) {
   )
 }
 
-export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimate }) {
+export default function Step2Repairs({ onSelectStep }) {
   const [wizardStage, setWizardStage] = useState(0)
   const [wizardDone, setWizardDone] = useState(false)
   const [photos, setPhotos] = useState({ bathrooms: [], kitchen: [], front: [], other: [] })
@@ -271,15 +280,22 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
       const data = await res.json()
       const findings = data.issues || []
       setAiFindings(findings)
+      const matchedIds = new Set()
       findings.forEach(finding => {
         const words = finding.issue.toLowerCase().split(/\s+/).filter(w => w.length >= 3)
         CHECKLIST_CATEGORIES.forEach(cat => {
           cat.items.forEach(item => {
             if (words.some(word => item.name.toLowerCase().includes(word))) {
+              matchedIds.add(item.id)
               handleCheck(item.id, true)
             }
           })
         })
+      })
+      setAiFlaggedItemIds(prev => {
+        const next = new Set(prev)
+        matchedIds.forEach(id => next.add(id))
+        return next
       })
       try {
         const saved = localStorage.getItem('fsbo_stepData')
@@ -309,29 +325,37 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
     return new Set()
   })
 
+  const [aiFlaggedItemIds, setAiFlaggedItemIds] = useState(() => {
+    if (typeof window === 'undefined') return new Set()
+    try {
+      const saved = localStorage.getItem('fsbo_stepData')
+      if (saved) {
+        const data = JSON.parse(saved)
+        const ids = data?.step2?.aiFlaggedItemIds
+        if (Array.isArray(ids)) return new Set(ids)
+      }
+    } catch {}
+    return new Set()
+  })
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem('fsbo_stepData')
       const existing = saved ? JSON.parse(saved) : {}
       localStorage.setItem(
         'fsbo_stepData',
-        JSON.stringify({ ...existing, step2: { checkedItems: [...checkedItems] } })
+        JSON.stringify({
+          ...existing,
+          step2: {
+            ...(existing.step2 || {}),
+            checkedItems: [...checkedItems],
+            aiFlaggedItemIds: [...aiFlaggedItemIds],
+          },
+        })
       )
       notifyStepDataChange()
     } catch {}
-  }, [checkedItems])
-
-  useEffect(() => {
-    if (allMustFixDone && protectedValue) {
-      const updated = { ...priceEstimate, protectedValue }
-      localStorage.setItem('fsbo_priceEstimate', JSON.stringify(updated))
-      if (onPriceUpdate) onPriceUpdate(updated)
-    } else if (!allMustFixDone) {
-      const updated = { ...priceEstimate, protectedValue: null }
-      localStorage.setItem('fsbo_priceEstimate', JSON.stringify(updated))
-      if (onPriceUpdate) onPriceUpdate(updated)
-    }
-  }, [checkedItems]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [checkedItems, aiFlaggedItemIds])
 
   const handleCheck = (id, checked) => {
     setCheckedItems((prev) => {
@@ -364,29 +388,23 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
 
   const allChecklistItems = CHECKLIST_CATEGORIES.flatMap(c => c.items)
   const mustFixItems = allChecklistItems.filter(i => i.priority === 'must')
-  const recommendedItems = allChecklistItems.filter(i => i.priority === 'recommended')
   const mustFixDone = mustFixItems.filter(i => checkedItems.has(i.id)).length
-  const recommendedDone = recommendedItems.filter(i => checkedItems.has(i.id)).length
-  const parseLowCost = (s) => {
-    if (!s || s.toLowerCase() === 'free') return 0
-    const m = s.match(/\$(\d+)/)
-    return m ? parseInt(m[1], 10) : 0
-  }
-  const estimatedCost = allChecklistItems
+  const shieldedEquity = allChecklistItems
     .filter(i => checkedItems.has(i.id))
-    .reduce((sum, i) => sum + parseLowCost(i.cost), 0)
+    .reduce((sum, i) => sum + negotiationRisk(i), 0)
+  const riskRemaining = mustFixItems
+    .filter(i => !checkedItems.has(i.id))
+    .reduce((sum, i) => sum + negotiationRisk(i), 0)
+  const mustFixProgress = mustFixItems.length === 0 ? 0 : mustFixDone / mustFixItems.length
   const motivatingMessage =
     mustFixDone === 0
-      ? 'Start with Must Fix items — they protect your asking price'
+      ? 'Start with Must Fix items — every unchecked one is leverage for the buyer’s inspector'
       : mustFixDone === mustFixItems.length
-      ? '✓ All critical items done! Your home is inspection-ready'
+      ? '🛡 Market Fortified: major negotiation traps eliminated'
       : 'Good progress! Keep going on the Must Fix items'
   const motivatingColor =
     mustFixDone === mustFixItems.length ? '#166534' : mustFixDone > 0 ? '#92400e' : '#1e40af'
   const allMustFixDone = mustFixDone === mustFixItems.length
-  const protectedValue = priceEstimate?.currentEstimate
-    ? Math.round(priceEstimate.currentEstimate * 0.01)
-    : null
 
   const goTo = (step) => {
     setDirection(step > activeSubStep ? 1 : -1)
@@ -634,29 +652,46 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
                     </span>
                   </div>
                   <p className="text-sm text-gray-500 mb-6">
-                    Focus on <span className="font-semibold text-red-600">Must Fix</span> items first — they protect your asking price. Tap a category to expand.
+                    Focus on <span className="font-semibold text-red-600">Must Fix</span> items first — every one you skip becomes leverage for the buyer&apos;s inspector. Tap a category to expand.
                   </p>
 
-                  {/* Progress summary */}
+                  {/* Negotiation Defense summary */}
                   <div className="rounded-xl border border-gray-200 bg-white p-4 mb-6">
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <p className="text-xl font-bold text-gray-900">
-                          {mustFixDone}<span className="text-sm font-normal text-gray-400">/{mustFixItems.length}</span>
-                        </p>
-                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#dc2626' }}>Must Fix</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-lg px-4 py-3" style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                        <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#15803d' }}>🛡 Shielded Equity</p>
+                        <p className="text-2xl font-bold" style={{ color: '#15803d' }}>${shieldedEquity.toLocaleString()}</p>
+                        <p className="text-xs mt-1" style={{ color: '#166534' }}>Leverage you&apos;ve neutralized</p>
                       </div>
-                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <p className="text-xl font-bold text-gray-900">
-                          {recommendedDone}<span className="text-sm font-normal text-gray-400">/{recommendedItems.length}</span>
+                      <div className="rounded-lg px-4 py-3 relative" style={{ backgroundColor: riskRemaining === 0 ? '#f0fdf4' : '#fef2f2', border: `1px solid ${riskRemaining === 0 ? '#bbf7d0' : '#fecaca'}` }}>
+                        <p className="text-xs font-semibold uppercase tracking-wide mb-1 flex items-center gap-1" style={{ color: riskRemaining === 0 ? '#15803d' : '#dc2626' }}>
+                          ⚠ Risk Remaining
+                          <span className="cursor-pointer group relative inline-block ml-0.5">
+                            <span className="text-gray-400">ⓘ</span>
+                            <span className="hidden group-hover:block absolute top-full left-0 mt-1 w-72 p-2 bg-gray-800 text-white text-xs font-normal normal-case tracking-normal rounded z-10">
+                              Buyers often extract 5–10× the literal repair cost as a closing credit during the option period. Fixing a $50 leak now prevents the buyer&apos;s inspector flagging it as a $500 ask against your equity.
+                            </span>
+                          </span>
                         </p>
-                        <p className="text-xs font-semibold mt-0.5" style={{ color: '#ca8a04' }}>Recommended</p>
-                      </div>
-                      <div className="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <p className="text-xl font-bold text-gray-900">${estimatedCost.toLocaleString()}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Est. DIY cost</p>
+                        <p className="text-2xl font-bold" style={{ color: riskRemaining === 0 ? '#15803d' : '#dc2626' }}>${riskRemaining.toLocaleString()}</p>
+                        <p className="text-xs mt-1" style={{ color: riskRemaining === 0 ? '#166534' : '#991b1b' }}>{mustFixItems.length - mustFixDone} Must Fix item{mustFixItems.length - mustFixDone === 1 ? '' : 's'} unchecked</p>
                       </div>
                     </div>
+
+                    {/* Shield-fill bar */}
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between text-xs mb-1.5">
+                        <span className="text-gray-500">🛡 {mustFixDone} of {mustFixItems.length} Must Fix items shielded</span>
+                        <span className="font-semibold" style={{ color: '#15803d' }}>{Math.round(mustFixProgress * 100)}%</span>
+                      </div>
+                      <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#e5e7eb' }}>
+                        <div
+                          className="h-full transition-all duration-300"
+                          style={{ width: `${mustFixProgress * 100}%`, backgroundColor: '#16a34a' }}
+                        />
+                      </div>
+                    </div>
+
                     <p className="text-xs font-medium mt-3" style={{ color: motivatingColor }}>{motivatingMessage}</p>
                   </div>
 
@@ -708,7 +743,7 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
                                     style={{ accentColor: ACCENT }}
                                   />
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                                    <div className="flex flex-wrap items-center gap-2 mb-1">
                                       <span
                                         className="text-sm font-medium text-gray-800"
                                         style={checkedItems.has(item.id) ? { textDecoration: 'line-through', color: '#9ca3af' } : {}}
@@ -716,16 +751,27 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
                                         {item.name}
                                       </span>
                                       <PriorityBadge priority={item.priority} />
+                                      {aiFlaggedItemIds.has(item.id) && (
+                                        <span
+                                          className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                                          style={{ backgroundColor: '#faf5ff', color: '#7e22ce', border: '1px solid #e9d5ff' }}
+                                        >
+                                          AI flagged
+                                        </span>
+                                      )}
                                     </div>
-                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                                      <span className="text-xs text-gray-500 font-medium">{item.cost}</span>
-                                      <span className="text-xs text-gray-400">—</span>
-                                      <span className="text-xs text-gray-500 italic">
-                                        &ldquo;{item.impact}&rdquo;
-                                        {item.source && (
-                                          <span className="not-italic text-gray-400"> — {item.source}</span>
-                                        )}
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                      <span
+                                        className="inline-block px-2 py-0.5 rounded-full text-xs font-bold"
+                                        style={{
+                                          backgroundColor: checkedItems.has(item.id) ? '#f0fdf4' : '#fef2f2',
+                                          color: checkedItems.has(item.id) ? '#15803d' : '#dc2626',
+                                          border: `1px solid ${checkedItems.has(item.id) ? '#bbf7d0' : '#fecaca'}`,
+                                        }}
+                                      >
+                                        {checkedItems.has(item.id) ? '✓' : '−'}${negotiationRisk(item).toLocaleString()} {checkedItems.has(item.id) ? 'shielded' : 'at risk'}
                                       </span>
+                                      <span className="text-xs text-gray-400">~{item.cost} to fix</span>
                                     </div>
                                   </div>
                                 </label>
@@ -736,28 +782,6 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
                       )
                     })}
                   </div>
-
-                  {/* Price protection alert */}
-                  {protectedValue && (
-                    <div className={`p-4 rounded-lg text-sm font-medium mb-6 ${
-                      allMustFixDone
-                        ? 'bg-green-50 text-green-800 border border-green-200'
-                        : 'bg-amber-50 text-amber-800 border border-amber-200'
-                    }`}>
-                      {allMustFixDone ? (
-                        <span>🎉 You&apos;ve protected <strong>${protectedValue.toLocaleString()}</strong> of your asking price from buyer negotiation.</span>
-                      ) : (
-                        <span>🛡️ Complete all Must Fix items to protect an estimated <strong>${protectedValue.toLocaleString()}</strong> of your asking price.
-                          <span className="ml-1 cursor-pointer group relative inline-block">
-                            ⓘ
-                            <span className="hidden group-hover:block absolute bottom-full left-0 w-64 p-2 bg-gray-800 text-white text-xs rounded z-10">
-                              Buyers negotiate an average of $7,200 off asking price using inspection findings. Completing Must Fix repairs removes their leverage. Source: NAR Home Buyer &amp; Seller Report.
-                            </span>
-                          </span>
-                        </span>
-                      )}
-                    </div>
-                  )}
 
                   <div className="mb-6 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
                     <p className="text-base font-semibold text-gray-900">
