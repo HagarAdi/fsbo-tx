@@ -130,6 +130,9 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
   const [pool, setPool] = useState(null)
   const [garageCars, setGarageCars] = useState('')
   const [lotAcres, setLotAcres] = useState('')
+  const [propertyType, setPropertyType] = useState('') // reserved for future comp matching
+  const [lotUnit, setLotUnit] = useState('acres')
+  const [editingField, setEditingField] = useState(null)
   const [comps, setComps] = useState([
     { ...EMPTY_COMP },
     { ...EMPTY_COMP },
@@ -143,6 +146,24 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
   const goTo = (step) => {
     setDirection(step > activeSubStep ? 1 : -1)
     setActiveSubStep(step)
+  }
+
+  const fieldInput = "border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
+  const fieldLabel = "block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1"
+
+  const isUnset = (v) => v === null || v === undefined || v === ''
+  const isExpanded = (fieldName, value) => isUnset(value) || editingField === fieldName
+
+  const displayLotValue = lotUnit === 'sqft'
+    ? (lotAcres ? Math.round(parseFloat(lotAcres) * SQFT_PER_ACRE).toString() : '')
+    : lotAcres
+  const handleLotChange = (raw) => {
+    if (lotUnit === 'sqft') {
+      const sqft = parseFloat(raw)
+      setLotAcres(Number.isFinite(sqft) ? (sqft / SQFT_PER_ACRE).toFixed(6) : '')
+    } else {
+      setLotAcres(raw)
+    }
   }
 
   useEffect(() => {
@@ -161,6 +182,8 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           if (s1.pool !== undefined) setPool(s1.pool)
           if (s1.garageCars !== undefined) setGarageCars(s1.garageCars)
           if (s1.lotAcres !== undefined) setLotAcres(s1.lotAcres)
+          if (s1.propertyType !== undefined) setPropertyType(s1.propertyType)
+          if (s1.lotUnit !== undefined) setLotUnit(s1.lotUnit)
           if (s1.comps && s1.comps.length > 0) {
             setComps(s1.comps.map((c) => ({ ...EMPTY_COMP, ...c })))
           }
@@ -175,11 +198,11 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       const existing = saved ? JSON.parse(saved) : {}
       localStorage.setItem(
         'fsbo_stepData',
-        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, comps } })
+        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, propertyType, lotUnit, comps } })
       )
       notifyStepDataChange()
     } catch {}
-  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, comps])
+  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, propertyType, lotUnit, comps])
 
   const updateComp = (index, field, value) => {
     setComps((prev) => {
@@ -347,207 +370,351 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           </p>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
-          <div>
-            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
-              Square footage
-              <HelpTip id="sqft" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                Heated/cooled area only. Find on Williamson CAD (wcad.org)
-              </HelpTip>
-            </label>
-            <input
-              type="number"
-              value={sqft}
-              onChange={(e) => setSqft(e.target.value)}
-              placeholder="e.g. 2100"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
-              Bedrooms
-              <HelpTip id="bedrooms" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                Number of bedrooms. Buyers filter by this — comps should match your bedroom count
-              </HelpTip>
-            </label>
-            <input
-              type="number"
-              value={bedrooms}
-              onChange={(e) => setBedrooms(e.target.value)}
-              placeholder="e.g. 4"
-              step="1"
-              min="0"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
-              Bathrooms
-              <HelpTip id="bathrooms" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                Full baths count as 1, half baths (no shower) count as 0.5
-              </HelpTip>
-            </label>
-            <input
-              type="number"
-              value={bathrooms}
-              onChange={(e) => setBathrooms(e.target.value)}
-              placeholder="e.g. 2.5"
-              step="0.5"
-              min="0"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
-              Year built
-              <HelpTip id="yearBuilt" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                On your CAD record. Homes 10+ years older than comps price 3–5% lower unless updated
-              </HelpTip>
-            </label>
-            <input
-              type="number"
-              value={yearBuilt}
-              onChange={(e) => setYearBuilt(e.target.value)}
-              placeholder="e.g. 2005"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
-              Condition
-              <HelpTip id="condition" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                Be honest — buyers find out at inspection
-              </HelpTip>
-            </label>
-            <select
-              value={condition}
-              onChange={(e) => setCondition(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
-            >
-              <option value="">Select condition</option>
-              <option value="Excellent">Excellent</option>
-              <option value="Good">Good</option>
-              <option value="Average">Average</option>
-              <option value="Fair">Fair</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-              One-story or Two-story
-              <HelpTip id="stories" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                In Texas, single-story homes typically sell faster and for more per sqft, especially for buyers over 50
-              </HelpTip>
-            </label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setStories('one')}
-                className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
-                style={
-                  stories === 'one'
-                    ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
-                    : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
-                }
-              >
-                One-story
-              </button>
-              <button
-                type="button"
-                onClick={() => setStories('two')}
-                className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
-                style={
-                  stories === 'two'
-                    ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
-                    : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
-                }
-              >
-                Two-story
-              </button>
+        <div className="rounded-lg border border-gray-200 bg-white p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+            <div>
+              <label className={fieldLabel + " flex items-center"}>
+                Square footage
+                <HelpTip id="sqft" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  Heated/cooled area only. Find on Williamson CAD (wcad.org)
+                </HelpTip>
+              </label>
+              <input
+                type="number"
+                value={sqft}
+                onChange={(e) => setSqft(e.target.value)}
+                placeholder="e.g. 2100"
+                className={"w-full " + fieldInput}
+              />
             </div>
-          </div>
 
-          <div>
-            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-              Pool
-              <HelpTip id="pool" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} align="start">
-                In Texas, a pool adds $15,000–$30,000 depending on neighborhood
-              </HelpTip>
-            </label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setPool(true)}
-                className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
-                style={
-                  pool === true
-                    ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
-                    : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
-                }
-              >
-                Yes
-              </button>
-              <button
-                type="button"
-                onClick={() => setPool(false)}
-                className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
-                style={
-                  pool === false
-                    ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
-                    : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
-                }
-              >
-                No
-              </button>
+            <div>
+              <label className={fieldLabel + " flex items-center"}>
+                Bedrooms
+                <HelpTip id="bedrooms" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  Number of bedrooms. Buyers filter by this — comps should match your bedroom count
+                </HelpTip>
+              </label>
+              <input
+                type="number"
+                value={bedrooms}
+                onChange={(e) => setBedrooms(e.target.value)}
+                placeholder="e.g. 4"
+                step="1"
+                min="0"
+                className={"w-full " + fieldInput}
+              />
             </div>
-          </div>
 
-          <div>
-            <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-              Garage (car spaces)
-              <HelpTip id="garageCars" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                Each garage space is worth roughly $5,000 in Texas. We use this to normalize comps that have a different number of spaces.
-              </HelpTip>
-            </label>
-            <div className="flex gap-2">
-              {['0', '1', '2', '3'].map((n) => (
+            <div>
+              <label className={fieldLabel + " flex items-center"}>
+                Bathrooms
+                <HelpTip id="bathrooms" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  Full baths count as 1, half baths (no shower) count as 0.5
+                </HelpTip>
+              </label>
+              <input
+                type="number"
+                value={bathrooms}
+                onChange={(e) => setBathrooms(e.target.value)}
+                placeholder="e.g. 2.5"
+                step="0.5"
+                min="0"
+                className={"w-full " + fieldInput}
+              />
+            </div>
+
+            {(() => {
+              const PROPERTY_TYPE_OPTIONS = [
+                { value: 'single', label: 'Single family' },
+                { value: 'town', label: 'Townhouse' },
+                { value: 'condo', label: 'Condo' },
+                { value: 'multi', label: 'Multi-family' },
+              ]
+              const labelMap = Object.fromEntries(PROPERTY_TYPE_OPTIONS.map((o) => [o.value, o.label]))
+              const expanded = isExpanded('propertyType', propertyType)
+              return (
+                <div>
+                  <label className={fieldLabel + " flex items-center"}>
+                    Property type
+                    <HelpTip id="propertyType" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                      Buyers filter by type. Comps should match — a townhouse doesn&apos;t compare to a single-family home.
+                    </HelpTip>
+                  </label>
+                  {expanded ? (
+                    <div id="propertyType-pills" role="group"className="grid grid-cols-2 gap-2">
+                      {PROPERTY_TYPE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => { setPropertyType(opt.value); setEditingField(null) }}
+                          className="py-2 rounded-lg text-sm font-medium border transition-colors"
+                          style={
+                            propertyType === opt.value
+                              ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
+                              : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
+                          }
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <span className="font-medium">{labelMap[propertyType] || propertyType}</span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingField('propertyType')}
+                        aria-expanded={false}
+                        aria-controls="propertyType-pills"
+                        className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
+            <div>
+              <label className={fieldLabel + " flex items-center"}>
+                Year built
+                <HelpTip id="yearBuilt" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  On your CAD record. Homes 10+ years older than comps price 3–5% lower unless updated
+                </HelpTip>
+              </label>
+              <input
+                type="number"
+                value={yearBuilt}
+                onChange={(e) => setYearBuilt(e.target.value)}
+                placeholder="e.g. 2005"
+                className={"w-full " + fieldInput}
+              />
+            </div>
+
+            <div>
+              <label className={fieldLabel + " flex items-center"}>
+                Condition
+                <HelpTip id="condition" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  Be honest — buyers find out at inspection
+                </HelpTip>
+              </label>
+              <select
+                value={condition}
+                onChange={(e) => setCondition(e.target.value)}
+                className={"w-full " + fieldInput}
+              >
+                <option value="">Select condition</option>
+                <option value="Excellent">Excellent</option>
+                <option value="Good">Good</option>
+                <option value="Average">Average</option>
+                <option value="Fair">Fair</option>
+              </select>
+            </div>
+
+            {(() => {
+              const labelMap = { one: 'One-story', two: 'Two-story' }
+              const expanded = isExpanded('stories', stories)
+              return (
+                <div>
+                  <label className={fieldLabel + " flex items-center"}>
+                    Stories
+                    <HelpTip id="stories" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                      In Texas, single-story homes typically sell faster and for more per sqft, especially for buyers over 50
+                    </HelpTip>
+                  </label>
+                  {expanded ? (
+                    <div id="stories-pills" role="group"className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setStories('one'); setEditingField(null) }}
+                        className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
+                        style={
+                          stories === 'one'
+                            ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
+                            : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
+                        }
+                      >
+                        One-story
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setStories('two'); setEditingField(null) }}
+                        className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
+                        style={
+                          stories === 'two'
+                            ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
+                            : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
+                        }
+                      >
+                        Two-story
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <span className="font-medium">{labelMap[stories]}</span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingField('stories')}
+                        aria-expanded={false}
+                        aria-controls="stories-pills"
+                        className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
+            {(() => {
+              const expanded = isExpanded('pool', pool)
+              const label = pool === true ? 'Yes' : pool === false ? 'No' : ''
+              return (
+                <div>
+                  <label className={fieldLabel + " flex items-center"}>
+                    Pool
+                    <HelpTip id="pool" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} align="start">
+                      In Texas, a pool adds $15,000–$30,000 depending on neighborhood
+                    </HelpTip>
+                  </label>
+                  {expanded ? (
+                    <div id="pool-pills" role="group"className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setPool(true); setEditingField(null) }}
+                        className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
+                        style={
+                          pool === true
+                            ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
+                            : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
+                        }
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setPool(false); setEditingField(null) }}
+                        className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
+                        style={
+                          pool === false
+                            ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
+                            : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
+                        }
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <span className="font-medium">{label}</span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingField('pool')}
+                        aria-expanded={false}
+                        aria-controls="pool-pills"
+                        className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
+            {(() => {
+              const expanded = isExpanded('garage', garageCars)
+              const label = garageCars === '3' ? '3+ spaces' : (garageCars ? `${garageCars} space${garageCars === '1' ? '' : 's'}` : '')
+              return (
+                <div>
+                  <label className={fieldLabel + " flex items-center"}>
+                    Garage (car spaces)
+                    <HelpTip id="garageCars" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                      Each garage space is worth roughly $5,000 in Texas. We use this to normalize comps that have a different number of spaces.
+                    </HelpTip>
+                  </label>
+                  {expanded ? (
+                    <div id="garage-pills" role="group"className="flex gap-2">
+                      {['0', '1', '2', '3'].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => { setGarageCars(n); setEditingField(null) }}
+                          className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
+                          style={
+                            garageCars === n
+                              ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
+                              : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
+                          }
+                        >
+                          {n === '3' ? '3+' : n}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <span className="font-medium">{label}</span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingField('garage')}
+                        aria-expanded={false}
+                        aria-controls="garage-pills"
+                        className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
+            <div>
+              <label className={fieldLabel + " flex items-center"}>
+                Lot size
+                <HelpTip id="lotAcres" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  Find on Zillow under Property Details, or Redfin&apos;s Home facts. 1 acre = 43,560 sqft.
+                </HelpTip>
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={displayLotValue}
+                  onChange={(e) => handleLotChange(e.target.value)}
+                  placeholder={lotUnit === 'sqft' ? 'e.g. 6500' : 'e.g. 0.15'}
+                  step={lotUnit === 'sqft' ? '1' : '0.01'}
+                  min="0"
+                  className={"flex-1 " + fieldInput}
+                />
                 <button
-                  key={n}
                   type="button"
-                  onClick={() => setGarageCars(n)}
-                  className="flex-1 py-2 rounded-lg text-sm font-medium border transition-colors"
+                  onClick={() => setLotUnit('acres')}
+                  className="px-3 py-1.5 rounded text-xs font-medium border transition-colors"
                   style={
-                    garageCars === n
+                    lotUnit === 'acres'
                       ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
                       : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
                   }
                 >
-                  {n === '3' ? '3+' : n}
+                  acres
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => setLotUnit('sqft')}
+                  className="px-3 py-1.5 rounded text-xs font-medium border transition-colors"
+                  style={
+                    lotUnit === 'sqft'
+                      ? { backgroundColor: ACCENT, color: 'white', borderColor: ACCENT }
+                      : { backgroundColor: 'white', color: '#374151', borderColor: '#e5e7eb' }
+                  }
+                >
+                  sqft
+                </button>
+              </div>
             </div>
-          </div>
-
-          <div>
-            <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
-              Lot size (acres)
-              <HelpTip id="lotAcres" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                Find on Zillow under Property Details, or Redfin&apos;s Home facts. Enter as acres (e.g. 0.15 for ~6,500 sqft, 0.5 for ~21,780 sqft, 1.0 for an acre). 1 acre = 43,560 sqft.
-              </HelpTip>
-            </label>
-            <input
-              type="number"
-              value={lotAcres}
-              onChange={(e) => setLotAcres(e.target.value)}
-              placeholder="e.g. 0.15"
-              step="0.01"
-              min="0"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
           </div>
         </div>
 
@@ -695,9 +862,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             const ppsfDiffers = rawPpsf !== null && adjPpsf !== null
               && Math.abs(adjPpsf - rawPpsf) / rawPpsf > 0.005
             const adjustedDirection = adjPpsf !== null && rawPpsf !== null && adjPpsf < rawPpsf ? 'down' : 'up'
-
-            const fieldInput = "border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
-            const fieldLabel = "block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1"
 
             return (
               <div key={i} className="rounded-lg border border-gray-200 bg-white p-5">
