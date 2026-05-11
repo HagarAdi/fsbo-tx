@@ -130,38 +130,6 @@ const CHECKLIST_SECTIONS = [
       },
     ],
   },
-  {
-    id: 'polish',
-    label: 'Pre-listing Polish',
-    sublabel: 'Cosmetic prep — not inspector territory, but buyers notice in photos and showings. These don’t add to your negotiation shield, but they help bring more offers in.',
-    contributesToShield: false,
-    categories: [
-      {
-        label: 'Curb Appeal',
-        items: [
-          { id: 'fresh-mulch', name: 'Fresh mulch and trimmed hedges', priority: 'recommended', cost: '$150–600 hired', estCost: 375, impact: 'Sets the tone before buyers even walk in' },
-          { id: 'pressure-wash', name: 'Pressure wash driveway', priority: 'recommended', cost: '$150–400 hired', estCost: 275, impact: 'Instantly makes the home look cared for' },
-          { id: 'front-door', name: 'Paint front door a bold color (black, navy, red)', priority: 'recommended', cost: '$50–150 DIY / $300–600 hired', estCost: 100, impact: 'One of the highest ROI things you can do' },
-          { id: 'mailbox', name: 'Replace broken mailbox', priority: 'optional', cost: '$50–200', estCost: 125, impact: 'Buyers notice the small stuff' },
-        ],
-      },
-      {
-        label: 'Interior Refresh',
-        items: [
-          { id: 'squeaky', name: 'Fix squeaky doors and cabinets', priority: 'recommended', cost: '$10–50 DIY / $150–300 hired', estCost: 30, impact: 'Squeaks feel like neglect' },
-          { id: 'interior-paint', name: 'Paint walls white or off-white (Sherwin-Williams Alabaster)', priority: 'recommended', cost: '$300–600 DIY / $600–1,500 hired per room', estCost: 450, impact: 'Neutral walls help buyers picture their own life here', source: 'Zillow Research' },
-        ],
-      },
-      {
-        label: 'Kitchen & Bath Cosmetic',
-        items: [
-          { id: 'vanities', name: 'Paint bathroom vanities navy, black, or forest green', priority: 'recommended', cost: '$100–250 DIY / $400–800 hired', estCost: 175, impact: 'Photographs beautifully and feels renovated', source: 'Zillow Research' },
-          { id: 'grout', name: 'Deep clean grout', priority: 'recommended', cost: '$20–60 DIY / $200–500 hired', estCost: 40, impact: 'Clean grout reads as a fresh bathroom in photos' },
-          { id: 'hardware', name: 'Update cabinet hardware', priority: 'optional', cost: '$100–400 DIY', estCost: 250, impact: 'New pulls can transform a kitchen' },
-        ],
-      },
-    ],
-  },
 ]
 
 const PRIORITY_CONFIG = {
@@ -331,24 +299,6 @@ export default function Step2Repairs({ onSelectStep }) {
       const data = await res.json()
       const findings = data.issues || []
       setAiFindings(findings)
-      const matchedIds = new Set()
-      const polishItemsForMatch = CHECKLIST_SECTIONS
-        .find(s => s.id === 'polish')
-        .categories.flatMap(c => c.items)
-      findings.forEach(finding => {
-        const words = finding.issue.toLowerCase().split(/\s+/).filter(w => w.length >= 3)
-        polishItemsForMatch.forEach(item => {
-          if (words.some(word => item.name.toLowerCase().includes(word))) {
-            matchedIds.add(item.id)
-            handleCheck(item.id, true)
-          }
-        })
-      })
-      setAiFlaggedItemIds(prev => {
-        const next = new Set(prev)
-        matchedIds.forEach(id => next.add(id))
-        return next
-      })
       try {
         const saved = localStorage.getItem('fsbo_stepData')
         const existing = saved ? JSON.parse(saved) : {}
@@ -377,19 +327,6 @@ export default function Step2Repairs({ onSelectStep }) {
     return new Set()
   })
 
-  const [aiFlaggedItemIds, setAiFlaggedItemIds] = useState(() => {
-    if (typeof window === 'undefined') return new Set()
-    try {
-      const saved = localStorage.getItem('fsbo_stepData')
-      if (saved) {
-        const data = JSON.parse(saved)
-        const ids = data?.step2?.aiFlaggedItemIds
-        if (Array.isArray(ids)) return new Set(ids)
-      }
-    } catch {}
-    return new Set()
-  })
-
   useEffect(() => {
     try {
       const saved = localStorage.getItem('fsbo_stepData')
@@ -401,13 +338,12 @@ export default function Step2Repairs({ onSelectStep }) {
           step2: {
             ...(existing.step2 || {}),
             checkedItems: [...checkedItems],
-            aiFlaggedItemIds: [...aiFlaggedItemIds],
           },
         })
       )
       notifyStepDataChange()
     } catch {}
-  }, [checkedItems, aiFlaggedItemIds])
+  }, [checkedItems])
 
   const handleCheck = (id, checked) => {
     setCheckedItems((prev) => {
@@ -439,9 +375,7 @@ export default function Step2Repairs({ onSelectStep }) {
   const currentStage = WIZARD_STAGES[wizardStage]
 
   const inspectionSection = CHECKLIST_SECTIONS.find(s => s.id === 'inspection')
-  const polishSection = CHECKLIST_SECTIONS.find(s => s.id === 'polish')
   const inspectionItems = inspectionSection.categories.flatMap(c => c.items)
-  const polishItems = polishSection.categories.flatMap(c => c.items)
   const mustFixItems = inspectionItems.filter(i => i.priority === 'must')
   const mustFixDone = mustFixItems.filter(i => checkedItems.has(i.id)).length
   const shieldedEquity = inspectionItems
@@ -844,14 +778,6 @@ export default function Step2Repairs({ onSelectStep }) {
                                                 style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}
                                               >
                                                 TREC {item.trecRef}
-                                              </span>
-                                            )}
-                                            {aiFlaggedItemIds.has(item.id) && (
-                                              <span
-                                                className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                                                style={{ backgroundColor: '#faf5ff', color: '#7e22ce', border: '1px solid #e9d5ff' }}
-                                              >
-                                                AI flagged
                                               </span>
                                             )}
                                           </div>

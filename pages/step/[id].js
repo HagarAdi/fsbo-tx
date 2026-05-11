@@ -59,8 +59,6 @@ export default function StepPage() {
   if (stepId === 3) return (
     <Step3Staging
       onSelectStep={handleSelect}
-      onPriceUpdate={handlePriceUpdate}
-      priceEstimate={priceEstimate}
     />
   )
   if (stepId === 4) return (
