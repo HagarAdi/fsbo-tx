@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getStepStatuses } from '../utils/getStepStatuses'
 
 export function useAppState() {
@@ -46,12 +46,12 @@ export function useAppState() {
     setShowOnboarding(true)
   }
 
-  const handlePriceUpdate = (estimate) => {
+  const handlePriceUpdate = useCallback((estimate) => {
     setPriceEstimate(estimate)
     try {
       localStorage.setItem('fsbo_priceEstimate', JSON.stringify(estimate))
     } catch {}
-  }
+  }, [])
 
   const stepStatuses = getStepStatuses(stepData)
   const completed = Object.entries(stepStatuses)

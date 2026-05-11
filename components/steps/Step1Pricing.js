@@ -136,7 +136,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     { ...EMPTY_COMP },
   ])
   const [showMath, setShowMath] = useState(false)
-  const [estimateSaved, setEstimateSaved] = useState(false)
   const [activeSubStep, setActiveSubStep] = useState(1)
   const [direction, setDirection] = useState(1)
   const [appraiserPanelOpen, setAppraiserPanelOpen] = useState(false)
@@ -181,10 +180,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       notifyStepDataChange()
     } catch {}
   }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, comps])
-
-  useEffect(() => {
-    setEstimateSaved(false)
-  }, [sqft, condition, stories, pool, garageCars, lotAcres, comps])
 
   const updateComp = (index, field, value) => {
     setComps((prev) => {
@@ -246,7 +241,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     ? Math.ceil(baseValue / 25000) * 25000 - 100
     : null
 
-  const handleSaveEstimate = () => {
+  useEffect(() => {
     if (!baseValue) return
     const estimate = {
       currentEstimate: Math.round(baseValue),
@@ -256,8 +251,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       localStorage.setItem('fsbo_priceEstimate', JSON.stringify(estimate))
     } catch {}
     if (onPriceUpdate) onPriceUpdate(estimate)
-    setEstimateSaved(true)
-  }
+  }, [baseValue, suggestedListPrice, onPriceUpdate])
 
   return (
     <div className="px-4 py-8 md:px-10 md:py-12">
@@ -1071,23 +1065,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 </div>
               </div>
             )}
-
-            <div className="mt-4">
-              {estimateSaved ? (
-                <span className="text-sm font-semibold" style={{ color: ACCENT }}>
-                  ✓ Estimate saved
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSaveEstimate}
-                  className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  Save my calculation
-                </button>
-              )}
-            </div>
           </section>
         )}
 
