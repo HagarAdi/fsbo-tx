@@ -602,6 +602,15 @@ export default function Step2Repairs({ onSelectStep, onPriceUpdate, priceEstimat
               {/* Card 2: Repair Checklist */}
               {activeSubStep === 2 && (
                 <div>
+                  <div className="mb-6 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                    <p className="text-base font-semibold text-gray-900">
+                      Fix it now → keep your price. Fix it later → negotiate it.
+                    </p>
+                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                      Visible issues scare off buyers before they ever make an offer. Hidden ones become negotiation leverage after the buyer&apos;s inspector finds them — fixing them now keeps that leverage off the table.
+                    </p>
+                  </div>
+
                   {/* Must-Fix progress pill */}
                   <div className="flex items-center gap-2 mb-4">
                     <span className="text-lg font-semibold text-gray-900">Your pre-listing checklist</span>
