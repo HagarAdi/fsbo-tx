@@ -64,51 +64,102 @@ const WIZARD_STAGES = [
   },
 ]
 
-const CHECKLIST_CATEGORIES = [
+const TREC_FORM_URL = 'https://www.trec.texas.gov/forms/property-inspection-report-rei-7-6'
+
+const CHECKLIST_SECTIONS = [
   {
-    label: 'Curb Appeal',
-    items: [
-      { id: 'fresh-mulch', name: 'Fresh mulch and trimmed hedges', priority: 'recommended', cost: '$150–600 hired', estCost: 375, impact: 'Sets the tone before buyers even walk in' },
-      { id: 'pressure-wash', name: 'Pressure wash driveway', priority: 'recommended', cost: '$150–400 hired', estCost: 275, impact: 'Instantly makes the home look cared for' },
-      { id: 'front-door', name: 'Paint front door a bold color (black, navy, red)', priority: 'recommended', cost: '$50–150 DIY / $300–600 hired', estCost: 100, impact: 'One of the highest ROI things you can do' },
-      { id: 'mailbox', name: 'Replace broken mailbox', priority: 'optional', cost: '$50–200', estCost: 125, impact: 'Buyers notice the small stuff' },
-      { id: 'gutters', name: 'Clean gutters', priority: 'recommended', cost: '$150–400 hired', estCost: 275, impact: 'Tells buyers the home has been maintained' },
+    id: 'inspection',
+    label: 'Inspection Leverage',
+    sublabel: 'Items a TREC-licensed inspector will check on REI 7-6 — the standard Texas inspection report. Skipping these gives buyers ammunition during the option period.',
+    contributesToShield: true,
+    categories: [
+      {
+        label: 'Structural',
+        trecSection: 'I',
+        items: [
+          { id: 'foundation-tells', name: 'Check for foundation tell-tales (stair-step brick cracks, sticky doors, sloped floors)', priority: 'must', cost: 'Free DIY check / $400 engineer if found', estCost: 0, impact: 'TX foundation issues kill more deals than any other category. Catch it now or face a giant credit demand later.', trecRef: 'I.A' },
+          { id: 'drainage-slope', name: 'Confirm grading slopes away from foundation; add splash blocks under downspouts', priority: 'recommended', cost: '$0–30 DIY', estCost: 30, impact: 'Standing water near the foundation is a top-5 TX inspector flag', trecRef: 'I.B' },
+          { id: 'gutters', name: 'Clean gutters and check downspouts', priority: 'recommended', cost: '$150–400 hired', estCost: 275, impact: 'Inspectors check for clogs and detached sections', trecRef: 'I.B' },
+          { id: 'roof', name: 'Roof inspection (get the report before listing)', priority: 'recommended', cost: '$300–500 hired', estCost: 400, impact: 'Know before they find out at inspection', trecRef: 'I.C/D' },
+          { id: 'attic-insulation', name: 'Top up attic insulation to R-30 (Texas code minimum)', priority: 'recommended', cost: '$300–800 hired blow-in', estCost: 550, impact: 'Visible at the attic hatch; thin insulation is auto-flagged on REI 7-6', trecRef: 'I.D' },
+          { id: 'patch-walls', name: 'Patch holes in walls', priority: 'recommended', cost: '$20–50 DIY / $200–500 hired', estCost: 35, impact: 'Inspectors note but rarely use as leverage. Cosmetic buyer-deduct.', trecRef: 'I.E' },
+          { id: 'exterior-rot', name: 'Repair wood rot at fascia, soffit, and exterior trim', priority: 'recommended', cost: '$50–300 DIY caulk + paint', estCost: 175, impact: 'TX humidity makes wood rot a constant inspector flag', trecRef: 'I.E' },
+          { id: 'sticky-windows', name: 'Fix sticky windows or doors', priority: 'recommended', cost: '$50–200 DIY / $200–500 hired', estCost: 125, impact: 'Inspectors operate every window and door', trecRef: 'I.G/H' },
+          { id: 'window-seals', name: 'Address fogged or failed window seals (IGUs)', priority: 'optional', cost: '$200–400 per IGU', estCost: 300, impact: 'Flagged but rarely a deal-breaker; budget if you have several', trecRef: 'I.H' },
+          { id: 'handrail', name: 'Check handrail stability on stairs', priority: 'must', cost: '$20–100 DIY / $150–300 hired', estCost: 60, impact: 'Always flagged in inspection reports', trecRef: 'I.I' },
+        ],
+      },
+      {
+        label: 'Electrical',
+        trecSection: 'II',
+        items: [
+          { id: 'panel-labeling', name: 'Label every breaker; install all panel cover screws', priority: 'must', cost: '$0–30 DIY (label maker)', estCost: 20, impact: 'Missing labels and cover screws are universal inspector flags', trecRef: 'II.A' },
+          { id: 'bulbs', name: 'Replace burned out bulbs with warm LED (2700K)', priority: 'recommended', cost: '$30–80 DIY', estCost: 55, impact: 'Inspectors mark "inoperative"; not real leverage but signals neglect in photos', trecRef: 'II.B' },
+          { id: 'gfci', name: 'Test GFCI outlets near water (kitchen, baths, garage, exterior)', priority: 'must', cost: '$0–50 DIY', estCost: 25, impact: 'Inspectors check every one', trecRef: 'II.B' },
+          { id: 'smoke', name: 'Test smoke detectors (and CO if you have gas appliances)', priority: 'must', cost: '$0–30 DIY', estCost: 15, impact: 'Required by Texas law at closing', trecRef: 'II.B' },
+        ],
+      },
+      {
+        label: 'HVAC',
+        trecSection: 'III',
+        items: [
+          { id: 'hvac', name: 'HVAC service + new filter; keep the receipt', priority: 'must', cost: '$150–300 hired', estCost: 225, impact: 'Texas buyers always ask. Receipt prevents the "system needs servicing" credit demand.', trecRef: 'III.A/B/C' },
+          { id: 'ac-condensate', name: 'Flush A/C condensate line (vinegar or shop-vac)', priority: 'recommended', cost: 'Free DIY', estCost: 0, impact: 'Clogs cause AC failure mid-showing — a 10-minute fix', trecRef: 'III.B' },
+        ],
+      },
+      {
+        label: 'Plumbing',
+        trecSection: 'IV',
+        items: [
+          { id: 'recaulk', name: 'Recaulk tubs, showers, and sinks', priority: 'must', cost: '$20–50 DIY / $200–400 hired', estCost: 35, impact: 'Failed caulk is among the top-3 most-flagged TX items', trecRef: 'IV.A' },
+          { id: 'faucets', name: 'Fix dripping faucets; check angle stops under sinks', priority: 'must', cost: '$20–100 DIY / $150–350 hired', estCost: 60, impact: 'Drips make buyers wonder what else is wrong', trecRef: 'IV.A' },
+          { id: 'hose-bibs', name: 'Inspect hose bibs; install frost-free valves if missing', priority: 'recommended', cost: '$30–80 DIY per bib', estCost: 50, impact: 'TX freeze-damage history makes this a routine inspector check', trecRef: 'IV.A' },
+          { id: 'slow-drains', name: 'Clear slow sink and tub drains', priority: 'recommended', cost: '$10–30 DIY snake', estCost: 20, impact: 'Inspector runs water in every fixture; slow drains are flagged', trecRef: 'IV.B' },
+          { id: 'water-heater', name: 'Check water heater age, drip pan, and TPR valve', priority: 'recommended', cost: 'Free check', estCost: 0, impact: 'Over 15 years? Expect a $800–1,500 replace credit ask', trecRef: 'IV.C' },
+        ],
+      },
+      {
+        label: 'Appliances',
+        trecSection: 'V',
+        items: [
+          { id: 'appliance-operation', name: 'Test every built-in appliance (dishwasher, disposal, range, oven, microwave, range hood)', priority: 'must', cost: 'Free DIY', estCost: 0, impact: 'TREC inspectors operate every built-in; a dead appliance = immediate credit ask', trecRef: 'V.A–F' },
+          { id: 'bath-exhaust', name: 'Test bath exhaust fan operation', priority: 'recommended', cost: 'Free DIY check / $100–200 to replace', estCost: 0, impact: 'TREC-required; often flagged on older homes', trecRef: 'V.F' },
+          { id: 'garage-door-reverse', name: 'Test garage door auto-reverse (beam sensors + resistance)', priority: 'must', cost: 'Free DIY adjust / $150–200 hired', estCost: 0, impact: 'Every TREC inspector tests it; failure triggers a re-inspection cost demand', trecRef: 'V.G' },
+          { id: 'dryer-vent', name: 'Clean dryer vent; verify exterior termination', priority: 'recommended', cost: '$100–200 hired', estCost: 150, impact: 'Fire hazard; almost always noted in TX reports', trecRef: 'V.H' },
+        ],
+      },
     ],
   },
   {
-    label: 'Interior',
-    items: [
-      { id: 'patch-walls', name: 'Patch holes in walls', priority: 'must', cost: '$20–50 DIY / $200–500 hired', estCost: 35, impact: 'Buyers mentally deduct $500+ per hole' },
-      { id: 'bulbs', name: 'Replace burned out bulbs with warm LED (2700K)', priority: 'must', cost: '$30–80 DIY', estCost: 55, impact: 'Good lighting makes every room look better in photos' },
-      { id: 'squeaky', name: 'Fix squeaky doors and cabinets', priority: 'recommended', cost: '$10–50 DIY / $150–300 hired', estCost: 30, impact: 'Squeaks feel like neglect' },
-      { id: 'interior-paint', name: 'Paint walls white or off-white (Sherwin-Williams Alabaster)', priority: 'recommended', cost: '$300–600 DIY / $600–1,500 hired per room', estCost: 450, impact: 'Neutral walls help buyers picture their own life here', source: 'Zillow Research' },
-      { id: 'sticky-windows', name: 'Fix sticky windows or doors', priority: 'recommended', cost: '$50–200 DIY / $200–500 hired', estCost: 125, impact: 'Buyers test everything' },
-    ],
-  },
-  {
-    label: 'Kitchen & Bathrooms',
-    items: [
-      { id: 'recaulk', name: 'Recaulk tubs, showers, and sinks', priority: 'must', cost: '$20–50 DIY / $200–400 hired', estCost: 35, impact: 'A small fix that looks like a renovation' },
-      { id: 'faucets', name: 'Fix dripping faucets', priority: 'must', cost: '$20–100 DIY / $150–350 hired', estCost: 60, impact: 'Drips make buyers wonder what else is wrong' },
-      { id: 'vanities', name: 'Paint bathroom vanities navy, black, or forest green', priority: 'recommended', cost: '$100–250 DIY / $400–800 hired', estCost: 175, impact: 'Photographs beautifully and feels renovated', source: 'Zillow Research' },
-      { id: 'grout', name: 'Deep clean grout', priority: 'recommended', cost: '$20–60 DIY / $200–500 hired', estCost: 40, impact: 'Clean grout = fresh bathroom' },
-      { id: 'hardware', name: 'Update cabinet hardware', priority: 'optional', cost: '$100–400 DIY', estCost: 250, impact: 'New pulls can transform a kitchen' },
-    ],
-  },
-  {
-    label: 'Big Ticket Items',
-    items: [
-      { id: 'hvac', name: 'HVAC service and new filter', priority: 'must', cost: '$150–300 hired', estCost: 225, impact: 'Texas buyers always ask. Have the receipt ready.' },
-      { id: 'roof', name: 'Roof inspection', priority: 'recommended', cost: '$300–500 hired', estCost: 400, impact: 'Know before they find out at inspection' },
-      { id: 'water-heater', name: 'Check water heater age', priority: 'recommended', cost: 'Free', estCost: 0, impact: 'Over 15 years? Budget $800–1,500 to replace or be ready to negotiate' },
-    ],
-  },
-  {
-    label: 'Safety',
-    items: [
-      { id: 'smoke', name: 'Test smoke detectors', priority: 'must', cost: '$0–30 DIY', estCost: 15, impact: 'Required by Texas law at closing' },
-      { id: 'gfci', name: 'Test GFCI outlets near water', priority: 'must', cost: '$0–50 DIY', estCost: 25, impact: 'Inspectors check every one' },
-      { id: 'handrail', name: 'Check handrail stability', priority: 'must', cost: '$20–100 DIY / $150–300 hired', estCost: 60, impact: 'Always flagged in inspection reports' },
+    id: 'polish',
+    label: 'Pre-listing Polish',
+    sublabel: 'Cosmetic prep — not inspector territory, but buyers notice in photos and showings. These don’t add to your negotiation shield, but they help bring more offers in.',
+    contributesToShield: false,
+    categories: [
+      {
+        label: 'Curb Appeal',
+        items: [
+          { id: 'fresh-mulch', name: 'Fresh mulch and trimmed hedges', priority: 'recommended', cost: '$150–600 hired', estCost: 375, impact: 'Sets the tone before buyers even walk in' },
+          { id: 'pressure-wash', name: 'Pressure wash driveway', priority: 'recommended', cost: '$150–400 hired', estCost: 275, impact: 'Instantly makes the home look cared for' },
+          { id: 'front-door', name: 'Paint front door a bold color (black, navy, red)', priority: 'recommended', cost: '$50–150 DIY / $300–600 hired', estCost: 100, impact: 'One of the highest ROI things you can do' },
+          { id: 'mailbox', name: 'Replace broken mailbox', priority: 'optional', cost: '$50–200', estCost: 125, impact: 'Buyers notice the small stuff' },
+        ],
+      },
+      {
+        label: 'Interior Refresh',
+        items: [
+          { id: 'squeaky', name: 'Fix squeaky doors and cabinets', priority: 'recommended', cost: '$10–50 DIY / $150–300 hired', estCost: 30, impact: 'Squeaks feel like neglect' },
+          { id: 'interior-paint', name: 'Paint walls white or off-white (Sherwin-Williams Alabaster)', priority: 'recommended', cost: '$300–600 DIY / $600–1,500 hired per room', estCost: 450, impact: 'Neutral walls help buyers picture their own life here', source: 'Zillow Research' },
+        ],
+      },
+      {
+        label: 'Kitchen & Bath Cosmetic',
+        items: [
+          { id: 'vanities', name: 'Paint bathroom vanities navy, black, or forest green', priority: 'recommended', cost: '$100–250 DIY / $400–800 hired', estCost: 175, impact: 'Photographs beautifully and feels renovated', source: 'Zillow Research' },
+          { id: 'grout', name: 'Deep clean grout', priority: 'recommended', cost: '$20–60 DIY / $200–500 hired', estCost: 40, impact: 'Clean grout reads as a fresh bathroom in photos' },
+          { id: 'hardware', name: 'Update cabinet hardware', priority: 'optional', cost: '$100–400 DIY', estCost: 250, impact: 'New pulls can transform a kitchen' },
+        ],
+      },
     ],
   },
 ]
@@ -281,15 +332,16 @@ export default function Step2Repairs({ onSelectStep }) {
       const findings = data.issues || []
       setAiFindings(findings)
       const matchedIds = new Set()
+      const polishItemsForMatch = CHECKLIST_SECTIONS
+        .find(s => s.id === 'polish')
+        .categories.flatMap(c => c.items)
       findings.forEach(finding => {
         const words = finding.issue.toLowerCase().split(/\s+/).filter(w => w.length >= 3)
-        CHECKLIST_CATEGORIES.forEach(cat => {
-          cat.items.forEach(item => {
-            if (words.some(word => item.name.toLowerCase().includes(word))) {
-              matchedIds.add(item.id)
-              handleCheck(item.id, true)
-            }
-          })
+        polishItemsForMatch.forEach(item => {
+          if (words.some(word => item.name.toLowerCase().includes(word))) {
+            matchedIds.add(item.id)
+            handleCheck(item.id, true)
+          }
         })
       })
       setAiFlaggedItemIds(prev => {
@@ -386,10 +438,13 @@ export default function Step2Repairs({ onSelectStep }) {
 
   const currentStage = WIZARD_STAGES[wizardStage]
 
-  const allChecklistItems = CHECKLIST_CATEGORIES.flatMap(c => c.items)
-  const mustFixItems = allChecklistItems.filter(i => i.priority === 'must')
+  const inspectionSection = CHECKLIST_SECTIONS.find(s => s.id === 'inspection')
+  const polishSection = CHECKLIST_SECTIONS.find(s => s.id === 'polish')
+  const inspectionItems = inspectionSection.categories.flatMap(c => c.items)
+  const polishItems = polishSection.categories.flatMap(c => c.items)
+  const mustFixItems = inspectionItems.filter(i => i.priority === 'must')
   const mustFixDone = mustFixItems.filter(i => checkedItems.has(i.id)).length
-  const shieldedEquity = allChecklistItems
+  const shieldedEquity = inspectionItems
     .filter(i => checkedItems.has(i.id))
     .reduce((sum, i) => sum + negotiationRisk(i), 0)
   const riskRemaining = mustFixItems
@@ -695,93 +750,138 @@ export default function Step2Repairs({ onSelectStep }) {
                     <p className="text-xs font-medium mt-3" style={{ color: motivatingColor }}>{motivatingMessage}</p>
                   </div>
 
-                  {/* Accordion checklist */}
-                  <div className="space-y-2 mb-6">
-                    {CHECKLIST_CATEGORIES.map((category) => {
-                      const isOpen = expandedCategories.has(category.label)
-                      const catMustFix = category.items.filter(i => i.priority === 'must')
-                      const catChecked = category.items.filter(i => checkedItems.has(i.id)).length
-                      const catMustDone = catMustFix.filter(i => checkedItems.has(i.id)).length
-                      return (
-                        <div key={category.label} className="rounded-xl border border-gray-200 overflow-hidden">
-                          <button
-                            type="button"
-                            onClick={() => toggleCategory(category.label)}
-                            className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left"
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm font-semibold text-gray-800">{category.label}</span>
-                              {catMustFix.length > 0 && (
-                                <span
-                                  className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                                  style={{
-                                    backgroundColor: catMustDone === catMustFix.length ? '#dcfce7' : '#fef2f2',
-                                    color: catMustDone === catMustFix.length ? '#15803d' : '#dc2626',
-                                  }}
-                                >
-                                  {catMustDone}/{catMustFix.length} must-fix
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <span className="text-xs text-gray-400">{catChecked}/{category.items.length} checked</span>
-                              <span className="text-gray-400 text-xs">{isOpen ? '▲' : '▼'}</span>
-                            </div>
-                          </button>
-                          {isOpen && (
-                            <div className="border-t border-gray-100 divide-y divide-gray-50">
-                              {category.items.map((item) => (
-                                <label
-                                  key={item.id}
-                                  className="flex items-start gap-3 px-4 py-3 bg-white hover:bg-gray-50/50 cursor-pointer transition-colors"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={checkedItems.has(item.id)}
-                                    onChange={(e) => handleCheck(item.id, e.target.checked)}
-                                    className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer flex-shrink-0"
-                                    style={{ accentColor: ACCENT }}
-                                  />
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                                      <span
-                                        className="text-sm font-medium text-gray-800"
-                                        style={checkedItems.has(item.id) ? { textDecoration: 'line-through', color: '#9ca3af' } : {}}
-                                      >
-                                        {item.name}
-                                      </span>
-                                      <PriorityBadge priority={item.priority} />
-                                      {aiFlaggedItemIds.has(item.id) && (
-                                        <span
-                                          className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                                          style={{ backgroundColor: '#faf5ff', color: '#7e22ce', border: '1px solid #e9d5ff' }}
-                                        >
-                                          AI flagged
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                      <span
-                                        className="inline-block px-2 py-0.5 rounded-full text-xs font-bold"
-                                        style={{
-                                          backgroundColor: checkedItems.has(item.id) ? '#f0fdf4' : '#fef2f2',
-                                          color: checkedItems.has(item.id) ? '#15803d' : '#dc2626',
-                                          border: `1px solid ${checkedItems.has(item.id) ? '#bbf7d0' : '#fecaca'}`,
-                                        }}
-                                      >
-                                        {checkedItems.has(item.id) ? '✓' : '−'}${negotiationRisk(item).toLocaleString()} {checkedItems.has(item.id) ? 'shielded' : 'at risk'}
-                                      </span>
-                                      <span className="text-xs text-gray-400">~{item.cost} to fix</span>
-                                    </div>
-                                  </div>
-                                </label>
-                              ))}
-                            </div>
+                  {/* Two-section accordion: Inspection Leverage (TREC) then Pre-listing Polish */}
+                  {CHECKLIST_SECTIONS.map((section) => (
+                    <div key={section.id} className="mb-6">
+                      <div className="mb-3">
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <h4 className="text-base font-bold text-gray-900">{section.label}</h4>
+                          {section.id === 'inspection' && (
+                            <a
+                              href={TREC_FORM_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-medium underline"
+                              style={{ color: '#2563eb' }}
+                            >
+                              Based on TREC REI 7-6 ↗
+                            </a>
                           )}
                         </div>
-                      )
-                    })}
-                  </div>
+                        <p className="text-xs text-gray-500 mt-1">{section.sublabel}</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        {section.categories.map((category) => {
+                          const isOpen = expandedCategories.has(category.label)
+                          const catMustFix = category.items.filter(i => i.priority === 'must')
+                          const catChecked = category.items.filter(i => checkedItems.has(i.id)).length
+                          const catMustDone = catMustFix.filter(i => checkedItems.has(i.id)).length
+                          return (
+                            <div key={category.label} className="rounded-xl border border-gray-200 overflow-hidden">
+                              <button
+                                type="button"
+                                onClick={() => toggleCategory(category.label)}
+                                className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left"
+                              >
+                                <div className="flex items-center gap-3 flex-wrap">
+                                  <span className="text-sm font-semibold text-gray-800">{category.label}</span>
+                                  {category.trecSection && (
+                                    <span
+                                      className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold"
+                                      style={{ backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}
+                                    >
+                                      TREC {category.trecSection}
+                                    </span>
+                                  )}
+                                  {catMustFix.length > 0 && (
+                                    <span
+                                      className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                                      style={{
+                                        backgroundColor: catMustDone === catMustFix.length ? '#dcfce7' : '#fef2f2',
+                                        color: catMustDone === catMustFix.length ? '#15803d' : '#dc2626',
+                                      }}
+                                    >
+                                      {catMustDone}/{catMustFix.length} must-fix
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <span className="text-xs text-gray-400">{catChecked}/{category.items.length} checked</span>
+                                  <span className="text-gray-400 text-xs">{isOpen ? '▲' : '▼'}</span>
+                                </div>
+                              </button>
+                              {isOpen && (
+                                <div className="border-t border-gray-100 divide-y divide-gray-50">
+                                  {category.items.map((item) => {
+                                    const isChecked = checkedItems.has(item.id)
+                                    const risk = negotiationRisk(item)
+                                    const showRiskPill = section.contributesToShield && risk > 0
+                                    return (
+                                      <label
+                                        key={item.id}
+                                        className="flex items-start gap-3 px-4 py-3 bg-white hover:bg-gray-50/50 cursor-pointer transition-colors"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={isChecked}
+                                          onChange={(e) => handleCheck(item.id, e.target.checked)}
+                                          className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer flex-shrink-0"
+                                          style={{ accentColor: ACCENT }}
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                                            <span
+                                              className="text-sm font-medium text-gray-800"
+                                              style={isChecked ? { textDecoration: 'line-through', color: '#9ca3af' } : {}}
+                                            >
+                                              {item.name}
+                                            </span>
+                                            <PriorityBadge priority={item.priority} />
+                                            {item.trecRef && (
+                                              <span
+                                                className="px-1.5 py-0.5 rounded text-[10px] font-mono"
+                                                style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}
+                                              >
+                                                TREC {item.trecRef}
+                                              </span>
+                                            )}
+                                            {aiFlaggedItemIds.has(item.id) && (
+                                              <span
+                                                className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                                                style={{ backgroundColor: '#faf5ff', color: '#7e22ce', border: '1px solid #e9d5ff' }}
+                                              >
+                                                AI flagged
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                            {showRiskPill && (
+                                              <span
+                                                className="inline-block px-2 py-0.5 rounded-full text-xs font-bold"
+                                                style={{
+                                                  backgroundColor: isChecked ? '#f0fdf4' : '#fef2f2',
+                                                  color: isChecked ? '#15803d' : '#dc2626',
+                                                  border: `1px solid ${isChecked ? '#bbf7d0' : '#fecaca'}`,
+                                                }}
+                                              >
+                                                {isChecked ? '✓' : '−'}${risk.toLocaleString()} {isChecked ? 'shielded' : 'at risk'}
+                                              </span>
+                                            )}
+                                            <span className="text-xs text-gray-400">~{item.cost} to fix</span>
+                                          </div>
+                                        </div>
+                                      </label>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
 
                   <div className="mb-6 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
                     <p className="text-base font-semibold text-gray-900">
