@@ -1,14 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
 import InspectorPanel from '../InspectorPanel'
 
 const ACCENT = '#16a34a'
-
-const SUB_STEPS = [
-  { id: 1, label: 'Photo Assessment' },
-  { id: 2, label: 'Repair Checklist' },
-]
 
 const CONTRACTORS = [
   { name: 'Texas Home Services', service: 'General repairs', rating: '4.8', url: 'https://thumbtack.com' },
@@ -16,52 +10,11 @@ const CONTRACTORS = [
   { name: 'Austin Paint & Patch', service: 'Painting', rating: '4.9', url: 'https://thumbtack.com' },
 ]
 
-const slideVariants = {
-  initial: (dir) => ({ opacity: 0, x: dir * 40 }),
-  animate: { opacity: 1, x: 0, transition: { duration: 0.22, ease: 'easeOut' } },
-  exit: (dir) => ({ opacity: 0, x: dir * -40, transition: { duration: 0.16, ease: 'easeIn' } }),
-}
-
 const PRO_TIPS = [
   { tip: 'Buyers negotiate 1–3% of purchase price for repairs found at inspection', source: 'HomeLight Agent Survey' },
   { tip: 'Homes with pre-listing inspections sell faster and with fewer surprises', source: 'NAR Profile of Home Buyers' },
   { tip: 'A $20 caulk job can prevent a $500 negotiation', source: 'Industry best practice' },
   { tip: 'Having HVAC service receipts ready increases buyer confidence in Texas', source: 'HomeLight Agent Survey' },
-]
-
-const WIZARD_STAGES = [
-  {
-    id: 'bathrooms',
-    emoji: '🚿',
-    label: 'Start with your bathrooms',
-    tip: 'Buyers judge bathrooms immediately. Upload one photo per bathroom if you have multiple.',
-    maxPhotos: 5,
-    nextLabel: 'Next →',
-  },
-  {
-    id: 'kitchen',
-    emoji: '🍳',
-    label: 'How about your kitchen?',
-    tip: 'Check under the sink, faucets, and cabinet hardware. These are inspection favorites.',
-    maxPhotos: 3,
-    nextLabel: 'Next →',
-  },
-  {
-    id: 'front',
-    emoji: '🏡',
-    label: 'The first impression',
-    tip: 'Buyers form an opinion before they walk in. Curb appeal matters more than most sellers realize.',
-    maxPhotos: 3,
-    nextLabel: 'Next →',
-  },
-  {
-    id: 'other',
-    emoji: '🔍',
-    label: 'Any areas you\'re worried about?',
-    tip: 'Cracks, stains, damage — anything that\'s been bothering you. Better to know now.',
-    maxPhotos: 5,
-    nextLabel: 'Done →',
-  },
 ]
 
 const TREC_FORM_URL = 'https://www.trec.texas.gov/forms/property-inspection-report-rei-7-6'
@@ -147,12 +100,6 @@ function negotiationRisk(item) {
   return base
 }
 
-const AI_PRIORITY_STYLE = {
-  'Must Fix':    { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' },
-  'Recommended': { bg: '#fefce8', text: '#ca8a04', border: '#fef08a' },
-  'Optional':    { bg: '#f9fafb', text: '#6b7280', border: '#e5e7eb' },
-}
-
 function PriorityBadge({ priority }) {
   const cfg = PRIORITY_CONFIG[priority]
   return (
@@ -165,154 +112,9 @@ function PriorityBadge({ priority }) {
   )
 }
 
-function UploadZone({ photos, onAdd, maxPhotos }) {
-  const inputRef = useRef(null)
-  const [dragging, setDragging] = useState(false)
-
-  const handleFiles = (files) => {
-    const valid = Array.from(files).filter((f) =>
-      ['image/jpeg', 'image/png', 'image/webp'].includes(f.type)
-    )
-    const remaining = maxPhotos - photos.length
-    const toAdd = valid.slice(0, remaining).map((f) => ({
-      name: f.name,
-      url: URL.createObjectURL(f),
-      file: f,
-    }))
-    if (toAdd.length > 0) onAdd(toAdd)
-  }
-
-  const handleDrop = (e) => {
-    e.preventDefault()
-    setDragging(false)
-    handleFiles(e.dataTransfer.files)
-  }
-
-  const isFull = photos.length >= maxPhotos
-
-  return (
-    <div className="space-y-3">
-      <div
-        onClick={() => !isFull && inputRef.current?.click()}
-        onDragOver={(e) => { e.preventDefault(); if (!isFull) setDragging(true) }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={handleDrop}
-        className="rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors"
-        style={{
-          borderColor: dragging ? ACCENT : '#d1d5db',
-          backgroundColor: dragging ? '#f0fdf4' : '#fafafa',
-          cursor: isFull ? 'default' : 'pointer',
-        }}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          className="hidden"
-          onChange={(e) => handleFiles(e.target.files)}
-        />
-        <div className="text-3xl mb-2">📷</div>
-        {isFull ? (
-          <p className="text-sm text-gray-500">Max {maxPhotos} photos uploaded</p>
-        ) : (
-          <>
-            <p className="text-sm font-medium text-gray-700">Drag photos here or click to browse</p>
-            <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP — up to {maxPhotos} photos</p>
-          </>
-        )}
-      </div>
-
-      {photos.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {photos.map((p, i) => (
-            <div key={i} className="relative group">
-              <img
-                src={p.url}
-                alt={p.name}
-                className="w-20 h-20 object-cover rounded-lg border border-gray-200"
-              />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-lg">
-                <span className="text-white text-xs font-medium">{i + 1}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
 export default function Step2Repairs({ onSelectStep }) {
-  const [wizardStage, setWizardStage] = useState(0)
-  const [wizardDone, setWizardDone] = useState(false)
-  const [photos, setPhotos] = useState({ bathrooms: [], kitchen: [], front: [], other: [] })
-  const [analyzing, setAnalyzing] = useState(false)
-  const [analyzeError, setAnalyzeError] = useState(null)
   const [inspectorPanelOpen, setInspectorPanelOpen] = useState(false)
-  const [activeSubStep, setActiveSubStep] = useState(1)
-  const [direction, setDirection] = useState(1)
   const [expandedCategories, setExpandedCategories] = useState(new Set())
-  const [aiFindings, setAiFindings] = useState(() => {
-    if (typeof window === 'undefined') return null
-    try {
-      const saved = localStorage.getItem('fsbo_stepData')
-      if (saved) {
-        const data = JSON.parse(saved)
-        const findings = data?.step2?.aiFindings
-        if (Array.isArray(findings) && findings.length > 0) return findings
-      }
-    } catch {}
-    return null
-  })
-
-  const toBase64Compressed = (file) => new Promise(resolve => {
-    const canvas = document.createElement('canvas')
-    const img = new Image()
-    const url = URL.createObjectURL(file)
-    img.onload = () => {
-      const maxW = 800
-      const scale = Math.min(1, maxW / img.width)
-      canvas.width = img.width * scale
-      canvas.height = img.height * scale
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-      const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1]
-      URL.revokeObjectURL(url)
-      resolve(base64)
-    }
-    img.src = url
-  })
-
-  const handleAnalyze = async () => {
-    const allFiles = Object.values(photos).flat().map(p => p.file).filter(Boolean)
-    setAnalyzing(true)
-    setAiFindings(null)
-    setAnalyzeError(null)
-    try {
-      const base64Images = await Promise.all(allFiles.map(toBase64Compressed))
-      const res = await fetch('/api/analyze-photos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ images: base64Images }),
-      })
-      const data = await res.json()
-      const findings = data.issues || []
-      setAiFindings(findings)
-      try {
-        const saved = localStorage.getItem('fsbo_stepData')
-        const existing = saved ? JSON.parse(saved) : {}
-        localStorage.setItem('fsbo_stepData', JSON.stringify({
-          ...existing,
-          step2: { ...existing.step2, aiFindings: findings },
-        }))
-      } catch {}
-    } catch {
-      setAnalyzeError("Couldn't analyze photos — no worries, use the checklist below.")
-    } finally {
-      setAnalyzing(false)
-    }
-  }
 
   const [checkedItems, setCheckedItems] = useState(() => {
     if (typeof window === 'undefined') return new Set()
@@ -354,25 +156,14 @@ export default function Step2Repairs({ onSelectStep }) {
     })
   }
 
-  const addPhotos = (stageId, newPhotos) => {
-    setPhotos((prev) => ({
-      ...prev,
-      [stageId]: [...prev[stageId], ...newPhotos],
-    }))
+  const toggleCategory = (label) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(label)) next.delete(label)
+      else next.add(label)
+      return next
+    })
   }
-
-  const advanceWizard = () => {
-    if (wizardStage < WIZARD_STAGES.length - 1) {
-      setWizardStage((s) => s + 1)
-    } else {
-      setWizardDone(true)
-    }
-  }
-
-  const totalPhotos = Object.values(photos).reduce((sum, arr) => sum + arr.length, 0)
-  const roomsWithPhotos = Object.values(photos).filter((arr) => arr.length > 0).length
-
-  const currentStage = WIZARD_STAGES[wizardStage]
 
   const inspectionSection = CHECKLIST_SECTIONS.find(s => s.id === 'inspection')
   const inspectionItems = inspectionSection.categories.flatMap(c => c.items)
@@ -395,19 +186,6 @@ export default function Step2Repairs({ onSelectStep }) {
     mustFixDone === mustFixItems.length ? '#166534' : mustFixDone > 0 ? '#92400e' : '#1e40af'
   const allMustFixDone = mustFixDone === mustFixItems.length
 
-  const goTo = (step) => {
-    setDirection(step > activeSubStep ? 1 : -1)
-    setActiveSubStep(step)
-  }
-  const toggleCategory = (label) => {
-    setExpandedCategories((prev) => {
-      const next = new Set(prev)
-      if (next.has(label)) next.delete(label)
-      else next.add(label)
-      return next
-    })
-  }
-
   return (
     <>
     <div className="px-4 py-8 md:px-10 md:py-12">
@@ -426,487 +204,271 @@ export default function Step2Repairs({ onSelectStep }) {
         protection. Every unfixed item gives buyers a reason to negotiate your price down.
       </p>
 
-      {/* Sub-step progress indicator */}
-      <div className="flex items-center mb-8">
-        {SUB_STEPS.map((step, i) => {
-          const done = step.id < activeSubStep
-          const active = step.id === activeSubStep
-          return (
-            <div key={step.id} className="flex items-center">
-              <button
-                type="button"
-                onClick={() => goTo(step.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
-                  active
-                    ? 'text-white'
-                    : done
-                    ? 'text-green-700 hover:bg-green-50'
-                    : 'text-gray-400 hover:bg-gray-100'
-                }`}
-                style={active ? { backgroundColor: ACCENT } : {}}
-              >
-                <span
-                  className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                    done
-                      ? 'bg-green-500 text-white'
-                      : active
-                      ? 'bg-white/30 text-white'
-                      : 'bg-gray-200 text-gray-500'
-                  }`}
-                >
-                  {done ? '✓' : step.id}
-                </span>
-                {step.label}
-              </button>
-              {i < SUB_STEPS.length - 1 && (
-                <div className={`w-5 h-px mx-1 ${activeSubStep > step.id ? 'bg-green-400' : 'bg-gray-200'}`} />
-              )}
-            </div>
-          )
-        })}
-      </div>
-
       {/* Two-column layout */}
       <div className="flex gap-8 items-start">
-        {/* Wizard cards */}
         <div className="flex-1 min-w-0">
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={activeSubStep}
-              custom={direction}
-              variants={slideVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
+          <div className="mb-6 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
+            <p className="text-base font-semibold text-gray-900">
+              Fix it now → keep your price. Fix it later → negotiate it.
+            </p>
+            <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+              Visible issues scare off buyers before they ever make an offer. Hidden ones become negotiation leverage after the buyer&apos;s inspector finds them — fixing them now keeps that leverage off the table.
+            </p>
+          </div>
+
+          {/* Must-Fix progress pill */}
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-lg font-semibold text-gray-900">Your pre-listing checklist</span>
+            <span
+              className="px-2.5 py-0.5 rounded-full text-xs font-semibold"
+              style={{
+                backgroundColor: allMustFixDone ? '#dcfce7' : '#fef3c7',
+                color: allMustFixDone ? '#15803d' : '#92400e',
+              }}
             >
-              {/* Card 1: Photo Assessment */}
-              {activeSubStep === 1 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">What&apos;s worth a checkbook to upgrade before listing?</h3>
-                  <p className="text-sm text-gray-500 mb-6">
-                    We&apos;ll guide you room by room. Upload a photo and our AI flags dated or worn cosmetic items with rough $ estimates — or skip and use the checklist below.
-                  </p>
+              {mustFixDone} of {mustFixItems.length} Must-Fixes checked
+            </span>
+          </div>
+          <p className="text-sm text-gray-500 mb-6">
+            Focus on <span className="font-semibold text-red-600">Must Fix</span> items first — every one you skip becomes leverage for the buyer&apos;s inspector. Tap a category to expand.
+          </p>
 
-                  {!wizardDone ? (
-                    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden mb-6">
-                      <div className="px-6 pt-5 pb-4 border-b border-gray-100">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                            Room {wizardStage + 1} of {WIZARD_STAGES.length}
-                          </span>
-                          <div className="flex gap-1.5">
-                            {WIZARD_STAGES.map((_, i) => (
-                              <div
-                                key={i}
-                                className="h-1.5 w-8 rounded-full transition-colors"
-                                style={{ backgroundColor: i <= wizardStage ? ACCENT : '#e5e7eb' }}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{currentStage.emoji}</span>
-                          <h4 className="text-base font-semibold text-gray-900">{currentStage.label}</h4>
-                        </div>
-                        <p className="mt-1.5 text-sm text-gray-500">{currentStage.tip}</p>
-                      </div>
-                      <div className="px-6 py-5">
-                        <UploadZone
-                          photos={photos[currentStage.id]}
-                          onAdd={(newPhotos) => addPhotos(currentStage.id, newPhotos)}
-                          maxPhotos={currentStage.maxPhotos}
-                        />
-                        <div className="flex gap-3 mt-5">
-                          <button
-                            type="button"
-                            onClick={advanceWizard}
-                            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                            style={{ backgroundColor: ACCENT }}
-                          >
-                            {currentStage.nextLabel}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={advanceWizard}
-                            className="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors"
-                          >
-                            Skip
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="rounded-xl border border-gray-200 bg-white p-6 mb-6">
-                      <p className="text-sm font-medium text-gray-700 mb-5">
-                        {totalPhotos > 0
-                          ? `You uploaded ${totalPhotos} photo${totalPhotos !== 1 ? 's' : ''} across ${roomsWithPhotos} room${roomsWithPhotos !== 1 ? 's' : ''}`
-                          : "No photos uploaded — that's okay, you can still use the checklist."}
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                        <div>
-                          <button
-                            type="button"
-                            onClick={handleAnalyze}
-                            disabled={analyzing}
-                            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ backgroundColor: ACCENT }}
-                          >
-                            {analyzing ? 'Analyzing your photos... 🔍' : 'Analyze my photos →'}
-                          </button>
-                          {analyzeError && (
-                            <p className="mt-2 text-sm text-gray-500">{analyzeError}</p>
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => goTo(2)}
-                          className="text-sm text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors"
-                        >
-                          Skip — go straight to checklist
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* AI findings */}
-                  {aiFindings && aiFindings.length > 0 && (
-                    <div className="mb-6">
-                      <h3 className="text-base font-semibold text-gray-900 mb-4">💰 Cosmetic upgrades worth a checkbook:</h3>
-                      <div className="space-y-3">
-                        {aiFindings.map((finding, i) => {
-                          const style = AI_PRIORITY_STYLE[finding.priority] || AI_PRIORITY_STYLE['Optional']
-                          return (
-                            <div key={i} className="rounded-lg border p-4" style={{ borderColor: style.border, backgroundColor: style.bg }}>
-                              <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                <span className="text-sm font-semibold text-gray-900">{finding.issue}</span>
-                                {finding.costRange && (
-                                  <span
-                                    className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-300"
-                                  >
-                                    {finding.costRange}
-                                  </span>
-                                )}
-                                <span
-                                  className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                                  style={{ backgroundColor: style.bg, color: style.text, border: `1px solid ${style.border}` }}
-                                >
-                                  {finding.priority}
-                                </span>
-                                <span className="text-xs text-gray-400 ml-auto">{finding.room}</span>
-                              </div>
-                              <p className="text-xs text-gray-500 italic">&ldquo;{finding.whyItMatters}&rdquo;</p>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-end pt-2">
-                    <button
-                      type="button"
-                      onClick={() => goTo(2)}
-                      className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                      style={{ backgroundColor: ACCENT }}
-                    >
-                      Continue to Repair Checklist →
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Card 2: Repair Checklist */}
-              {activeSubStep === 2 && (
-                <div>
-                  <div className="mb-6 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                    <p className="text-base font-semibold text-gray-900">
-                      Fix it now → keep your price. Fix it later → negotiate it.
-                    </p>
-                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                      Visible issues scare off buyers before they ever make an offer. Hidden ones become negotiation leverage after the buyer&apos;s inspector finds them — fixing them now keeps that leverage off the table.
-                    </p>
-                  </div>
-
-                  {/* Must-Fix progress pill */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-lg font-semibold text-gray-900">Your pre-listing checklist</span>
-                    <span
-                      className="px-2.5 py-0.5 rounded-full text-xs font-semibold"
-                      style={{
-                        backgroundColor: allMustFixDone ? '#dcfce7' : '#fef3c7',
-                        color: allMustFixDone ? '#15803d' : '#92400e',
-                      }}
-                    >
-                      {mustFixDone} of {mustFixItems.length} Must-Fixes checked
+          {/* Negotiation Defense summary */}
+          <div className="rounded-xl border border-gray-200 bg-white p-4 mb-6">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg px-4 py-3" style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#15803d' }}>🛡 Shielded Equity</p>
+                <p className="text-2xl font-bold" style={{ color: '#15803d' }}>${shieldedEquity.toLocaleString()}</p>
+                <p className="text-xs mt-1" style={{ color: '#166534' }}>Leverage you&apos;ve neutralized</p>
+              </div>
+              <div className="rounded-lg px-4 py-3 relative" style={{ backgroundColor: riskRemaining === 0 ? '#f0fdf4' : '#fef2f2', border: `1px solid ${riskRemaining === 0 ? '#bbf7d0' : '#fecaca'}` }}>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-1 flex items-center gap-1" style={{ color: riskRemaining === 0 ? '#15803d' : '#dc2626' }}>
+                  ⚠ Risk Remaining
+                  <span className="cursor-pointer group relative inline-block ml-0.5">
+                    <span className="text-gray-400">ⓘ</span>
+                    <span className="hidden group-hover:block absolute top-full left-0 mt-1 w-72 p-2 bg-gray-800 text-white text-xs font-normal normal-case tracking-normal rounded z-10">
+                      Buyers often extract 5–10× the literal repair cost as a closing credit during the option period. Fixing a $50 leak now prevents the buyer&apos;s inspector flagging it as a $500 ask against your equity.
                     </span>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-6">
-                    Focus on <span className="font-semibold text-red-600">Must Fix</span> items first — every one you skip becomes leverage for the buyer&apos;s inspector. Tap a category to expand.
-                  </p>
-
-                  {/* Negotiation Defense summary */}
-                  <div className="rounded-xl border border-gray-200 bg-white p-4 mb-6">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="rounded-lg px-4 py-3" style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-                        <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#15803d' }}>🛡 Shielded Equity</p>
-                        <p className="text-2xl font-bold" style={{ color: '#15803d' }}>${shieldedEquity.toLocaleString()}</p>
-                        <p className="text-xs mt-1" style={{ color: '#166534' }}>Leverage you&apos;ve neutralized</p>
-                      </div>
-                      <div className="rounded-lg px-4 py-3 relative" style={{ backgroundColor: riskRemaining === 0 ? '#f0fdf4' : '#fef2f2', border: `1px solid ${riskRemaining === 0 ? '#bbf7d0' : '#fecaca'}` }}>
-                        <p className="text-xs font-semibold uppercase tracking-wide mb-1 flex items-center gap-1" style={{ color: riskRemaining === 0 ? '#15803d' : '#dc2626' }}>
-                          ⚠ Risk Remaining
-                          <span className="cursor-pointer group relative inline-block ml-0.5">
-                            <span className="text-gray-400">ⓘ</span>
-                            <span className="hidden group-hover:block absolute top-full left-0 mt-1 w-72 p-2 bg-gray-800 text-white text-xs font-normal normal-case tracking-normal rounded z-10">
-                              Buyers often extract 5–10× the literal repair cost as a closing credit during the option period. Fixing a $50 leak now prevents the buyer&apos;s inspector flagging it as a $500 ask against your equity.
-                            </span>
-                          </span>
-                        </p>
-                        <p className="text-2xl font-bold" style={{ color: riskRemaining === 0 ? '#15803d' : '#dc2626' }}>${riskRemaining.toLocaleString()}</p>
-                        <p className="text-xs mt-1" style={{ color: riskRemaining === 0 ? '#166534' : '#991b1b' }}>{mustFixItems.length - mustFixDone} Must Fix item{mustFixItems.length - mustFixDone === 1 ? '' : 's'} unchecked</p>
-                      </div>
-                    </div>
-
-                    {/* Shield-fill bar */}
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between text-xs mb-1.5">
-                        <span className="text-gray-500">🛡 {mustFixDone} of {mustFixItems.length} Must Fix items shielded</span>
-                        <span className="font-semibold" style={{ color: '#15803d' }}>{Math.round(mustFixProgress * 100)}%</span>
-                      </div>
-                      <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#e5e7eb' }}>
-                        <div
-                          className="h-full transition-all duration-300"
-                          style={{ width: `${mustFixProgress * 100}%`, backgroundColor: '#16a34a' }}
-                        />
-                      </div>
-                    </div>
-
-                    <p className="text-xs font-medium mt-3" style={{ color: motivatingColor }}>{motivatingMessage}</p>
-                  </div>
-
-                  {/* Two-section accordion: Inspection Leverage (TREC) then Pre-listing Polish */}
-                  {CHECKLIST_SECTIONS.map((section) => (
-                    <div key={section.id} className="mb-6">
-                      <div className="mb-3">
-                        <div className="flex items-baseline gap-2 flex-wrap">
-                          <h4 className="text-base font-bold text-gray-900">{section.label}</h4>
-                          {section.id === 'inspection' && (
-                            <a
-                              href={TREC_FORM_URL}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-medium underline"
-                              style={{ color: '#2563eb' }}
-                            >
-                              Based on TREC REI 7-6 ↗
-                            </a>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">{section.sublabel}</p>
-                      </div>
-
-                      <div className="space-y-2">
-                        {section.categories.map((category) => {
-                          const isOpen = expandedCategories.has(category.label)
-                          const catMustFix = category.items.filter(i => i.priority === 'must')
-                          const catChecked = category.items.filter(i => checkedItems.has(i.id)).length
-                          const catMustDone = catMustFix.filter(i => checkedItems.has(i.id)).length
-                          return (
-                            <div key={category.label} className="rounded-xl border border-gray-200 overflow-hidden">
-                              <button
-                                type="button"
-                                onClick={() => toggleCategory(category.label)}
-                                className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left"
-                              >
-                                <div className="flex items-center gap-3 flex-wrap">
-                                  <span className="text-sm font-semibold text-gray-800">{category.label}</span>
-                                  {category.trecSection && (
-                                    <span
-                                      className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold"
-                                      style={{ backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}
-                                    >
-                                      TREC {category.trecSection}
-                                    </span>
-                                  )}
-                                  {catMustFix.length > 0 && (
-                                    <span
-                                      className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                                      style={{
-                                        backgroundColor: catMustDone === catMustFix.length ? '#dcfce7' : '#fef2f2',
-                                        color: catMustDone === catMustFix.length ? '#15803d' : '#dc2626',
-                                      }}
-                                    >
-                                      {catMustDone}/{catMustFix.length} must-fix
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  <span className="text-xs text-gray-400">{catChecked}/{category.items.length} checked</span>
-                                  <span className="text-gray-400 text-xs">{isOpen ? '▲' : '▼'}</span>
-                                </div>
-                              </button>
-                              {isOpen && (
-                                <div className="border-t border-gray-100 divide-y divide-gray-50">
-                                  {category.items.map((item) => {
-                                    const isChecked = checkedItems.has(item.id)
-                                    const risk = negotiationRisk(item)
-                                    const showRiskPill = section.contributesToShield && risk > 0
-                                    return (
-                                      <label
-                                        key={item.id}
-                                        className="flex items-start gap-3 px-4 py-3 bg-white hover:bg-gray-50/50 cursor-pointer transition-colors"
-                                      >
-                                        <input
-                                          type="checkbox"
-                                          checked={isChecked}
-                                          onChange={(e) => handleCheck(item.id, e.target.checked)}
-                                          className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer flex-shrink-0"
-                                          style={{ accentColor: ACCENT }}
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex flex-wrap items-center gap-2 mb-1">
-                                            <span
-                                              className="text-sm font-medium text-gray-800"
-                                              style={isChecked ? { textDecoration: 'line-through', color: '#9ca3af' } : {}}
-                                            >
-                                              {item.name}
-                                            </span>
-                                            <PriorityBadge priority={item.priority} />
-                                            {item.trecRef && (
-                                              <span
-                                                className="px-1.5 py-0.5 rounded text-[10px] font-mono"
-                                                style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}
-                                              >
-                                                TREC {item.trecRef}
-                                              </span>
-                                            )}
-                                          </div>
-                                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                            {showRiskPill && (
-                                              <span
-                                                className="inline-block px-2 py-0.5 rounded-full text-xs font-bold"
-                                                style={{
-                                                  backgroundColor: isChecked ? '#f0fdf4' : '#fef2f2',
-                                                  color: isChecked ? '#15803d' : '#dc2626',
-                                                  border: `1px solid ${isChecked ? '#bbf7d0' : '#fecaca'}`,
-                                                }}
-                                              >
-                                                {isChecked ? '✓' : '−'}${risk.toLocaleString()} {isChecked ? 'shielded' : 'at risk'}
-                                              </span>
-                                            )}
-                                            <span className="text-xs text-gray-400">~{item.cost} to fix</span>
-                                          </div>
-                                        </div>
-                                      </label>
-                                    )
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="mb-6 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                    <p className="text-base font-semibold text-gray-900">
-                      AI can&apos;t see leaks, wiring, or HVAC.
-                    </p>
-                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                      A pre-listing inspection is usually the highest-leverage spend in this step — it surfaces the negotiation-leverage items a buyer&apos;s inspector would find later, while you still control the timing.
-                    </p>
-                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-                      <button
-                        type="button"
-                        onClick={() => setInspectorPanelOpen(true)}
-                        className="inline-flex items-center gap-1 rounded-md px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-                        style={{ backgroundColor: ACCENT }}
-                      >
-                        Find a pre-listing inspector
-                        <span aria-hidden="true">→</span>
-                      </button>
-                      <span className="text-xs text-gray-500">$350–500</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <button
-                        type="button"
-                        onClick={() => goTo(1)}
-                        className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors"
-                      >
-                        ← Back
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onSelectStep && onSelectStep(3)}
-                        className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                        style={{ backgroundColor: ACCENT }}
-                      >
-                        Next up: Staging &amp; Curb Appeal →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Sticky right panel — context-aware */}
-        <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-4 space-y-4">
-          {activeSubStep === 1 ? (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
-              <div className="space-y-3">
-                {PRO_TIPS.map(({ tip, source }, i) => (
-                  <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
-                    <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
-                    <p className="text-xs text-gray-400">— {source}</p>
-                  </div>
-                ))}
+                  </span>
+                </p>
+                <p className="text-2xl font-bold" style={{ color: riskRemaining === 0 ? '#15803d' : '#dc2626' }}>${riskRemaining.toLocaleString()}</p>
+                <p className="text-xs mt-1" style={{ color: riskRemaining === 0 ? '#166534' : '#991b1b' }}>{mustFixItems.length - mustFixDone} Must Fix item{mustFixItems.length - mustFixDone === 1 ? '' : 's'} unchecked</p>
               </div>
             </div>
-          ) : (
-            <>
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Need Help?</h4>
-                <p className="text-xs text-gray-500 mb-3">Trusted contractors — personalized to your address soon.</p>
-                <div className="space-y-2">
-                  {CONTRACTORS.map(({ name, service, rating, url }) => (
-                    <div key={name} className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-gray-900 truncate">{name}</p>
-                        <p className="text-xs text-gray-400">{service} · ⭐ {rating}</p>
-                      </div>
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-shrink-0 text-center px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                        style={{ backgroundColor: ACCENT }}
+
+            {/* Shield-fill bar */}
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="text-gray-500">🛡 {mustFixDone} of {mustFixItems.length} Must Fix items shielded</span>
+                <span className="font-semibold" style={{ color: '#15803d' }}>{Math.round(mustFixProgress * 100)}%</span>
+              </div>
+              <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#e5e7eb' }}>
+                <div
+                  className="h-full transition-all duration-300"
+                  style={{ width: `${mustFixProgress * 100}%`, backgroundColor: '#16a34a' }}
+                />
+              </div>
+            </div>
+
+            <p className="text-xs font-medium mt-3" style={{ color: motivatingColor }}>{motivatingMessage}</p>
+          </div>
+
+          {/* Inspection Leverage accordion */}
+          {CHECKLIST_SECTIONS.map((section) => (
+            <div key={section.id} className="mb-6">
+              <div className="mb-3">
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <h4 className="text-base font-bold text-gray-900">{section.label}</h4>
+                  {section.id === 'inspection' && (
+                    <a
+                      href={TREC_FORM_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium underline"
+                      style={{ color: '#2563eb' }}
+                    >
+                      Based on TREC REI 7-6 ↗
+                    </a>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">{section.sublabel}</p>
+              </div>
+
+              <div className="space-y-2">
+                {section.categories.map((category) => {
+                  const isOpen = expandedCategories.has(category.label)
+                  const catMustFix = category.items.filter(i => i.priority === 'must')
+                  const catChecked = category.items.filter(i => checkedItems.has(i.id)).length
+                  const catMustDone = catMustFix.filter(i => checkedItems.has(i.id)).length
+                  return (
+                    <div key={category.label} className="rounded-xl border border-gray-200 overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory(category.label)}
+                        className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left"
                       >
-                        Quote
-                      </a>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="text-sm font-semibold text-gray-800">{category.label}</span>
+                          {category.trecSection && (
+                            <span
+                              className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold"
+                              style={{ backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}
+                            >
+                              TREC {category.trecSection}
+                            </span>
+                          )}
+                          {catMustFix.length > 0 && (
+                            <span
+                              className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                              style={{
+                                backgroundColor: catMustDone === catMustFix.length ? '#dcfce7' : '#fef2f2',
+                                color: catMustDone === catMustFix.length ? '#15803d' : '#dc2626',
+                              }}
+                            >
+                              {catMustDone}/{catMustFix.length} must-fix
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-xs text-gray-400">{catChecked}/{category.items.length} checked</span>
+                          <span className="text-gray-400 text-xs">{isOpen ? '▲' : '▼'}</span>
+                        </div>
+                      </button>
+                      {isOpen && (
+                        <div className="border-t border-gray-100 divide-y divide-gray-50">
+                          {category.items.map((item) => {
+                            const isChecked = checkedItems.has(item.id)
+                            const risk = negotiationRisk(item)
+                            const showRiskPill = section.contributesToShield && risk > 0
+                            return (
+                              <label
+                                key={item.id}
+                                className="flex items-start gap-3 px-4 py-3 bg-white hover:bg-gray-50/50 cursor-pointer transition-colors"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={(e) => handleCheck(item.id, e.target.checked)}
+                                  className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer flex-shrink-0"
+                                  style={{ accentColor: ACCENT }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                                    <span
+                                      className="text-sm font-medium text-gray-800"
+                                      style={isChecked ? { textDecoration: 'line-through', color: '#9ca3af' } : {}}
+                                    >
+                                      {item.name}
+                                    </span>
+                                    <PriorityBadge priority={item.priority} />
+                                    {item.trecRef && (
+                                      <span
+                                        className="px-1.5 py-0.5 rounded text-[10px] font-mono"
+                                        style={{ backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}
+                                      >
+                                        TREC {item.trecRef}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                    {showRiskPill && (
+                                      <span
+                                        className="inline-block px-2 py-0.5 rounded-full text-xs font-bold"
+                                        style={{
+                                          backgroundColor: isChecked ? '#f0fdf4' : '#fef2f2',
+                                          color: isChecked ? '#15803d' : '#dc2626',
+                                          border: `1px solid ${isChecked ? '#bbf7d0' : '#fecaca'}`,
+                                        }}
+                                      >
+                                        {isChecked ? '✓' : '−'}${risk.toLocaleString()} {isChecked ? 'shielded' : 'at risk'}
+                                      </span>
+                                    )}
+                                    <span className="text-xs text-gray-400">~{item.cost} to fix</span>
+                                  </div>
+                                </div>
+                              </label>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  )
+                })}
               </div>
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
-                <div className="space-y-3">
-                  {PRO_TIPS.slice(0, 2).map(({ tip, source }, i) => (
-                    <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
-                      <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
-                      <p className="text-xs text-gray-400">— {source}</p>
-                    </div>
-                  ))}
+            </div>
+          ))}
+
+          <div className="mb-6 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
+            <p className="text-base font-semibold text-gray-900">
+              AI can&apos;t see leaks, wiring, or HVAC.
+            </p>
+            <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+              A pre-listing inspection is usually the highest-leverage spend in this step — it surfaces the negotiation-leverage items a buyer&apos;s inspector would find later, while you still control the timing.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <button
+                type="button"
+                onClick={() => setInspectorPanelOpen(true)}
+                className="inline-flex items-center gap-1 rounded-md px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: ACCENT }}
+              >
+                Find a pre-listing inspector
+                <span aria-hidden="true">→</span>
+              </button>
+              <span className="text-xs text-gray-500">$350–500</span>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => onSelectStep && onSelectStep(3)}
+                className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: ACCENT }}
+              >
+                Next up: Staging &amp; Curb Appeal →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Sticky right panel */}
+        <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-4 space-y-4">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Need Help?</h4>
+            <p className="text-xs text-gray-500 mb-3">Trusted contractors — personalized to your address soon.</p>
+            <div className="space-y-2">
+              {CONTRACTORS.map(({ name, service, rating, url }) => (
+                <div key={name} className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 truncate">{name}</p>
+                    <p className="text-xs text-gray-400">{service} · ⭐ {rating}</p>
+                  </div>
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 text-center px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: ACCENT }}
+                  >
+                    Quote
+                  </a>
                 </div>
-              </div>
-            </>
-          )}
+              ))}
+            </div>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
+            <div className="space-y-3">
+              {PRO_TIPS.slice(0, 2).map(({ tip, source }, i) => (
+                <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
+                  <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
+                  <p className="text-xs text-gray-400">— {source}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </aside>
       </div>
     </div>
