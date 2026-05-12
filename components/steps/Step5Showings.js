@@ -17,18 +17,6 @@ const slideVariants = {
   exit: (dir) => ({ opacity: 0, x: dir * -40, transition: { duration: 0.16, ease: 'easeIn' } }),
 }
 
-const SETUP_CARDS = [
-  { id: 'yardsign',    emoji: '🪧', label: 'Yard Sign' },
-  { id: 'virtualtour', emoji: '🎥', label: 'Virtual Tour' },
-  { id: 'method',      emoji: '🔑', label: 'Showing Method' },
-]
-
-const YARD_SIGN_PROVIDERS = [
-  { name: 'Amazon',           priceRange: '$20–50',  url: 'https://www.amazon.com/s?k=fsbo+yard+sign', blurb: 'Pre-printed FSBO signs, delivered in 2 days.' },
-  { name: 'Home Depot',       priceRange: '$30–80',  url: 'https://www.homedepot.com',                 blurb: 'Pick up the same day in most TX metros.' },
-  { name: 'Local print shop', priceRange: '$50–100', url: 'https://www.google.com/search?q=sign+printing+near+me', blurb: 'Custom design with your wording — search "sign printing near me".' },
-]
-
 const SAFETY_ITEMS = [
   'Never show alone — have someone present',
   'Verify buyer is working with a licensed agent',
@@ -58,39 +46,6 @@ const SHOWING_METHOD_OPTIONS = [
     description: 'Most professional option. ShowingTime coordinates requests for you. ~$30–50/month.',
     link: 'https://www.showingtime.com',
     linkLabel: 'Learn about ShowingTime →',
-  },
-]
-
-const VIRTUAL_TOUR_PROVIDERS = [
-  {
-    id: 'matterport',
-    label: 'Matterport',
-    cost: '$150–300',
-    costColor: '#92400e',
-    costBg: '#fef3c7',
-    description: 'Professional 3D walkthrough. Hire a photographer to shoot it.',
-    link: 'https://www.thumbtack.com/k/matterport/near-me/',
-    linkLabel: 'Find a photographer on Thumbtack →',
-  },
-  {
-    id: 'zillow3d',
-    label: 'Zillow 3D Home',
-    cost: 'Free',
-    costColor: '#15803d',
-    costBg: '#dcfce7',
-    description: 'Free app — shoot it yourself in about 30 minutes. Integrates directly with your Zillow listing.',
-    link: 'https://www.zillow.com/z3d/',
-    linkLabel: 'Get the Zillow 3D app →',
-  },
-  {
-    id: 'youtube',
-    label: 'YouTube walkthrough',
-    cost: 'Free',
-    costColor: '#15803d',
-    costBg: '#dcfce7',
-    description: 'Walk through on video, post to YouTube, and paste the link in your listing. 30 minutes to shoot.',
-    link: 'https://www.youtube.com',
-    linkLabel: 'Open YouTube →',
   },
 ]
 
@@ -295,24 +250,22 @@ export default function Step5Showings({ onSelectStep }) {
               {/* Sub-step 1: Setup */}
               {activeSubStep === 1 && (
                 <div>
-                  {/* 3-card setup grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10">
-                    {SETUP_CARDS.map(d => (
-                      <button
-                        key={d.id}
-                        type="button"
-                        onClick={() => setActiveModal(d.id)}
-                        className="rounded-xl border px-4 py-3 text-sm font-semibold text-left hover:bg-gray-50 transition-colors"
-                        style={{
-                          borderColor: '#e5e7eb',
-                          color: '#374151',
-                        }}
-                      >
-                        <span className="block text-xl mb-1">{d.emoji}</span>
-                        {d.label}
-                      </button>
-                    ))}
-                  </div>
+                  {/* Showing method picker */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal('method')}
+                    className="mb-10 w-full sm:w-auto inline-flex items-center gap-3 rounded-xl border border-gray-200 px-5 py-3 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <span className="text-2xl">🔑</span>
+                    <span>
+                      <span className="block text-sm font-semibold text-gray-800">Showing Method</span>
+                      <span className="block text-xs text-gray-500 mt-0.5">
+                        {showingMethod
+                          ? `Selected: ${SHOWING_METHOD_OPTIONS.find(o => o.id === showingMethod)?.label || showingMethod}`
+                          : 'Choose how buyers will tour the home'}
+                      </span>
+                    </span>
+                  </button>
 
                   {/* Preferred Title Company */}
                   <section className="mb-8">
@@ -643,94 +596,7 @@ export default function Step5Showings({ onSelectStep }) {
 
       </div>
 
-      {/* Setup modals */}
-      <SetupModal open={activeModal === 'yardsign'} onClose={closeModal} title="🪧 Yard Sign">
-        <div className="space-y-6">
-          <p className="text-sm text-gray-600 leading-relaxed">
-            A &ldquo;For Sale by Owner&rdquo; yard sign is one of the cheapest, highest-leverage things you can do.
-            In Texas, drive-by buyers and neighborhood word-of-mouth still convert — a clean sign with a phone
-            number often beats a Zillow ad for local foot traffic.
-          </p>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">What goes on your sign</p>
-            <div className="space-y-2 text-sm text-gray-700">
-              <div className="flex items-start gap-2">
-                <span className="text-green-500 font-bold mt-0.5">✓</span>
-                <p><span className="font-semibold">&ldquo;For Sale By Owner&rdquo;</span> — required on every sign</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-green-500 font-bold mt-0.5">✓</span>
-                <p>A phone number — your primary lead source</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-gray-300 font-bold mt-0.5">○</span>
-                <p>Price — <span className="text-gray-500">optional. Adding a price gets more serious calls; skipping it gets more curious ones.</span></p>
-              </div>
-            </div>
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Placement tips</p>
-            <ul className="space-y-1 text-sm text-gray-600">
-              <li className="flex items-start gap-2"><span>•</span> Street-facing, visible from the road</li>
-              <li className="flex items-start gap-2"><span>•</span> Corner of the lot if possible — double visibility</li>
-              <li className="flex items-start gap-2"><span>•</span> Eye level, not blocked by bushes or parked cars</li>
-            </ul>
-          </div>
-          <div className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: '#fffbeb', border: '1px solid #fcd34d' }}>
-            <p className="font-semibold text-amber-800 mb-1">⚠️ HOA Warning</p>
-            <p className="text-amber-700 text-xs">Check your HOA rules before ordering — some restrict sign size, style, or placement.</p>
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Where to buy</p>
-            <div className="space-y-2">
-              {YARD_SIGN_PROVIDERS.map(p => (
-                <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-800">{p.name}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{p.priceRange} · {p.blurb}</p>
-                  </div>
-                  <span className="text-gray-400 text-sm flex-shrink-0">→</span>
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </SetupModal>
-
-      <SetupModal open={activeModal === 'virtualtour'} onClose={closeModal} title="🎥 Virtual Tour">
-        <div className="space-y-6">
-          <p className="text-sm text-gray-600 leading-relaxed">
-            A virtual tour lets buyers walk through your home online before requesting an in-person showing.
-            It filters tire-kickers, reduces calendar clutter, and keeps your listing fresh on every major
-            platform. Texas buyers — especially out-of-state relocators — expect one.
-          </p>
-          <div className="rounded-xl px-4 py-4 text-center" style={{ backgroundColor: '#f0fdf4', border: '1px solid #86efac' }}>
-            <p className="text-2xl font-extrabold text-green-700 mb-1">87%</p>
-            <p className="text-sm text-green-700">more views for listings with a virtual tour <span className="text-xs text-green-500">(NAR)</span></p>
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Your options</p>
-            <div className="space-y-3">
-              {VIRTUAL_TOUR_PROVIDERS.map(opt => (
-                <div key={opt.id} className="rounded-xl border border-gray-200 px-4 py-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold text-gray-800">{opt.label}</p>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: opt.costBg, color: opt.costColor }}>{opt.cost}</span>
-                  </div>
-                  <p className="text-xs text-gray-600 mb-2">{opt.description}</p>
-                  {opt.link && (
-                    <a href={opt.link} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold hover:underline" style={{ color: ACCENT }}>
-                      {opt.linkLabel}
-                    </a>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </SetupModal>
-
+      {/* Showing method modal */}
       <SetupModal open={activeModal === 'method'} onClose={closeModal} title="🔑 Showing Method">
         <div className="space-y-6">
           <div>

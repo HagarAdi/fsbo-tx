@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
 import PlatformPreviewCard from './PlatformPreviewCard'
+import SetupModal from '../SetupModal'
 
 const ACCENT = '#16a34a'
 
@@ -81,10 +82,6 @@ function parseCity(addr) {
   // Heuristic: "123 Main St, Round Rock, TX 78664" → "Round Rock"
   const parts = String(addr).split(',').map(p => p.trim()).filter(Boolean)
   return parts.length >= 2 ? parts[parts.length - 2] : ''
-}
-
-function featuresLine(features, sep) {
-  return (features || []).map(f => (f || '').trim()).filter(Boolean).join(sep)
 }
 
 function applyPlatformTemplate(platformKey, inputs) {
@@ -190,6 +187,47 @@ const PRO_TIPS = [
   { text: 'The first photo determines if buyers click — always lead with the best exterior shot',  source: 'Industry best practice' },
   { text: 'Natural light is everything — never shoot on a cloudy or rainy day',                    source: 'Professional RE photographer standard' },
 ]
+
+const YARD_SIGN_PROVIDERS = [
+  { name: 'Amazon',           priceRange: '$20–50',  url: 'https://www.amazon.com/s?k=fsbo+yard+sign', blurb: 'Pre-printed FSBO signs, delivered in 2 days.' },
+  { name: 'Home Depot',       priceRange: '$30–80',  url: 'https://www.homedepot.com',                 blurb: 'Pick up the same day in most TX metros.' },
+  { name: 'Local print shop', priceRange: '$50–100', url: 'https://www.google.com/search?q=sign+printing+near+me', blurb: 'Custom design with your wording — search "sign printing near me".' },
+]
+
+const VIRTUAL_TOUR_PROVIDERS = [
+  {
+    id: 'matterport',
+    label: 'Matterport',
+    cost: '$150–300',
+    costColor: '#92400e',
+    costBg: '#fef3c7',
+    description: 'Professional 3D walkthrough. Hire a photographer to shoot it.',
+    link: 'https://www.thumbtack.com/k/matterport/near-me/',
+    linkLabel: 'Find a photographer on Thumbtack →',
+  },
+  {
+    id: 'zillow3d',
+    label: 'Zillow 3D Home',
+    cost: 'Free',
+    costColor: '#15803d',
+    costBg: '#dcfce7',
+    description: 'Free app — shoot it yourself in about 30 minutes. Integrates directly with your Zillow listing.',
+    link: 'https://www.zillow.com/z3d/',
+    linkLabel: 'Get the Zillow 3D app →',
+  },
+  {
+    id: 'youtube',
+    label: 'YouTube walkthrough',
+    cost: 'Free',
+    costColor: '#15803d',
+    costBg: '#dcfce7',
+    description: 'Walk through on video, post to YouTube, and paste the link in your listing. 30 minutes to shoot.',
+    link: 'https://www.youtube.com',
+    linkLabel: 'Open YouTube →',
+  },
+]
+
+const EMPTY_MEDIA = { yardSignOrdered: false, virtualTourUrl: '', virtualTourType: '' }
 
 const SUB_STEPS = [
   { id: 1, label: 'Photography' },
@@ -481,6 +519,11 @@ export default function Step4Listing({ onSelectStep }) {
     if (typeof window === 'undefined') return null
     return loadStepData().step4?.selectedMls || null
   })
+  const [media, setMedia] = useState(() => {
+    if (typeof window === 'undefined') return EMPTY_MEDIA
+    return { ...EMPTY_MEDIA, ...(loadStepData().step4?.media || {}) }
+  })
+  const [activeMediaModal, setActiveMediaModal] = useState(null)
   const listNowMenuRef = useRef(null)
 
   // Derived — before wizard
@@ -560,7 +603,7 @@ export default function Step4Listing({ onSelectStep }) {
     return () => document.removeEventListener('mousedown', onMouseDown)
   }, [listNowMenuOpen])
 
-  // Persist listing details + MLS selection
+  // Persist listing details + MLS selection + media
   useEffect(() => {
     try {
       const existing = loadStepData()
@@ -570,11 +613,12 @@ export default function Step4Listing({ onSelectStep }) {
           ...existing.step4,
           listingDetails: { features, neighborhood, vibe, description, specs, platformDrafts, platformDraftsDirty, activePlatform },
           selectedMls,
+          media,
         },
       }))
       notifyStepDataChange()
     } catch {}
-  }, [features, neighborhood, vibe, description, specs, platformDrafts, platformDraftsDirty, activePlatform, selectedMls])
+  }, [features, neighborhood, vibe, description, specs, platformDrafts, platformDraftsDirty, activePlatform, selectedMls, media])
 
   const addBeforePhotos = (id, newPhotos) => {
     setPhotos(prev => ({ ...prev, [id]: [...prev[id], ...newPhotos] }))
@@ -974,6 +1018,63 @@ export default function Step4Listing({ onSelectStep }) {
                     </div>
                   )}
 
+                  {/* Marketing assets — virtual tour + yard sign */}
+                  <div className="mb-6">
+                    <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-3">Marketing assets</p>
+                    <div className="space-y-3">
+                      <div className="rounded-xl border border-gray-200 bg-white p-4">
+                        <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-gray-900">🎥 Virtual Tour</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Optional — boosts engagement on Zillow / Realtor.com (NAR: 87% more views).</p>
+                          </div>
+                          <button type="button" onClick={() => setActiveMediaModal('virtualtour')} className="flex-shrink-0 text-xs font-semibold underline underline-offset-2 text-gray-500 hover:text-gray-800 transition-colors">
+                            See your options →
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-[1fr_180px] gap-2">
+                          <input
+                            type="url"
+                            value={media.virtualTourUrl}
+                            onChange={e => setMedia(prev => ({ ...prev, virtualTourUrl: e.target.value }))}
+                            placeholder="https://my.matterport.com/show/?m=..."
+                            className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                          />
+                          <select
+                            value={media.virtualTourType}
+                            onChange={e => setMedia(prev => ({ ...prev, virtualTourType: e.target.value }))}
+                            className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:border-transparent transition"
+                          >
+                            <option value="">Type…</option>
+                            {VIRTUAL_TOUR_PROVIDERS.map(p => <option key={p.id} value={p.label}>{p.label}</option>)}
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-gray-200 bg-white p-4">
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-gray-900">🪧 Yard Sign</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Most drive-by buyers find the home from the sign — and they&apos;re often the neighbors&apos; friends.</p>
+                          </div>
+                          <button type="button" onClick={() => setActiveMediaModal('yardsign')} className="flex-shrink-0 text-xs font-semibold underline underline-offset-2 text-gray-500 hover:text-gray-800 transition-colors">
+                            Where to buy →
+                          </button>
+                        </div>
+                        <label className="mt-3 inline-flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={media.yardSignOrdered}
+                            onChange={e => setMedia(prev => ({ ...prev, yardSignOrdered: e.target.checked }))}
+                            className="w-4 h-4 accent-green-600"
+                          />
+                          <span className="text-sm text-gray-700">Sign ordered</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="pt-4 border-t border-gray-100">
                     <div className="flex items-center justify-between">
                       <button type="button" onClick={() => goTo(1)} className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors">
@@ -1052,6 +1153,94 @@ export default function Step4Listing({ onSelectStep }) {
           )}
         </aside>
       </div>
+
+      {/* Setup modals */}
+      <SetupModal open={activeMediaModal === 'yardsign'} onClose={() => setActiveMediaModal(null)} title="🪧 Yard Sign">
+        <div className="space-y-6">
+          <p className="text-sm text-gray-600 leading-relaxed">
+            A &ldquo;For Sale by Owner&rdquo; yard sign is one of the cheapest, highest-leverage things you can do.
+            In Texas, drive-by buyers and neighborhood word-of-mouth still convert — a clean sign with a phone
+            number often beats a Zillow ad for local foot traffic.
+          </p>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">What goes on your sign</p>
+            <div className="space-y-2 text-sm text-gray-700">
+              <div className="flex items-start gap-2">
+                <span className="text-green-500 font-bold mt-0.5">✓</span>
+                <p><span className="font-semibold">&ldquo;For Sale By Owner&rdquo;</span> — required on every sign</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-green-500 font-bold mt-0.5">✓</span>
+                <p>A phone number — your primary lead source</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-gray-300 font-bold mt-0.5">○</span>
+                <p>Price — <span className="text-gray-500">optional. Adding a price gets more serious calls; skipping it gets more curious ones.</span></p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Placement tips</p>
+            <ul className="space-y-1 text-sm text-gray-600">
+              <li className="flex items-start gap-2"><span>•</span> Street-facing, visible from the road</li>
+              <li className="flex items-start gap-2"><span>•</span> Corner of the lot if possible — double visibility</li>
+              <li className="flex items-start gap-2"><span>•</span> Eye level, not blocked by bushes or parked cars</li>
+            </ul>
+          </div>
+          <div className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: '#fffbeb', border: '1px solid #fcd34d' }}>
+            <p className="font-semibold text-amber-800 mb-1">⚠️ HOA Warning</p>
+            <p className="text-amber-700 text-xs">Check your HOA rules before ordering — some restrict sign size, style, or placement.</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Where to buy</p>
+            <div className="space-y-2">
+              {YARD_SIGN_PROVIDERS.map(p => (
+                <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-800">{p.name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{p.priceRange} · {p.blurb}</p>
+                  </div>
+                  <span className="text-gray-400 text-sm flex-shrink-0">→</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </SetupModal>
+
+      <SetupModal open={activeMediaModal === 'virtualtour'} onClose={() => setActiveMediaModal(null)} title="🎥 Virtual Tour">
+        <div className="space-y-6">
+          <p className="text-sm text-gray-600 leading-relaxed">
+            A virtual tour lets buyers walk through your home online before requesting an in-person showing.
+            It filters tire-kickers, reduces calendar clutter, and keeps your listing fresh on every major
+            platform. Texas buyers — especially out-of-state relocators — expect one.
+          </p>
+          <div className="rounded-xl px-4 py-4 text-center" style={{ backgroundColor: '#f0fdf4', border: '1px solid #86efac' }}>
+            <p className="text-2xl font-extrabold text-green-700 mb-1">87%</p>
+            <p className="text-sm text-green-700">more views for listings with a virtual tour <span className="text-xs text-green-500">(NAR)</span></p>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-3">Your options</p>
+            <div className="space-y-3">
+              {VIRTUAL_TOUR_PROVIDERS.map(opt => (
+                <div key={opt.id} className="rounded-xl border border-gray-200 px-4 py-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold text-gray-800">{opt.label}</p>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: opt.costBg, color: opt.costColor }}>{opt.cost}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 mb-2">{opt.description}</p>
+                  {opt.link && (
+                    <a href={opt.link} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold hover:underline" style={{ color: ACCENT }}>
+                      {opt.linkLabel}
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </SetupModal>
     </div>
   )
 }
