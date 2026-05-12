@@ -23,7 +23,7 @@ export function getStepStatuses(stepData = {}) {
 
   const step4 = s.step4 || {}
   const rooms = Array.isArray(step4.uploadedRooms) ? step4.uploadedRooms : []
-  const desc = step4.description || ''
+  const desc = step4.listingDetails?.description || ''
   const s4partial = rooms.length > 0 || desc.length > 0
   const s4complete = rooms.length > 0 && desc.length > 0
 

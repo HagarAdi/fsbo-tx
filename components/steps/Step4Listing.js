@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
+import PlatformPreviewCard from './PlatformPreviewCard'
 
 const ACCENT = '#16a34a'
 
@@ -52,6 +53,137 @@ const LISTING_PLATFORMS = [
   { name: 'Flat Fee MLS TX',      cost: '$300-500', description: 'Lists you directly on the TX MLS — the same database agents use. Maximum exposure.',                 url: 'https://texasflatfeemls.com' },
 ]
 
+const FSBO_PLATFORMS = [
+  { key: 'zillow',     label: 'Zillow / MLS', listUrl: 'https://www.zillow.com/post-a-home-for-sale/' },
+  { key: 'facebook',   label: 'Facebook',     listUrl: 'https://www.facebook.com/marketplace/create/item' },
+  { key: 'instagram',  label: 'Instagram',    listUrl: null },
+  { key: 'craigslist', label: 'Craigslist',   listUrl: 'https://geo.craigslist.org/iso/us/tx' },
+]
+
+const FLAT_FEE_MLS_PARTNERS = [
+  { name: 'List with Freedom',     price: '$129 flat-fee MLS',         url: 'https://listwithfreedom.com',     blurb: 'Free 6-photo MLS listing. Texas coverage.' },
+  { name: 'Texas Flat Fee Realty', price: '$295 + 0.25% at closing',   url: 'https://texasflatfeemls.com',     blurb: 'Texas-only broker; full MLS exposure + paperwork support.' },
+  { name: 'Houzeo',                price: '$349 flat-fee MLS',         url: 'https://houzeo.com',              blurb: 'Most popular FSBO MLS service nationwide; Texas-licensed.' },
+]
+
+const SPEC_FIELDS = [
+  { key: 'bedrooms',  label: 'Beds',       type: 'number', step: '1' },
+  { key: 'bathrooms', label: 'Baths',      type: 'number', step: '0.5' },
+  { key: 'sqft',      label: 'Sqft',       type: 'number', step: '1' },
+  { key: 'yearBuilt', label: 'Year built', type: 'number', step: '1' },
+]
+
+const EMPTY_PLATFORM_DRAFTS = { zillow: '', facebook: '', instagram: '', craigslist: '' }
+const EMPTY_PLATFORM_DIRTY  = { zillow: false, facebook: false, instagram: false, craigslist: false }
+
+function parseCity(addr) {
+  if (!addr) return ''
+  // Heuristic: "123 Main St, Round Rock, TX 78664" → "Round Rock"
+  const parts = String(addr).split(',').map(p => p.trim()).filter(Boolean)
+  return parts.length >= 2 ? parts[parts.length - 2] : ''
+}
+
+function featuresLine(features, sep) {
+  return (features || []).map(f => (f || '').trim()).filter(Boolean).join(sep)
+}
+
+function applyPlatformTemplate(platformKey, inputs) {
+  const { specs = {}, vibe = '', features = [], neighborhood = '', description = '', homeAddress = '' } = inputs || {}
+  const city = parseCity(homeAddress) || 'your neighborhood'
+  const beds = specs.bedrooms || ''
+  const baths = specs.bathrooms || ''
+  const sqftN = parseFloat(specs.sqft)
+  const sqft = !isNaN(sqftN) && sqftN > 0 ? `${sqftN.toLocaleString()} sqft` : ''
+  const year = specs.yearBuilt || ''
+  const specLine = [beds && `${beds}BR`, baths && `${baths}BA`, sqft, year && `Built ${year}`].filter(Boolean).join(' · ')
+  const bodyOrFallback = (description && description.trim()) ||
+    `A ${vibe || 'welcoming'} home in ${city} ready for its next chapter.`
+  const feats = features.map(f => (f || '').trim()).filter(Boolean)
+  const hood = (neighborhood || '').trim()
+  const hashtagize = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '')
+
+  if (platformKey === 'zillow') {
+    const lines = []
+    if (specLine) lines.push(specLine)
+    if (lines.length) lines.push('')
+    lines.push(bodyOrFallback)
+    if (feats.length) {
+      lines.push('')
+      lines.push('Features:')
+      feats.forEach(f => lines.push(`• ${f}`))
+    }
+    if (hood) {
+      lines.push('')
+      lines.push(hood)
+    }
+    lines.push('')
+    lines.push('Contact owner directly to schedule a showing.')
+    return lines.join('\n')
+  }
+
+  if (platformKey === 'facebook') {
+    const lines = []
+    const headline = specLine ? `🏡 ${specLine}${city ? ` in ${city}` : ''}` : `🏡 Home for sale${city ? ` in ${city}` : ''}`
+    lines.push(headline)
+    lines.push('')
+    lines.push(bodyOrFallback)
+    if (feats.length) {
+      lines.push('')
+      lines.push('✨ Features:')
+      feats.forEach(f => lines.push(`  • ${f}`))
+    }
+    if (hood) {
+      lines.push('')
+      lines.push(`📍 ${hood}`)
+    }
+    lines.push('')
+    lines.push('DM to schedule a viewing! 📩')
+    return lines.join('\n')
+  }
+
+  if (platformKey === 'instagram') {
+    const firstSentence = bodyOrFallback.split(/(?<=[.!?])\s+/)[0] || bodyOrFallback
+    const tagPool = [
+      'fsbo',
+      city && `${hashtagize(city)}realestate`,
+      'homeforsale',
+      vibe && hashtagize(vibe),
+      'texasrealestate',
+      ...feats.map(hashtagize),
+    ].filter(Boolean)
+    const seen = new Set()
+    const tags = tagPool.filter(t => { if (seen.has(t)) return false; seen.add(t); return true }).slice(0, 10)
+    const lines = [firstSentence]
+    if (specLine) lines.push(specLine)
+    if (tags.length) {
+      lines.push('')
+      lines.push(tags.map(t => `#${t}`).join(' '))
+    }
+    return lines.join('\n')
+  }
+
+  if (platformKey === 'craigslist') {
+    const lines = []
+    if (specLine) lines.push(specLine)
+    if (lines.length) lines.push('')
+    lines.push(bodyOrFallback)
+    if (feats.length) {
+      lines.push('')
+      lines.push('Features:')
+      feats.forEach(f => lines.push(`- ${f}`))
+    }
+    if (hood) {
+      lines.push('')
+      lines.push(`Neighborhood: ${hood}`)
+    }
+    lines.push('')
+    lines.push('Contact owner. No agents please.')
+    return lines.join('\n')
+  }
+
+  return bodyOrFallback
+}
+
 const PRO_TIPS = [
   { text: 'Homes with professional photos sell 32% faster',                                        source: 'Zillow Research' },
   { text: 'Listings with 20+ photos get 2× more views than listings with fewer',                   source: 'HAR.com data' },
@@ -78,24 +210,6 @@ const PHOTO_SERVICES = [
 
 function loadStepData() {
   try { return JSON.parse(localStorage.getItem('fsbo_stepData') || '{}') } catch { return {} }
-}
-
-function buildDescription(address, step1, features, neighborhood) {
-  const addr = address || '[your address]'
-  const sqftNum = parseFloat(step1?.sqft)
-  const sqftStr = !isNaN(sqftNum) && sqftNum > 0 ? `${sqftNum.toLocaleString()} sq ft ` : ''
-  const beds = step1?.bedrooms
-  const baths = step1?.bathrooms
-  const bedsBaths =
-    beds && baths ? ` offers ${beds} bedroom${beds !== '1' ? 's' : ''} and ${baths} bathroom${baths !== '1' ? 's' : ''}` :
-    beds ? ` offers ${beds} bedroom${beds !== '1' ? 's' : ''}` :
-    baths ? ` offers ${baths} bathroom${baths !== '1' ? 's' : ''}` : ''
-  const f1 = features[0]?.trim() || 'stunning features'
-  const f2 = features[1]?.trim() || 'thoughtful design'
-  const f3 = features[2]?.trim() || 'exceptional location'
-  const hood = neighborhood?.trim() || 'the neighborhood and community will delight you'
-
-  return `Welcome to ${addr}! This beautiful ${sqftStr}home${bedsBaths} in one of Round Rock's most sought-after neighborhoods. ${f1}, ${f2}, and ${f3} make this home truly special. ${hood}. Don't miss this opportunity!`
 }
 
 function UploadZone({ photos, onAdd, maxPhotos }) {
@@ -332,12 +446,42 @@ export default function Step4Listing({ onSelectStep }) {
   })
   const [description, setDescription] = useState(() => {
     if (typeof window === 'undefined') return ''
-    return loadStepData().step4?.listingDetails?.description ||
-      buildDescription('', null, ['', '', ''], '')
+    return loadStepData().step4?.listingDetails?.description || ''
   })
   const [copied, setCopied] = useState(false)
 
-  const descriptionInitialized = useRef(false)
+  const [specs, setSpecs] = useState(() => {
+    if (typeof window === 'undefined') return { sqft: '', bedrooms: '', bathrooms: '', yearBuilt: '' }
+    const saved = loadStepData().step4?.listingDetails?.specs
+    if (saved) return saved
+    const s1 = loadStepData().step1 || {}
+    return {
+      sqft: s1.sqft || '',
+      bedrooms: s1.bedrooms || '',
+      bathrooms: s1.bathrooms || '',
+      yearBuilt: s1.yearBuilt || '',
+    }
+  })
+
+  const [activePlatform, setActivePlatform] = useState(() => {
+    if (typeof window === 'undefined') return 'zillow'
+    return loadStepData().step4?.listingDetails?.activePlatform || 'zillow'
+  })
+  const [platformDrafts, setPlatformDrafts] = useState(() => {
+    if (typeof window === 'undefined') return EMPTY_PLATFORM_DRAFTS
+    return loadStepData().step4?.listingDetails?.platformDrafts || EMPTY_PLATFORM_DRAFTS
+  })
+  const [platformDraftsDirty, setPlatformDraftsDirty] = useState(() => {
+    if (typeof window === 'undefined') return EMPTY_PLATFORM_DIRTY
+    return loadStepData().step4?.listingDetails?.platformDraftsDirty || EMPTY_PLATFORM_DIRTY
+  })
+  const [listNowMenuOpen, setListNowMenuOpen] = useState(false)
+  const [mlsExpanded, setMlsExpanded] = useState(false)
+  const [selectedMls, setSelectedMls] = useState(() => {
+    if (typeof window === 'undefined') return null
+    return loadStepData().step4?.selectedMls || null
+  })
+  const listNowMenuRef = useRef(null)
 
   // Derived — before wizard
   const totalBeforePhotos = Object.values(photos).reduce((sum, arr) => sum + arr.length, 0)
@@ -390,23 +534,47 @@ export default function Step4Listing({ onSelectStep }) {
     } catch {}
   }, [afterWizardDone]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Regenerate description from inputs (skip first render so saved descriptions are preserved)
+  // Re-template undirty platforms whenever the upstream inputs change
   useEffect(() => {
-    if (!descriptionInitialized.current) { descriptionInitialized.current = true; return }
-    setDescription(buildDescription(homeAddress, step1Data, features, neighborhood))
-  }, [features, neighborhood]) // eslint-disable-line react-hooks/exhaustive-deps
+    setPlatformDrafts(prev => {
+      const next = { ...prev }
+      let changed = false
+      FSBO_PLATFORMS.forEach(({ key }) => {
+        if (platformDraftsDirty[key]) return
+        const fresh = applyPlatformTemplate(key, { specs, vibe, features, neighborhood, description, homeAddress })
+        if (next[key] !== fresh) { next[key] = fresh; changed = true }
+      })
+      return changed ? next : prev
+    })
+  }, [specs, vibe, features, neighborhood, description, homeAddress]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Persist listing details
+  // Close the List Now menu on outside click
+  useEffect(() => {
+    if (!listNowMenuOpen) return
+    const onMouseDown = (e) => {
+      if (listNowMenuRef.current && !listNowMenuRef.current.contains(e.target)) {
+        setListNowMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [listNowMenuOpen])
+
+  // Persist listing details + MLS selection
   useEffect(() => {
     try {
       const existing = loadStepData()
       localStorage.setItem('fsbo_stepData', JSON.stringify({
         ...existing,
-        step4: { ...existing.step4, listingDetails: { features, neighborhood, vibe, description } },
+        step4: {
+          ...existing.step4,
+          listingDetails: { features, neighborhood, vibe, description, specs, platformDrafts, platformDraftsDirty, activePlatform },
+          selectedMls,
+        },
       }))
       notifyStepDataChange()
     } catch {}
-  }, [features, neighborhood, vibe, description])
+  }, [features, neighborhood, vibe, description, specs, platformDrafts, platformDraftsDirty, activePlatform, selectedMls])
 
   const addBeforePhotos = (id, newPhotos) => {
     setPhotos(prev => ({ ...prev, [id]: [...prev[id], ...newPhotos] }))
@@ -435,22 +603,50 @@ export default function Step4Listing({ onSelectStep }) {
 
   const handleCopy = () => {
     try {
-      navigator.clipboard.writeText(description).then(() => {
+      navigator.clipboard.writeText(platformDrafts[activePlatform] || '').then(() => {
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
       })
     } catch {}
   }
 
+  const handlePlatformChange = (key) => setActivePlatform(key)
+  const handlePlatformDraftChange = (key, value) => {
+    setPlatformDrafts(p => ({ ...p, [key]: value }))
+    setPlatformDraftsDirty(d => ({ ...d, [key]: true }))
+  }
+  const handleResetPlatform = (key) => {
+    const fresh = applyPlatformTemplate(key, { specs, vibe, features, neighborhood, description, homeAddress })
+    setPlatformDrafts(p => ({ ...p, [key]: fresh }))
+    setPlatformDraftsDirty(d => ({ ...d, [key]: false }))
+  }
+  const handleSpecChange = (field, value) =>
+    setSpecs(prev => ({ ...prev, [field]: value }))
+  const handleResetSpecsFromStep1 = () => {
+    if (!step1Data) return
+    setSpecs({
+      sqft: step1Data.sqft || '',
+      bedrooms: step1Data.bedrooms || '',
+      bathrooms: step1Data.bathrooms || '',
+      yearBuilt: step1Data.yearBuilt || '',
+    })
+  }
+  const handleSelectMls = (partnerName) => {
+    setSelectedMls(partnerName)
+    setMlsExpanded(false)
+  }
+  const handleToggleListNow = () => setListNowMenuOpen(o => !o)
+  const handleToggleMlsExpanded = () => setMlsExpanded(o => !o)
+
+  const specsDifferFromStep1 = !!step1Data && (
+    String(specs.sqft || '') !== String(step1Data.sqft || '') ||
+    String(specs.bedrooms || '') !== String(step1Data.bedrooms || '') ||
+    String(specs.bathrooms || '') !== String(step1Data.bathrooms || '') ||
+    String(specs.yearBuilt || '') !== String(step1Data.yearBuilt || '')
+  )
+
   const updateFeature = (i, val) =>
     setFeatures(prev => { const next = [...prev]; next[i] = val; return next })
-
-  // Listing description pills
-  const pills = []
-  if (step1Data?.bedrooms) pills.push(`${step1Data.bedrooms} bed`)
-  if (step1Data?.bathrooms) pills.push(`${step1Data.bathrooms} bath`)
-  if (step1Data?.sqft) pills.push(`${Number(step1Data.sqft).toLocaleString()} sqft`)
-  if (step1Data?.yearBuilt) pills.push(`Built ${step1Data.yearBuilt}`)
 
   return (
     <div className="px-4 py-8 md:px-10 md:py-12">
@@ -655,57 +851,128 @@ export default function Step4Listing({ onSelectStep }) {
               {/* Card 2: Your Listing */}
               {activeSubStep === 2 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Write your listing description ✍️</h3>
-                  <p className="text-sm text-gray-500 mb-6">A great description sells the lifestyle, not just the specs.</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Write your listing — preview every platform ✍️</h3>
+                  <p className="text-sm text-gray-500 mb-6">A great description sells the lifestyle. Switch platforms to see how it reads on each one.</p>
 
-                  {/* Step 1 gate / pills */}
-                  {step1Data ? (
-                    pills.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        {pills.map(pill => (
-                          <span key={pill} className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">{pill}</span>
-                        ))}
-                      </div>
-                    )
-                  ) : (
+                  {!step1Data && (
                     <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-center justify-between gap-4">
-                      <p className="text-sm text-amber-800">Complete Step 1 first to auto-fill your home details</p>
+                      <p className="text-sm text-amber-800">Complete Step 1 first to auto-fill your home specs</p>
                       <button type="button" onClick={() => onSelectStep && onSelectStep(1)} className="flex-shrink-0 text-sm font-semibold underline underline-offset-2 text-amber-700 hover:text-amber-900 transition-colors">
                         Go to Step 1 →
                       </button>
                     </div>
                   )}
 
-                  <div className="space-y-5 mb-8">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-2">Top 3 features</label>
-                      <div className="space-y-2">
-                        {[0, 1, 2].map(i => (
-                          <input key={i} type="text" value={features[i]} onChange={e => updateFeature(i, e.target.value)} placeholder={FEATURE_PLACEHOLDERS[i]} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition" style={{ '--tw-ring-color': ACCENT }} />
-                        ))}
+                  {/* Two-column inputs + preview */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    {/* Left: inputs */}
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-800 mb-2">Vibe</label>
+                        <select value={vibe} onChange={e => setVibe(e.target.value)} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:border-transparent transition">
+                          {VIBE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-semibold text-gray-800">Specs</label>
+                          {specsDifferFromStep1 && (
+                            <button type="button" onClick={handleResetSpecsFromStep1} className="text-xs font-semibold underline underline-offset-2 text-gray-500 hover:text-gray-800 transition-colors">
+                              ↻ Reset from Step 1
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {SPEC_FIELDS.map(f => (
+                            <div key={f.key}>
+                              <input
+                                type={f.type}
+                                step={f.step}
+                                value={specs[f.key] ?? ''}
+                                onChange={e => handleSpecChange(f.key, e.target.value)}
+                                placeholder={f.label}
+                                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                              />
+                              <p className="text-xs text-gray-400 mt-0.5">{f.label}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-800 mb-2">Top 3 features</label>
+                        <div className="space-y-2">
+                          {[0, 1, 2].map(i => (
+                            <input key={i} type="text" value={features[i]} onChange={e => updateFeature(i, e.target.value)} placeholder={FEATURE_PLACEHOLDERS[i]} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition" />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-800 mb-2">Neighborhood highlight</label>
+                        <input type="text" value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="e.g. Walking distance to Round Rock ISD" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition" />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-800 mb-2">Core description (seeds all platforms)</label>
+                        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={6} maxLength={2000} placeholder="A short body paragraph describing the home in your own voice. Each platform's preview is generated from this plus your inputs above." className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-800 leading-relaxed focus:outline-none focus:ring-2 focus:border-transparent transition resize-none" />
+                        <p className={`text-xs mt-1 ${description.length > 1900 ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>{description.length} / 2,000 characters</p>
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-2">Neighborhood highlight</label>
-                      <input type="text" value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="e.g. Walking distance to Round Rock ISD" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-2">Vibe</label>
-                      <select value={vibe} onChange={e => setVibe(e.target.value)} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:border-transparent transition">
-                        {VIBE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-2">Your listing description</label>
-                      <textarea value={description} onChange={e => setDescription(e.target.value)} rows={6} maxLength={2000} className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-800 leading-relaxed focus:outline-none focus:ring-2 focus:border-transparent transition resize-none" />
-                      <div className="flex items-center justify-between mt-2">
-                        <span className={`text-xs ${description.length > 1900 ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>{description.length} / 2,000 characters</span>
-                        <button type="button" onClick={handleCopy} className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: copied ? '#6b7280' : ACCENT }}>
-                          {copied ? '✓ Copied!' : 'Copy description'}
+
+                    {/* Right: preview */}
+                    <PlatformPreviewCard
+                      platforms={FSBO_PLATFORMS}
+                      activePlatform={activePlatform}
+                      onPlatformChange={handlePlatformChange}
+                      drafts={platformDrafts}
+                      dirty={platformDraftsDirty}
+                      onDraftChange={handlePlatformDraftChange}
+                      onReset={handleResetPlatform}
+                      onCopy={handleCopy}
+                      copied={copied}
+                      onToggleListNow={handleToggleListNow}
+                      listNowMenuOpen={listNowMenuOpen}
+                      listNowMenuRef={listNowMenuRef}
+                    />
+                  </div>
+
+                  {/* MLS Shortcut nudge — only when no MLS partner has been marked */}
+                  {!selectedMls && (
+                    <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
+                      <div className="flex items-start justify-between gap-3 flex-wrap">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-blue-900">🤝 Want us to handle the listing for you?</p>
+                          <p className="text-xs text-blue-800 mt-1">Check out our Flat-Fee MLS partners — list on the MLS for a one-time fee without a full agent.</p>
+                        </div>
+                        <button type="button" onClick={handleToggleMlsExpanded} className="flex-shrink-0 text-sm font-semibold underline underline-offset-2 text-blue-700 hover:text-blue-900 transition-colors">
+                          {mlsExpanded ? 'Hide partners ▴' : 'Show partners ▾'}
                         </button>
                       </div>
+                      {mlsExpanded && (
+                        <div className="mt-4 space-y-2">
+                          {FLAT_FEE_MLS_PARTNERS.map(p => (
+                            <div key={p.name} className="rounded-lg border border-blue-200 bg-white px-4 py-3 flex items-start justify-between gap-3 flex-wrap">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-semibold text-gray-900">{p.name}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{p.price}</p>
+                                <p className="text-xs text-gray-600 mt-1">{p.blurb}</p>
+                              </div>
+                              <div className="flex flex-col gap-2 flex-shrink-0">
+                                <a href={p.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-800 bg-white hover:bg-gray-50 transition-colors text-center">
+                                  Visit →
+                                </a>
+                                <button type="button" onClick={() => handleSelectMls(p.name)} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                                  Mark as selected
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  )}
 
                   <div className="pt-4 border-t border-gray-100">
                     <div className="flex items-center justify-between">

@@ -167,7 +167,7 @@ export default function Step5Showings({ onSelectStep }) {
     try {
       const data = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
       const photoCount = Array.isArray(data.step4?.uploadedRooms) ? data.step4.uploadedRooms.length : 0
-      const hasDescription = !!(data.step4?.description && String(data.step4.description).trim())
+      const hasDescription = !!(data.step4?.listingDetails?.description && String(data.step4.listingDetails.description).trim())
       if (photoCount > 0 || hasDescription) {
         const parts = []
         if (photoCount > 0) parts.push(`${photoCount} photo room${photoCount === 1 ? '' : 's'}`)
