@@ -188,6 +188,7 @@ export default function Step6Offers({ onSelectStep }) {
               >
                 <span className="block text-xl mb-1">{d.emoji}</span>
                 {d.label}
+                <span className="block text-xs font-medium text-gray-400 mt-1">Open guide →</span>
               </button>
             ))}
           </div>

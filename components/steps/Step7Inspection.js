@@ -228,6 +228,7 @@ export default function Step7Inspection({ onSelectStep }) {
             >
               <span className="text-xl mb-1 block">{d.emoji}</span>
               {d.label}
+              <span className="block text-xs font-medium text-gray-400 mt-1">Open guide →</span>
             </button>
           ))}
         </div>
