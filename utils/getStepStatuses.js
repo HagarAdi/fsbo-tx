@@ -29,7 +29,8 @@ export function getStepStatuses(stepData = {}) {
 
   const step5 = s.step5 || {}
   const tc5 = step5.titleCompany || {}
-  const s5partial = !!(step5.yardSignPhone || step5.virtualTourUrl || step5.showingMethod || tc5.name)
+  const showings5 = Array.isArray(step5.showings) ? step5.showings : []
+  const s5partial = !!(step5.showingMethod || tc5.name || showings5.length)
   const s5complete = !!(step5.showingMethod && tc5.name)
 
   const step6 = s.step6 || {}
