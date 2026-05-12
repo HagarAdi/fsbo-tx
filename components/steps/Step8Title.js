@@ -135,6 +135,7 @@ export default function Step8Title({ onSelectStep }) {
             >
               <span className="text-xl">{emoji}</span>
               {label}
+              <span className="text-xs font-medium mt-1" style={{ color: activeDrawer === id ? 'rgba(255,255,255,0.85)' : '#9ca3af' }}>Open guide →</span>
             </button>
           ))}
         </div>
