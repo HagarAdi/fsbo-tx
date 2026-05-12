@@ -15,7 +15,12 @@ function StepStatusIcon({ status }) {
     )
   }
   if (status === 'partial') {
-    return <span className="block w-4 h-4 rounded-full bg-yellow-400" />
+    return (
+      <svg className="w-5 h-5 drop-shadow-sm" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="7.5" fill="#facc15" />
+        <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    )
   }
   return <span className="block w-4 h-4 rounded-full border-2 border-gray-300" />
 }
