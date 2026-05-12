@@ -72,10 +72,26 @@ export default function PlatformPreviewCard({
         <button
           type="button"
           onClick={onCopy}
-          className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-          style={{ backgroundColor: copied ? '#6b7280' : ACCENT }}
+          title={copied ? 'Copied' : 'Copy description'}
+          aria-label={copied ? 'Copied' : 'Copy description'}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold border transition-colors"
+          style={copied
+            ? { backgroundColor: '#f0fdf4', color: '#15803d', borderColor: '#bbf7d0' }
+            : { backgroundColor: '#ffffff', color: '#374151', borderColor: '#e5e7eb' }}
         >
-          {copied ? '✓ Copied!' : '📋 Copy Description'}
+          {copied ? (
+            <>
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="4 11 8 15 16 5" />
+              </svg>
+              <span>Copied</span>
+            </>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="6" y="6" width="11" height="11" rx="1.5" />
+              <path d="M4 13V4.5A1.5 1.5 0 0 1 5.5 3H13" />
+            </svg>
+          )}
         </button>
 
         <div className="relative" ref={listNowMenuRef}>
