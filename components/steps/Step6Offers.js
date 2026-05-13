@@ -70,6 +70,7 @@ export default function Step6Offers({ onSelectStep }) {
   const toggleTerm = (i) => setOpenTerms(prev => ({ ...prev, [i]: !prev[i] }))
 
   const filledOffers = offers.filter(o => o.price)
+  const comparisonOffers = [...filledOffers].reverse()
   const maxPrice = filledOffers.length > 0 ? Math.max(...filledOffers.map(o => parseFloat(o.price) || 0)) : 0
   const hasAccepted = offers.some(o => o.status === 'Accepted')
 
@@ -82,11 +83,11 @@ export default function Step6Offers({ onSelectStep }) {
     {
       label: 'Status',
       type: 'status',
-      values: filledOffers.map(o => ({ display: o.status, status: o.status })),
+      values: comparisonOffers.map(o => ({ display: o.status, status: o.status })),
     },
     {
       label: 'Est. Net Proceeds',
-      values: filledOffers.map(o => {
+      values: comparisonOffers.map(o => {
         const r = calcNetProceeds(o, annualTaxes)
         const net = r ? Math.round(r.net) : 0
         return { raw: net, display: r ? fmtCurrency(String(net)) : '—' }
@@ -95,37 +96,37 @@ export default function Step6Offers({ onSelectStep }) {
     },
     {
       label: 'Purchase Price',
-      values: filledOffers.map(o => ({ raw: parseFloat(o.price) || 0, display: fmtCurrency(o.price) })),
+      values: comparisonOffers.map(o => ({ raw: parseFloat(o.price) || 0, display: fmtCurrency(o.price) })),
       best: 'max',
     },
     {
       label: 'Financing',
-      values: filledOffers.map(o => ({ raw: FINANCING_OPTIONS.indexOf(o.financing), display: o.financing || '—' })),
+      values: comparisonOffers.map(o => ({ raw: FINANCING_OPTIONS.indexOf(o.financing), display: o.financing || '—' })),
       best: 'min',
     },
     {
       label: 'Down Payment',
-      values: filledOffers.map(o => ({ raw: parseFloat(o.downPayment) || 0, display: o.downPayment ? `${o.downPayment}%` : '—' })),
+      values: comparisonOffers.map(o => ({ raw: parseFloat(o.downPayment) || 0, display: o.downPayment ? `${o.downPayment}%` : '—' })),
       best: 'max',
     },
     {
       label: 'Option Period',
-      values: filledOffers.map(o => ({ raw: parseFloat(o.optionDays) ?? Infinity, display: o.optionDays ? `${o.optionDays} days` : '—' })),
+      values: comparisonOffers.map(o => ({ raw: parseFloat(o.optionDays) ?? Infinity, display: o.optionDays ? `${o.optionDays} days` : '—' })),
       best: 'min',
     },
     {
       label: 'Option Fee',
-      values: filledOffers.map(o => ({ raw: parseFloat(o.optionFee) || 0, display: fmtCurrency(o.optionFee) })),
+      values: comparisonOffers.map(o => ({ raw: parseFloat(o.optionFee) || 0, display: fmtCurrency(o.optionFee) })),
       best: 'max',
     },
     {
       label: 'Earnest Money',
-      values: filledOffers.map(o => ({ raw: parseFloat(o.earnestMoney) || 0, display: fmtCurrency(o.earnestMoney) })),
+      values: comparisonOffers.map(o => ({ raw: parseFloat(o.earnestMoney) || 0, display: fmtCurrency(o.earnestMoney) })),
       best: 'max',
     },
     {
       label: 'Closing Date',
-      values: filledOffers.map(o => ({
+      values: comparisonOffers.map(o => ({
         raw: o.closingDate ? new Date(o.closingDate).getTime() : Infinity,
         display: fmtDate(o.closingDate),
       })),
@@ -134,7 +135,7 @@ export default function Step6Offers({ onSelectStep }) {
     {
       label: 'Strength Score',
       type: 'score',
-      values: filledOffers.map(o => {
+      values: comparisonOffers.map(o => {
         const bd = scoreBreakdown(o, maxPrice)
         const reasons = getScoreReasons(bd)
         return { raw: offerScores[o.id], display: `${offerScores[o.id]}`, reasons }
@@ -144,7 +145,7 @@ export default function Step6Offers({ onSelectStep }) {
     {
       label: 'Red Flags',
       type: 'flags',
-      values: filledOffers.map(o => {
+      values: comparisonOffers.map(o => {
         const messages = getRedFlags(o)
         const count = messages.length
         return { raw: count, display: count === 0 ? '—' : `⚠️ ${count}`, messages }
@@ -279,7 +280,7 @@ export default function Step6Offers({ onSelectStep }) {
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide bg-gray-50 w-36">Term</th>
-                      {filledOffers.map((o) => (
+                      {comparisonOffers.map((o) => (
                         <th key={o.id} className="text-left px-4 py-3 bg-gray-50">
                           <span className="text-xs font-bold text-gray-900 whitespace-nowrap">{o.nickname || 'Offer'}</span>
                         </th>
