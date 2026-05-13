@@ -6,7 +6,7 @@ import {
   ACCENT, PURPLE, DRAWERS, FINANCING_OPTIONS,
   OFFER_STATUS_COLORS, TX_TIPS,
   makeEmptyOffer, calcScore, scoreBreakdown, getScoreReasons, getRedFlags, calcNetProceeds,
-  fmtCurrency, fmtDate, loadStep6, saveStep6,
+  fmtCurrency, fmtDate, loadStep6, saveStep6, getOptionDays,
 } from './Step6Offers.data'
 
 export default function Step6Offers({ onSelectStep }) {
@@ -21,7 +21,7 @@ export default function Step6Offers({ onSelectStep }) {
   useEffect(() => {
     const saved = loadStep6()
     const loaded = saved.offers && saved.offers.length > 0
-      ? saved.offers.map(o => ({ status: 'Received', ...o }))
+      ? saved.offers.map(o => ({ status: 'Received', optionStartDate: '', optionEndDate: '', ...o }))
       : []
     setOffers(loaded)
   }, [])
@@ -111,7 +111,10 @@ export default function Step6Offers({ onSelectStep }) {
     },
     {
       label: 'Option Period',
-      values: comparisonOffers.map(o => ({ raw: parseFloat(o.optionDays) ?? Infinity, display: o.optionDays ? `${o.optionDays} days` : '—' })),
+      values: comparisonOffers.map(o => {
+        const d = getOptionDays(o)
+        return { raw: d ?? Infinity, display: d != null ? `${d} days` : '—' }
+      }),
       best: 'min',
     },
     {

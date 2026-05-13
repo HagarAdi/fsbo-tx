@@ -120,7 +120,7 @@ const OFFER_STATUS_COLORS = {
 
 const RED_FLAG_CHECKS = [
   {
-    check: (o) => { const d = parseFloat(o.optionDays); return !isNaN(d) && d > 10 },
+    check: (o) => { const d = getOptionDays(o); return d != null && d > 10 },
     message: 'Option period is long — buyer has more time to back out fee-free',
   },
   {
@@ -176,6 +176,8 @@ function makeEmptyOffer(label) {
     financing: 'Conventional',
     downPayment: '',
     optionDays: '',
+    optionStartDate: '',
+    optionEndDate: '',
     optionFee: '',
     earnestMoney: '',
     closingDate: '',
@@ -183,9 +185,23 @@ function makeEmptyOffer(label) {
   }
 }
 
+function daysBetween(startISO, endISO) {
+  if (!startISO || !endISO) return null
+  const s = new Date(startISO + 'T00:00:00')
+  const e = new Date(endISO + 'T00:00:00')
+  if (isNaN(s) || isNaN(e) || e < s) return null
+  return Math.round((e - s) / 86400000)
+}
+
+function getOptionDays(offer) {
+  const n = parseInt(offer?.optionDays)
+  if (!isNaN(n) && n > 0) return n
+  return daysBetween(offer?.optionStartDate, offer?.optionEndDate)
+}
+
 function scoreBreakdown(offer, maxPrice) {
   const dp = parseFloat(offer.downPayment) || 0
-  const optVal = parseFloat(offer.optionDays)
+  const optVal = getOptionDays(offer)
   const price = parseFloat(offer.price) || 0
 
   let financing = 0
@@ -198,7 +214,7 @@ function scoreBreakdown(offer, maxPrice) {
   else if (dp >= 10) downPts = 10
 
   let optPts = 5
-  if (!isNaN(optVal)) {
+  if (optVal != null) {
     if (optVal < 5) optPts = 15
     else if (optVal <= 7) optPts = 10
   }
@@ -308,5 +324,5 @@ export {
   OFFER_STATUS_OPTIONS, OFFER_STATUS_COLORS, RED_FLAG_CHECKS, TX_TIPS,
   SCORE_BANDS, getScoreBand, makeEmptyOffer, scoreBreakdown, calcScore,
   getScoreReasons, getRedFlags, calcNetProceeds, loadStep6, saveStep6,
-  fmtCurrency, fmtDate, inputCls,
+  fmtCurrency, fmtDate, inputCls, getOptionDays,
 }
