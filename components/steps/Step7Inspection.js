@@ -4,7 +4,7 @@ import {
   ACCENT, PURPLE, DRAWERS, SDN_ITEMS, SDN_TREC_INFO,
   INFO_NOTES, FINDINGS, REQUEST_TYPES, RESPONSE_TYPES, RESPONSE_STYLE,
   PRO_TIPS, VENDORS, makeEmptyRequest, loadStep7, saveStep7, getAcceptedOffer,
-  getAcceptedOptionDays, inputCls,
+  getAcceptedOptionDays, getOptionPeriodStatus, inputCls,
 } from './Step7Inspection.data'
 import { calcNetProceeds, fmtCurrency, getOptionDays } from './Step6Offers.data'
 
@@ -152,29 +152,7 @@ export default function Step7Inspection({ onSelectStep }) {
     saveStep7(buildSavePayload({ isLocked: false, finalNetProceeds: null }))
   }
 
-  const { startDate, endDate } = optionPeriod
-  let daysRemaining = null
-  let hoursRemaining = null
-  let pctElapsed = 0
-  let isExpired = false
-  let isLastDayBeforeFive = false
-
-  if (startDate && endDate) {
-    const now = new Date()
-    const start = new Date(startDate + 'T00:00:00')
-    const endAt5PM = new Date(endDate + 'T17:00:00')
-    const totalMs = endAt5PM - start
-    const elapsedMs = now - start
-    isExpired = now >= endAt5PM
-    pctElapsed = totalMs > 0 ? Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100)) : 0
-
-    if (!isExpired) {
-      const msLeft = endAt5PM - now
-      daysRemaining = Math.floor(msLeft / 86400000)
-      hoursRemaining = Math.floor((msLeft % 86400000) / 3600000)
-      isLastDayBeforeFive = daysRemaining === 0
-    }
-  }
+  const { daysRemaining, hoursRemaining, pctElapsed, isExpired, isLastDayBeforeFive } = getOptionPeriodStatus(optionPeriod)
 
   const sidebarDaysColor = isExpired ? ACCENT
     : daysRemaining !== null && daysRemaining <= 5 ? '#ca8a04'
