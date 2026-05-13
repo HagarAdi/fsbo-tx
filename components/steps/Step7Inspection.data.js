@@ -1,4 +1,5 @@
 import { notifyStepDataChange } from '../../utils/notifyStepData'
+import { getOptionDays } from './Step6Offers.data'
 
 const ACCENT = '#16a34a'
 const PURPLE = '#7c3aed'
@@ -136,7 +137,8 @@ function getAcceptedOffer() {
 function getAcceptedOptionDays() {
   try {
     const accepted = getAcceptedOffer()
-    return accepted ? (parseInt(accepted.optionDays) || 10) : 10
+    if (!accepted) return 10
+    return getOptionDays(accepted) || 10
   } catch { return 10 }
 }
 

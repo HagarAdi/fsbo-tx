@@ -6,7 +6,7 @@ import {
   PRO_TIPS, VENDORS, makeEmptyRequest, loadStep7, saveStep7, getAcceptedOffer,
   getAcceptedOptionDays, inputCls,
 } from './Step7Inspection.data'
-import { calcNetProceeds, fmtCurrency } from './Step6Offers.data'
+import { calcNetProceeds, fmtCurrency, getOptionDays } from './Step6Offers.data'
 
 export default function Step7Inspection({ onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
@@ -24,16 +24,26 @@ export default function Step7Inspection({ onSelectStep }) {
     const saved = loadStep7().optionPeriod || {}
     const accepted = getAcceptedOffer()
     const todayStr = new Date().toISOString().slice(0, 10)
-    const defaultStart = accepted ? todayStr : ''
+
+    let defaultStart = ''
     let defaultEnd = ''
-    if (accepted && !saved.startDate && accepted.optionDays) {
-      const d = new Date(todayStr + 'T00:00:00')
-      d.setDate(d.getDate() + (parseInt(accepted.optionDays) || 10))
-      defaultEnd = d.toISOString().slice(0, 10)
+    if (accepted) {
+      defaultStart = accepted.optionStartDate || todayStr
+      if (accepted.optionEndDate) {
+        defaultEnd = accepted.optionEndDate
+      } else {
+        const days = getOptionDays(accepted)
+        if (days && defaultStart) {
+          const d = new Date(defaultStart + 'T00:00:00')
+          d.setDate(d.getDate() + days)
+          defaultEnd = d.toISOString().slice(0, 10)
+        }
+      }
     }
+
     return {
-      startDate: saved.startDate || defaultStart,
-      endDate: saved.endDate || defaultEnd,
+      startDate: accepted?.optionStartDate || saved.startDate || defaultStart,
+      endDate:   accepted?.optionEndDate   || saved.endDate   || defaultEnd,
     }
   })
 

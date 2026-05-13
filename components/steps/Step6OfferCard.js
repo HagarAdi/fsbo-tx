@@ -125,8 +125,9 @@ export default function Step6OfferCard({
 }) {
   const band = getScoreBand(score)
   const netResult = offer.price ? calcNetProceeds(offer, annualTaxes) : null
+  const hasOptionInfo = !!offer.optionDays || (!!offer.optionStartDate && !!offer.optionEndDate)
   const missingForStep7 = offer.status === 'Accepted'
-    ? [!offer.closingDate && 'closing date', !offer.optionDays && 'option days'].filter(Boolean)
+    ? [!offer.closingDate && 'closing date', !hasOptionInfo && 'option period'].filter(Boolean)
     : []
   const titleCo = isExpanded ? getTitleCo() : null
 
@@ -243,14 +244,14 @@ export default function Step6OfferCard({
             <NetCheckPanel offer={offer} annualTaxes={annualTaxes} setAnnualTaxes={setAnnualTaxes} />
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Offer nickname</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-0.5">Offer nickname</label>
               <input type="text" value={offer.nickname} onChange={e => updateOffer(offer.id, 'nickname', e.target.value)} placeholder='e.g. "The Jones Family"' className={inputCls} />
             </div>
 
             <div>
-              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-0.5">
                 Purchase price ($)
                 <HelpTip id={`${offer.id}-price`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
                   The total agreed sales price. Found in Paragraph 3C of the TREC contract.
@@ -260,7 +261,7 @@ export default function Step6OfferCard({
             </div>
 
             <div>
-              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-0.5">
                 Seller Contribution to Buyer (Para 12) ($)
                 <HelpTip id={`${offer.id}-sellerContrib`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
                   Check Paragraph 12A(1)(b) of the contract. This is the amount the buyer is asking you to pay toward their closing costs or agent fees.
@@ -270,7 +271,7 @@ export default function Step6OfferCard({
             </div>
 
             <div>
-              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-0.5">
                 Financing type
                 <HelpTip id={`${offer.id}-financing`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
                   Check Paragraph 4 or the Third Party Financing Addendum. (Cash is strongest).
@@ -282,7 +283,7 @@ export default function Step6OfferCard({
             </div>
 
             <div>
-              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-0.5">
                 Down payment (%)
                 <HelpTip id={`${offer.id}-downPayment`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
                   The cash portion of the sales price the buyer pays at closing. Found in Paragraph 3A.
@@ -292,7 +293,7 @@ export default function Step6OfferCard({
             </div>
 
             <div>
-              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-0.5">
                 Option period (days)
                 <HelpTip id={`${offer.id}-optionDays`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
                   The number of days for inspections and backing out. Found in Paragraph 5B.
@@ -302,7 +303,27 @@ export default function Step6OfferCard({
             </div>
 
             <div>
-              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-0.5">
+                Option start
+                <HelpTip id={`${offer.id}-optionStart`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  First day of the buyer&apos;s termination-option period. Paragraph 5B begins on the effective date.
+                </HelpTip>
+              </label>
+              <input type="date" value={offer.optionStartDate} onChange={e => updateOffer(offer.id, 'optionStartDate', e.target.value)} className={inputCls} />
+            </div>
+
+            <div>
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-0.5">
+                Option end
+                <HelpTip id={`${offer.id}-optionEnd`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                  Last day the buyer can terminate fee-free (5:00 PM local). Usually start + the number of days in Paragraph 5B.
+                </HelpTip>
+              </label>
+              <input type="date" value={offer.optionEndDate} onChange={e => updateOffer(offer.id, 'optionEndDate', e.target.value)} className={inputCls} />
+            </div>
+
+            <div>
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-0.5">
                 Option fee ($)
                 <HelpTip id={`${offer.id}-optionFee`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
                   The non-refundable fee for the right to terminate. Found in Paragraph 5B.
@@ -312,7 +333,7 @@ export default function Step6OfferCard({
             </div>
 
             <div>
-              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-0.5">
                 Earnest money ($)
                 <HelpTip id={`${offer.id}-earnest`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
                   The &apos;good faith&apos; deposit, usually ~1%. Found in Paragraph 5A.
@@ -322,7 +343,7 @@ export default function Step6OfferCard({
             </div>
 
             <div>
-              <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+              <label className="flex items-center text-xs font-semibold text-gray-700 mb-0.5">
                 Closing date
                 <HelpTip id={`${offer.id}-closingDate`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
                   The date you officially get paid and hand over keys. Found in Paragraph 9A.
@@ -332,7 +353,7 @@ export default function Step6OfferCard({
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Notes (optional)</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-0.5">Notes (optional)</label>
               <input type="text" value={offer.notes} onChange={e => updateOffer(offer.id, 'notes', e.target.value)} placeholder="e.g. Pre-approved, motivated buyer" className={inputCls} />
             </div>
           </div>
