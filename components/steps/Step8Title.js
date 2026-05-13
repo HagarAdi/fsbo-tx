@@ -12,34 +12,43 @@ const CLOSING_TIMELINE = [
   {
     period: 'Week 1',
     seller: 'Request payoff statement from your lender',
-    title:  'Order title search and open escrow account',
-    buyer:  'Option period begins — 10 days to inspect',
+    title:  'Title co. orders title search and opens escrow account',
+    buyer:  "Buyer's option period begins — 10 days to inspect",
   },
   {
     period: 'Week 1–2',
     seller: 'Schedule survey if required by the contract',
-    title:  'Send HOA estoppel letter request (if applicable)',
-    buyer:  'Complete inspections; submit any repair requests',
+    title:  'Title co. sends HOA estoppel letter request (if applicable)',
+    buyer:  'Buyer completes inspections; submits any repair requests',
   },
   {
     period: 'Week 2–3',
     seller: 'Respond to buyer repair requests before Option Period ends',
-    title:  'Clear liens; coordinate payoff with your lender',
-    buyer:  'Lender orders appraisal; loan processing begins',
+    title:  'Title co. clears liens; coordinates payoff with your lender',
+    buyer:  "Buyer's lender orders appraisal; loan processing begins",
   },
   {
     period: 'Week 3',
     seller: 'Review closing disclosure for accuracy',
-    title:  'Prepare and deliver closing disclosure (3 days before closing)',
-    buyer:  'Underwriting review; final loan approval (clear to close)',
+    title:  'Title co. prepares and delivers closing disclosure (3 days before closing)',
+    buyer:  "Buyer's lender finishes underwriting; final loan approval (clear to close)",
   },
   {
     period: 'Closing day',
     seller: 'Sign documents and hand over keys',
-    title:  'Record deed with county; wire net proceeds to you',
-    buyer:  'Final walkthrough; wire closing funds to escrow',
+    title:  'Title co. records deed with county; wires net proceeds to you',
+    buyer:  'Buyer does final walkthrough; wires closing funds to escrow',
   },
 ]
+
+function getCurrentWeekIndex(daysToClose) {
+  if (typeof daysToClose !== 'number' || Number.isNaN(daysToClose)) return -1
+  if (daysToClose > 21) return 0
+  if (daysToClose > 14) return 1
+  if (daysToClose > 7)  return 2
+  if (daysToClose > 0)  return 3
+  return 4
+}
 
 function getTitleCo() {
   try {
@@ -84,6 +93,7 @@ export default function Step8Title({ onSelectStep }) {
   const withAgentNet     = estimatedNet - listingAgentCost
 
   const daysToClose = daysUntilDate(closingDates.closingDate)
+  const currentWeekIdx = getCurrentWeekIndex(daysToClose)
 
   const milestones = [
     { label: 'Title opened',           done: titleOpened },
@@ -147,91 +157,45 @@ export default function Step8Title({ onSelectStep }) {
             What each party is responsible for during the ~30-day closing window. Buyer tasks are shown for your awareness.
           </p>
 
-          <div className="overflow-x-auto -mx-1 px-1 pb-2">
-            <div style={{ minWidth: 600 }}>
-
-              {/* Seller row */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map(({ seller }, i) => (
-                  <div key={i} className="flex-1 rounded-lg px-2 py-2 text-xs" style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-                    <p className="font-bold uppercase tracking-wide mb-0.5" style={{ color: ACCENT, fontSize: 9 }}>You</p>
-                    <p className="text-gray-700 leading-snug">{seller}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Stems: seller → bar */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map((_, i) => (
-                  <div key={i} className="flex-1 flex justify-center">
-                    <div className="w-px h-4" style={{ backgroundColor: '#d1d5db' }} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Bar + circles */}
-              <div className="relative flex items-center" style={{ height: 32 }}>
-                <div className="absolute left-0 right-0 h-2 rounded-full" style={{ backgroundColor: '#e5e7eb', top: '50%', transform: 'translateY(-50%)' }} />
-                {CLOSING_TIMELINE.map((_, i) => (
-                  <div key={i} className="flex-1 flex justify-center relative z-10">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                      style={{ backgroundColor: ACCENT, border: '2px solid white', boxShadow: '0 0 0 2px ' + ACCENT }}
-                    >
-                      {i + 1}
+          <div className="space-y-4">
+            {CLOSING_TIMELINE.map(({ period, seller, title: titleTask, buyer }, i) => {
+              const isCurrent = i === currentWeekIdx
+              return (
+                <div
+                  key={i}
+                  className={`rounded-xl border bg-white px-5 py-5 transition ${
+                    isCurrent
+                      ? 'border-green-500 ring-2 ring-green-500 ring-offset-1'
+                      : 'border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                        style={{ backgroundColor: ACCENT }}
+                      >
+                        {i + 1}
+                      </span>
+                      <span className="text-sm font-semibold text-gray-900">{period}</span>
                     </div>
+                    {isCurrent && (
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-green-700 bg-green-100 rounded-full px-2 py-0.5">
+                        You are here
+                      </span>
+                    )}
                   </div>
-                ))}
-              </div>
-
-              {/* Period labels */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map(({ period }, i) => (
-                  <div key={i} className="flex-1 flex justify-center">
-                    <span className="text-center font-semibold text-gray-400 whitespace-nowrap" style={{ fontSize: 9 }}>{period}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Stems: bar → title */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map((_, i) => (
-                  <div key={i} className="flex-1 flex justify-center">
-                    <div className="w-px h-4" style={{ backgroundColor: '#d1d5db' }} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Title row */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map(({ title: titleTask }, i) => (
-                  <div key={i} className="flex-1 rounded-lg px-2 py-2 text-xs" style={{ backgroundColor: '#f0f9ff', border: '1px solid #bae6fd' }}>
-                    <p className="font-bold uppercase tracking-wide mb-0.5" style={{ color: '#0369a1', fontSize: 9 }}>Title</p>
-                    <p className="text-gray-700 leading-snug">{titleTask}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Stems: title → buyer */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map((_, i) => (
-                  <div key={i} className="flex-1 flex justify-center">
-                    <div className="w-px h-4" style={{ backgroundColor: '#fde68a' }} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Buyer row */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map(({ buyer }, i) => (
-                  <div key={i} className="flex-1 rounded-lg px-2 py-2 text-xs" style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a' }}>
-                    <p className="font-bold uppercase tracking-wide mb-0.5" style={{ color: '#92400e', fontSize: 9 }}>Buyer</p>
-                    <p className="text-gray-500 leading-snug italic">{buyer}</p>
-                  </div>
-                ))}
-              </div>
-
-            </div>
+                  <ul className="space-y-1.5 pl-1">
+                    <li className="flex gap-2 text-sm text-gray-900" aria-label="Your task">
+                      <span className="text-green-600 shrink-0" aria-hidden>▸</span>
+                      <span className="leading-snug">{seller}</span>
+                    </li>
+                    <li className="text-sm text-gray-600 leading-snug pl-5">{titleTask}</li>
+                    <li className="text-xs text-gray-500 leading-snug pl-5 italic">{buyer}</li>
+                  </ul>
+                </div>
+              )
+            })}
           </div>
         </section>
 
