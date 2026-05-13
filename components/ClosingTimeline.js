@@ -153,45 +153,78 @@ export default function ClosingTimeline({ daysToClose }) {
           const phase = PHASES[row.phase]
           const isCurrent = i === currentWeekIdx
           const cardCls = isCurrent
-            ? 'border-green-400 bg-green-50'
+            ? PHASE_TINTS[row.phase]
             : 'border-gray-200 bg-white'
+          const tipAlign = i === 0 ? 'start' : i === 4 ? 'end' : 'center'
           return (
             <li key={i} role="listitem" className="relative flex flex-col items-center">
 
               <div className={`w-full rounded-xl border px-3 py-3 mb-2 text-left ${cardCls}`}>
                 <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold mb-0.5">You</p>
-                <p className="text-xs font-bold text-gray-900 leading-snug">{row.sellerShort}</p>
+                <span className="inline-flex items-baseline">
+                  <span className="text-xs font-bold text-gray-900 leading-snug">{row.sellerShort}</span>
+                  <HelpTip id={`ct-${i}-seller`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} placement="bottom" align={tipAlign}>
+                    {PRO_TIPS[i].seller}
+                  </HelpTip>
+                </span>
                 <p className="text-[11px] text-gray-600 leading-snug mt-1">{row.seller}</p>
               </div>
 
-              <div aria-hidden className="w-px h-2 bg-gray-300" />
+              <div aria-hidden className="w-px h-[5px] bg-gray-300" />
 
               <div
                 aria-current={isCurrent ? 'true' : undefined}
-                className="relative z-10 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 ring-4 ring-white"
+                className={`relative z-10 rounded-full flex items-center justify-center font-bold text-white shrink-0 ring-4 ring-white transition-transform ${
+                  isCurrent && i === 4 ? 'w-10 h-10 text-base scale-[1.15]' : 'w-9 h-9 text-sm'
+                }`}
                 style={{
                   backgroundColor: phase.color,
                   animation: isCurrent ? 'ct-pulse-ring 1.8s ease-out infinite' : undefined,
                 }}
               >
-                {i + 1}
+                {isCurrent && i === 4 ? '🏁' : i + 1}
                 {isCurrent && <span className="sr-only">You are here. </span>}
               </div>
 
               <span className="mt-1 text-[11px] font-semibold text-gray-700 whitespace-nowrap">{row.period}</span>
 
-              <div aria-hidden className="w-px h-2 bg-gray-300" />
+              <div aria-hidden className="w-px h-[5px] bg-gray-300" />
 
               <div className={`w-full rounded-xl border px-3 py-3 mt-1 text-left ${cardCls}`}>
                 <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold mb-0.5">Title co.</p>
-                <p className="text-xs font-bold text-gray-800 leading-snug">{row.titleShort}</p>
+                <span className="inline-flex items-baseline">
+                  <span className="text-xs font-bold text-gray-800 leading-snug">{row.titleShort}</span>
+                  <HelpTip id={`ct-${i}-title`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} placement="top" align={tipAlign}>
+                    {PRO_TIPS[i].title}
+                  </HelpTip>
+                </span>
                 <p className="text-[11px] text-gray-600 leading-snug mt-1">{row.title}</p>
               </div>
 
               <div className={`w-full rounded-xl border px-3 py-3 mt-2 text-left ${cardCls}`}>
                 <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold mb-0.5">Buyer</p>
-                <p className="text-xs font-bold italic text-gray-700 leading-snug">{row.buyerShort}</p>
+                <span className="inline-flex items-baseline">
+                  <span className="text-xs font-bold italic text-gray-700 leading-snug">{row.buyerShort}</span>
+                  <HelpTip id={`ct-${i}-buyer`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} placement="top" align={tipAlign}>
+                    {PRO_TIPS[i].buyer}
+                  </HelpTip>
+                </span>
                 <p className="text-[11px] italic text-gray-500 leading-snug mt-1">{row.buyer}</p>
+                {i === 0 && optionStatus.isActive && (
+                  <>
+                    <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-red-100 text-red-700 border border-red-200">
+                      Action required
+                      {optionStatus.daysRemaining !== null && (
+                        <span className="font-medium normal-case">
+                          · {optionStatus.daysRemaining}d {optionStatus.hoursRemaining}h left
+                        </span>
+                      )}
+                    </span>
+                    <p className="text-[10px] text-gray-500 italic mt-1 leading-snug">
+                      Option Period ends at 5:00 PM local time on the final day.
+                    </p>
+                  </>
+                )}
               </div>
             </li>
           )
