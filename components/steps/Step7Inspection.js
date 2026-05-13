@@ -427,12 +427,12 @@ export default function Step7Inspection({ onSelectStep }) {
                                   ${parseFloat(r.requestedAmount).toLocaleString()} requested
                                 </span>
                               )}
-                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: responseStyle.bg, color: responseStyle.text }}>
-                                {r.response}
-                              </span>
                             </div>
                           </button>
-                          <div className="flex items-center gap-0.5 flex-shrink-0">
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ backgroundColor: responseStyle.bg, color: responseStyle.text }}>
+                              {r.response}
+                            </span>
                             <button
                               type="button"
                               onClick={() => removeRequest(r.id)}
