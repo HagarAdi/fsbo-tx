@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   ACCENT, OFFER_STATUS_OPTIONS, OFFER_STATUS_COLORS, FINANCING_OPTIONS,
   getScoreBand, fmtCurrency, fmtDate, inputCls, calcNetProceeds,
@@ -6,6 +7,33 @@ import HelpTip from '../Tooltip'
 
 function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
   const r = calcNetProceeds(offer, annualTaxes)
+  const price = parseFloat(offer?.price) || 0
+  const taxNum = parseFloat(annualTaxes)
+  const currentRatePct = annualTaxes && !isNaN(taxNum) && price > 0
+    ? ((taxNum / price) * 100).toFixed(2).replace(/\.?0+$/, '')
+    : '2.2'
+  const [editingRate, setEditingRate] = useState(false)
+  const [rateDraft, setRateDraft] = useState(currentRatePct)
+
+  function startEditingRate() {
+    setRateDraft(currentRatePct)
+    setEditingRate(true)
+  }
+
+  function commitRate() {
+    const pct = parseFloat(rateDraft)
+    if (isNaN(pct) || pct < 0 || price <= 0) {
+      setEditingRate(false)
+      return
+    }
+    setAnnualTaxes(String(Math.round((pct * price) / 100)))
+    setEditingRate(false)
+  }
+
+  function cancelRate() {
+    setEditingRate(false)
+  }
+
   if (!r) return null
   const isHighPara12 = r.sellerContrib > parseFloat(offer.price) * 0.02
   return (
@@ -32,8 +60,45 @@ function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
             <span className="text-gray-500">Title Policy</span>
             <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(r.titlePolicy)))}</span>
           </div>
-          <div className="flex justify-between px-3 py-1.5 text-xs">
-            <span className="text-gray-500">Tax{!r.hasClosingDate ? ' (est.)' : ''}</span>
+          <div className="flex justify-between items-center px-3 py-1.5 text-xs">
+            <span className="text-gray-500 flex items-center gap-1.5">
+              Tax{!r.hasClosingDate ? ' (est.)' : ''}
+              {editingRate ? (
+                <span className="inline-flex items-center gap-1">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={rateDraft}
+                    onChange={e => setRateDraft(e.target.value)}
+                    onBlur={commitRate}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') commitRate()
+                      if (e.key === 'Escape') cancelRate()
+                    }}
+                    autoFocus
+                    aria-label="Tax rate percentage"
+                    className="w-14 px-1.5 py-0.5 rounded border border-gray-200 text-xs text-gray-700 tabular-nums focus:outline-none focus:ring-1 focus:ring-green-500"
+                  />
+                  <span className="text-gray-400">%</span>
+                </span>
+              ) : (
+                <>
+                  <span className="text-gray-400 tabular-nums">{currentRatePct}%</span>
+                  <button
+                    type="button"
+                    onClick={startEditingRate}
+                    aria-label="Edit tax rate"
+                    title="Edit tax rate"
+                    className="text-gray-300 hover:text-gray-600 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11.5 2.5l2 2-8 8-2.5.5.5-2.5 8-8z" />
+                    </svg>
+                  </button>
+                </>
+              )}
+            </span>
             <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(r.taxProration)))}</span>
           </div>
           <div className="flex justify-between px-3 py-1.5 text-xs">
@@ -41,17 +106,6 @@ function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
             <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(r.escrow))}</span>
           </div>
         </div>
-      </div>
-      <div className="border-t border-gray-100 px-4 py-2 flex items-center gap-3">
-        <label className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0">Annual taxes</label>
-        <input
-          type="number"
-          min="0"
-          value={annualTaxes}
-          onChange={e => setAnnualTaxes(e.target.value)}
-          placeholder="2.2% est."
-          className="flex-1 min-w-0 px-2 py-1 rounded border border-gray-200 text-xs text-gray-600 placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-green-500"
-        />
       </div>
     </div>
   )
