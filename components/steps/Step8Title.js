@@ -41,6 +41,15 @@ const CLOSING_TIMELINE = [
   },
 ]
 
+function getCurrentWeekIndex(daysToClose) {
+  if (typeof daysToClose !== 'number' || Number.isNaN(daysToClose)) return -1
+  if (daysToClose > 21) return 0
+  if (daysToClose > 14) return 1
+  if (daysToClose > 7)  return 2
+  if (daysToClose > 0)  return 3
+  return 4
+}
+
 function getTitleCo() {
   try {
     const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
@@ -84,6 +93,7 @@ export default function Step8Title({ onSelectStep }) {
   const withAgentNet     = estimatedNet - listingAgentCost
 
   const daysToClose = daysUntilDate(closingDates.closingDate)
+  const currentWeekIdx = getCurrentWeekIndex(daysToClose)
 
   const milestones = [
     { label: 'Title opened',           done: titleOpened },
@@ -148,87 +158,104 @@ export default function Step8Title({ onSelectStep }) {
           </p>
 
           <div className="overflow-x-auto -mx-1 px-1 pb-2">
-            <div style={{ minWidth: 600 }}>
+            <div role="table" aria-label="Closing timeline by actor and week" style={{ minWidth: 640 }}>
 
-              {/* Seller row */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map(({ seller }, i) => (
-                  <div key={i} className="flex-1 rounded-lg px-2 py-2 text-xs" style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-                    <p className="font-bold uppercase tracking-wide mb-0.5" style={{ color: ACCENT, fontSize: 9 }}>You</p>
-                    <p className="text-gray-700 leading-snug">{seller}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Stems: seller → bar */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map((_, i) => (
-                  <div key={i} className="flex-1 flex justify-center">
-                    <div className="w-px h-4" style={{ backgroundColor: '#d1d5db' }} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Bar + circles */}
-              <div className="relative flex items-center" style={{ height: 32 }}>
-                <div className="absolute left-0 right-0 h-2 rounded-full" style={{ backgroundColor: '#e5e7eb', top: '50%', transform: 'translateY(-50%)' }} />
-                {CLOSING_TIMELINE.map((_, i) => (
-                  <div key={i} className="flex-1 flex justify-center relative z-10">
+              {/* Column header row */}
+              <div role="row" className="grid gap-2 mb-2" style={{ gridTemplateColumns: '7rem repeat(5, minmax(0, 1fr))' }}>
+                <div aria-hidden />
+                {CLOSING_TIMELINE.map(({ period }, i) => {
+                  const isCurrent = i === currentWeekIdx
+                  return (
                     <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                      style={{ backgroundColor: ACCENT, border: '2px solid white', boxShadow: '0 0 0 2px ' + ACCENT }}
+                      key={i}
+                      role="columnheader"
+                      aria-current={isCurrent ? 'true' : undefined}
+                      className="flex flex-col items-start gap-1 px-1"
                     >
-                      {i + 1}
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                          style={{ backgroundColor: ACCENT }}
+                        >
+                          {i + 1}
+                        </span>
+                        <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">{period}</span>
+                      </div>
+                      {isCurrent && (
+                        <span className="text-[9px] font-bold uppercase tracking-wide text-green-700 bg-green-100 rounded-full px-1.5 py-0.5">
+                          <span className="sr-only">Current week: </span>You are here
+                        </span>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
-              {/* Period labels */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map(({ period }, i) => (
-                  <div key={i} className="flex-1 flex justify-center">
-                    <span className="text-center font-semibold text-gray-400 whitespace-nowrap" style={{ fontSize: 9 }}>{period}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Stems: bar → title */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map((_, i) => (
-                  <div key={i} className="flex-1 flex justify-center">
-                    <div className="w-px h-4" style={{ backgroundColor: '#d1d5db' }} />
-                  </div>
-                ))}
+              {/* You row */}
+              <div role="row" className="grid gap-2 mb-2" style={{ gridTemplateColumns: '7rem repeat(5, minmax(0, 1fr))' }}>
+                <div role="rowheader" className="flex items-center gap-1.5 text-xs font-semibold text-gray-800 px-1">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: ACCENT }} aria-hidden />
+                  You
+                </div>
+                {CLOSING_TIMELINE.map(({ seller }, i) => {
+                  const isCurrent = i === currentWeekIdx
+                  return (
+                    <div
+                      key={i}
+                      role="cell"
+                      aria-current={isCurrent ? 'true' : undefined}
+                      className={`rounded-xl border px-3 py-3 text-xs leading-snug text-gray-800 ${
+                        isCurrent ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'
+                      }`}
+                    >
+                      {seller}
+                    </div>
+                  )
+                })}
               </div>
 
               {/* Title row */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map(({ title: titleTask }, i) => (
-                  <div key={i} className="flex-1 rounded-lg px-2 py-2 text-xs" style={{ backgroundColor: '#f0f9ff', border: '1px solid #bae6fd' }}>
-                    <p className="font-bold uppercase tracking-wide mb-0.5" style={{ color: '#0369a1', fontSize: 9 }}>Title</p>
-                    <p className="text-gray-700 leading-snug">{titleTask}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Stems: title → buyer */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map((_, i) => (
-                  <div key={i} className="flex-1 flex justify-center">
-                    <div className="w-px h-4" style={{ backgroundColor: '#fde68a' }} />
-                  </div>
-                ))}
+              <div role="row" className="grid gap-2 mb-2" style={{ gridTemplateColumns: '7rem repeat(5, minmax(0, 1fr))' }}>
+                <div role="rowheader" className="flex items-center text-xs font-semibold text-gray-700 px-1">
+                  Title co.
+                </div>
+                {CLOSING_TIMELINE.map(({ title: titleTask }, i) => {
+                  const isCurrent = i === currentWeekIdx
+                  return (
+                    <div
+                      key={i}
+                      role="cell"
+                      aria-current={isCurrent ? 'true' : undefined}
+                      className={`rounded-xl border px-3 py-3 text-xs leading-snug text-gray-700 ${
+                        isCurrent ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'
+                      }`}
+                    >
+                      {titleTask}
+                    </div>
+                  )
+                })}
               </div>
 
               {/* Buyer row */}
-              <div className="flex gap-1">
-                {CLOSING_TIMELINE.map(({ buyer }, i) => (
-                  <div key={i} className="flex-1 rounded-lg px-2 py-2 text-xs" style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a' }}>
-                    <p className="font-bold uppercase tracking-wide mb-0.5" style={{ color: '#92400e', fontSize: 9 }}>Buyer</p>
-                    <p className="text-gray-500 leading-snug italic">{buyer}</p>
-                  </div>
-                ))}
+              <div role="row" className="grid gap-2" style={{ gridTemplateColumns: '7rem repeat(5, minmax(0, 1fr))' }}>
+                <div role="rowheader" className="flex items-center text-xs font-semibold text-gray-500 px-1">
+                  Buyer
+                </div>
+                {CLOSING_TIMELINE.map(({ buyer }, i) => {
+                  const isCurrent = i === currentWeekIdx
+                  return (
+                    <div
+                      key={i}
+                      role="cell"
+                      aria-current={isCurrent ? 'true' : undefined}
+                      className={`rounded-xl border px-3 py-3 text-xs leading-snug italic text-gray-500 ${
+                        isCurrent ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'
+                      }`}
+                    >
+                      {buyer}
+                    </div>
+                  )
+                })}
               </div>
 
             </div>
