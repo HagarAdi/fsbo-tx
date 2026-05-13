@@ -1,8 +1,46 @@
+import { useEffect, useState } from 'react'
+import HelpTip from './Tooltip'
+import { getOptionPeriodStatusFromStorage } from './steps/Step7Inspection.data'
+
 const PHASES = {
   option:     { color: '#f59e0b', label: 'Option period' },
   processing: { color: '#3b82f6', label: 'Processing' },
   funding:    { color: '#10b981', label: 'Funding' },
 }
+
+const PHASE_TINTS = {
+  option:     'border-amber-300 bg-amber-50/50',
+  processing: 'border-blue-300 bg-blue-50/50',
+  funding:    'border-green-300 bg-green-50/50',
+}
+
+const PRO_TIPS = [
+  {
+    seller: 'Allow 10 business days for the payoff statement to arrive — request it the day the contract is executed.',
+    title:  'Confirm the title company has the executed contract and earnest money before the third business day.',
+    buyer:  'Option Period runs from the Effective Date. Buyer can terminate fee-free until 5:00 PM on the final day.',
+  },
+  {
+    seller: 'If you have a recent T-47 affidavit, your existing survey may save ~$500 — confirm with the title company first.',
+    title:  'HOA management companies have up to 10 business days to respond. Order it the moment HOA dues are confirmed.',
+    buyer:  'Buyers typically complete inspections within the first 5 days of the Option Period to leave time for repair negotiation.',
+  },
+  {
+    seller: 'You are not obligated to make repairs, but your response is due before the Option Period ends — silence ends the option.',
+    title:  'Mechanic and tax liens must be resolved before closing — they can delay funding by days.',
+    buyer:  'If the appraisal comes in low, expect a renegotiation request — review TREC Addendum P (Loan Assumption) ahead of time.',
+  },
+  {
+    seller: 'Verify property tax prorations match your county most-recent statement, including any homestead or over-65 cap.',
+    title:  'The Closing Disclosure must be delivered to the buyer at least 3 business days before closing — federal TRID rule.',
+    buyer:  'Buyers should avoid new credit applications between appraisal and closing — it can re-trigger underwriting.',
+  },
+  {
+    seller: 'Bring a government-issued photo ID and your payoff statement. Confirm wire instructions by phone — never email.',
+    title:  'Recording at the county clerk happens after funding; expect 1–2 business days for the deed to appear in public records.',
+    buyer:  'Verify your bank wire transfer limits 24 hours in advance — daily caps can delay funding.',
+  },
+]
 
 const CLOSING_TIMELINE = [
   {
@@ -70,6 +108,10 @@ export default function ClosingTimeline({ daysToClose }) {
   const currentWeekIdx = getCurrentWeekIndex(daysToClose)
   const hasCurrent = currentWeekIdx !== -1
   const currentPhase = hasCurrent ? CLOSING_TIMELINE[currentWeekIdx].phase : null
+
+  const [activeTooltip, setActiveTooltip] = useState(null)
+  const [optionStatus, setOptionStatus] = useState({ hasDates: false, isActive: false, daysRemaining: null, hoursRemaining: null })
+  useEffect(() => { setOptionStatus(getOptionPeriodStatusFromStorage()) }, [daysToClose])
 
   return (
     <div className="overflow-x-auto -mx-1 px-1 pb-2">

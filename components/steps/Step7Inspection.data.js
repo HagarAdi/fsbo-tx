@@ -134,6 +134,44 @@ function getAcceptedOffer() {
   } catch { return null }
 }
 
+function getOptionPeriodStatus(dates) {
+  const startDate = dates?.startDate || ''
+  const endDate   = dates?.endDate   || ''
+  if (!startDate || !endDate) {
+    return {
+      hasDates: false, isActive: false, isExpired: false,
+      daysRemaining: null, hoursRemaining: null,
+      isLastDayBeforeFive: false, pctElapsed: 0, endDate: '',
+    }
+  }
+  const now = new Date()
+  const start    = new Date(startDate + 'T00:00:00')
+  const endAt5PM = new Date(endDate   + 'T17:00:00')
+  const totalMs   = endAt5PM - start
+  const elapsedMs = now - start
+  const isExpired = now >= endAt5PM
+  const pctElapsed = totalMs > 0 ? Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100)) : 0
+  let daysRemaining = null
+  let hoursRemaining = null
+  let isLastDayBeforeFive = false
+  if (!isExpired) {
+    const msLeft = endAt5PM - now
+    daysRemaining  = Math.floor(msLeft / 86400000)
+    hoursRemaining = Math.floor((msLeft % 86400000) / 3600000)
+    isLastDayBeforeFive = daysRemaining === 0
+  }
+  const isActive = !isExpired && now >= start
+  return { hasDates: true, isActive, isExpired, daysRemaining, hoursRemaining, isLastDayBeforeFive, pctElapsed, endDate }
+}
+
+function getOptionPeriodStatusFromStorage() {
+  const accepted = getAcceptedOffer()
+  return getOptionPeriodStatus({
+    startDate: accepted?.optionStartDate,
+    endDate:   accepted?.optionEndDate,
+  })
+}
+
 function getAcceptedOptionDays() {
   try {
     const accepted = getAcceptedOffer()
@@ -148,5 +186,6 @@ export {
   ACCENT, PURPLE, DRAWERS, SDN_ITEMS, SDN_TREC_INFO, PHASE_RANGES,
   TIMELINE, INFO_NOTES, FINDINGS, REQUEST_TYPES, RESPONSE_TYPES, RESPONSE_STYLE,
   PRO_TIPS, VENDORS, makeEmptyRequest, loadStep7, saveStep7, getAcceptedOffer,
-  getAcceptedOptionDays, inputCls,
+  getAcceptedOptionDays, getOptionPeriodStatus, getOptionPeriodStatusFromStorage,
+  inputCls,
 }
