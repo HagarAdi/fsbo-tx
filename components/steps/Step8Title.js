@@ -12,32 +12,32 @@ const CLOSING_TIMELINE = [
   {
     period: 'Week 1',
     seller: 'Request payoff statement from your lender',
-    title:  'Title co. orders title search and opens escrow account',
-    buyer:  "Buyer's option period begins — 10 days to inspect",
+    title:  'Order title search and open escrow account',
+    buyer:  'Option period begins — 10 days to inspect',
   },
   {
     period: 'Week 1–2',
     seller: 'Schedule survey if required by the contract',
-    title:  'Title co. sends HOA estoppel letter request (if applicable)',
-    buyer:  'Buyer completes inspections; submits any repair requests',
+    title:  'Send HOA estoppel letter request (if applicable)',
+    buyer:  'Complete inspections; submit any repair requests',
   },
   {
     period: 'Week 2–3',
     seller: 'Respond to buyer repair requests before Option Period ends',
-    title:  'Title co. clears liens; coordinates payoff with your lender',
-    buyer:  "Buyer's lender orders appraisal; loan processing begins",
+    title:  'Clear liens; coordinate payoff with your lender',
+    buyer:  'Lender orders appraisal; loan processing begins',
   },
   {
     period: 'Week 3',
     seller: 'Review closing disclosure for accuracy',
-    title:  'Title co. prepares and delivers closing disclosure (3 days before closing)',
-    buyer:  "Buyer's lender finishes underwriting; final loan approval (clear to close)",
+    title:  'Prepare and deliver closing disclosure (3 days before closing)',
+    buyer:  'Underwriting review; final loan approval (clear to close)',
   },
   {
     period: 'Closing day',
     seller: 'Sign documents and hand over keys',
-    title:  'Title co. records deed with county; wires net proceeds to you',
-    buyer:  'Buyer does final walkthrough; wires closing funds to escrow',
+    title:  'Record deed with county; wire net proceeds to you',
+    buyer:  'Final walkthrough; wire closing funds to escrow',
   },
 ]
 
@@ -157,45 +157,108 @@ export default function Step8Title({ onSelectStep }) {
             What each party is responsible for during the ~30-day closing window. Buyer tasks are shown for your awareness.
           </p>
 
-          <div className="space-y-4">
-            {CLOSING_TIMELINE.map(({ period, seller, title: titleTask, buyer }, i) => {
-              const isCurrent = i === currentWeekIdx
-              return (
-                <div
-                  key={i}
-                  className={`rounded-xl border bg-white px-5 py-5 transition ${
-                    isCurrent
-                      ? 'border-green-500 ring-2 ring-green-500 ring-offset-1'
-                      : 'border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2.5">
-                      <span
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                        style={{ backgroundColor: ACCENT }}
-                      >
-                        {i + 1}
-                      </span>
-                      <span className="text-sm font-semibold text-gray-900">{period}</span>
+          <div className="overflow-x-auto -mx-1 px-1 pb-2">
+            <div role="table" aria-label="Closing timeline by actor and week" style={{ minWidth: 640 }}>
+
+              {/* Column header row */}
+              <div role="row" className="grid gap-2 mb-2" style={{ gridTemplateColumns: '7rem repeat(5, minmax(0, 1fr))' }}>
+                <div aria-hidden />
+                {CLOSING_TIMELINE.map(({ period }, i) => {
+                  const isCurrent = i === currentWeekIdx
+                  return (
+                    <div
+                      key={i}
+                      role="columnheader"
+                      aria-current={isCurrent ? 'true' : undefined}
+                      className="flex flex-col items-start gap-1 px-1"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                          style={{ backgroundColor: ACCENT }}
+                        >
+                          {i + 1}
+                        </span>
+                        <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">{period}</span>
+                      </div>
+                      {isCurrent && (
+                        <span className="text-[9px] font-bold uppercase tracking-wide text-green-700 bg-green-100 rounded-full px-1.5 py-0.5">
+                          <span className="sr-only">Current week: </span>You are here
+                        </span>
+                      )}
                     </div>
-                    {isCurrent && (
-                      <span className="text-[10px] font-bold uppercase tracking-wide text-green-700 bg-green-100 rounded-full px-2 py-0.5">
-                        You are here
-                      </span>
-                    )}
-                  </div>
-                  <ul className="space-y-1.5 pl-1">
-                    <li className="flex gap-2 text-sm text-gray-900" aria-label="Your task">
-                      <span className="text-green-600 shrink-0" aria-hidden>▸</span>
-                      <span className="leading-snug">{seller}</span>
-                    </li>
-                    <li className="text-sm text-gray-600 leading-snug pl-5">{titleTask}</li>
-                    <li className="text-xs text-gray-500 leading-snug pl-5 italic">{buyer}</li>
-                  </ul>
+                  )
+                })}
+              </div>
+
+              {/* You row */}
+              <div role="row" className="grid gap-2 mb-2" style={{ gridTemplateColumns: '7rem repeat(5, minmax(0, 1fr))' }}>
+                <div role="rowheader" className="flex items-center gap-1.5 text-xs font-semibold text-gray-800 px-1">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: ACCENT }} aria-hidden />
+                  You
                 </div>
-              )
-            })}
+                {CLOSING_TIMELINE.map(({ seller }, i) => {
+                  const isCurrent = i === currentWeekIdx
+                  return (
+                    <div
+                      key={i}
+                      role="cell"
+                      aria-current={isCurrent ? 'true' : undefined}
+                      className={`rounded-xl border px-3 py-3 text-xs leading-snug text-gray-800 ${
+                        isCurrent ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'
+                      }`}
+                    >
+                      {seller}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Title row */}
+              <div role="row" className="grid gap-2 mb-2" style={{ gridTemplateColumns: '7rem repeat(5, minmax(0, 1fr))' }}>
+                <div role="rowheader" className="flex items-center text-xs font-semibold text-gray-700 px-1">
+                  Title co.
+                </div>
+                {CLOSING_TIMELINE.map(({ title: titleTask }, i) => {
+                  const isCurrent = i === currentWeekIdx
+                  return (
+                    <div
+                      key={i}
+                      role="cell"
+                      aria-current={isCurrent ? 'true' : undefined}
+                      className={`rounded-xl border px-3 py-3 text-xs leading-snug text-gray-700 ${
+                        isCurrent ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'
+                      }`}
+                    >
+                      {titleTask}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Buyer row */}
+              <div role="row" className="grid gap-2" style={{ gridTemplateColumns: '7rem repeat(5, minmax(0, 1fr))' }}>
+                <div role="rowheader" className="flex items-center text-xs font-semibold text-gray-500 px-1">
+                  Buyer
+                </div>
+                {CLOSING_TIMELINE.map(({ buyer }, i) => {
+                  const isCurrent = i === currentWeekIdx
+                  return (
+                    <div
+                      key={i}
+                      role="cell"
+                      aria-current={isCurrent ? 'true' : undefined}
+                      className={`rounded-xl border px-3 py-3 text-xs leading-snug italic text-gray-500 ${
+                        isCurrent ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'
+                      }`}
+                    >
+                      {buyer}
+                    </div>
+                  )
+                })}
+              </div>
+
+            </div>
           </div>
         </section>
 
