@@ -17,7 +17,7 @@ export default function Layout({ children }) {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const { homeAddress, showOnboarding, handleAddressSave } =
+  const { homeAddress, showOnboarding, handleAddressSave, fsboSavings } =
     useAppStateContext()
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
@@ -80,12 +80,21 @@ export default function Layout({ children }) {
             {/* Cockpit header — hidden on home (WelcomeScreen has its own) */}
             {!isHome && homeAddress && (
               <div
-                className="flex-shrink-0 flex items-center px-4 py-2 border-b border-gray-100 z-10"
+                className="flex-shrink-0 flex items-center gap-3 px-4 py-2 border-b border-gray-100 z-10"
                 style={{ backgroundColor: '#f0fdf4' }}
               >
-                <span className="text-xs text-gray-500 truncate">
+                <span className="text-xs text-gray-500 truncate flex-1 min-w-0">
                   📍 {homeAddress}
                 </span>
+                {fsboSavings && (
+                  <span className="text-xs flex items-center gap-1.5 flex-shrink-0">
+                    <span className="text-gray-400">💰 FSBO savings:</span>
+                    <span className="font-bold text-green-700">${fsboSavings.amount.toLocaleString()}</span>
+                    <span className="text-gray-400 hidden sm:inline">
+                      on ${fsboSavings.basisPrice.toLocaleString()} {fsboSavings.basis === 'accepted' ? 'accepted' : 'est.'}
+                    </span>
+                  </span>
+                )}
               </div>
             )}
 
