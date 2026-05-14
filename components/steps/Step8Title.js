@@ -8,10 +8,7 @@ import {
   loadStep8, saveStep8, daysUntilDate, loadStep8Overrides, initClosingDates, inputCls, updateAcceptedOffer,
 } from './Step8Title.data'
 import { calcNetProceeds, fmtCurrency } from './Step6Offers.data'
-import HelpTip from '../Tooltip'
 import ClosingTimeline from '../ClosingTimeline'
-
-const PARA_12_TOOLTIP = 'Check Paragraph 12A(1)(b) of the contract. This is the amount the buyer is asking you to pay toward their closing costs or agent fees.'
 
 const EDIT_TARGETS = {
   para12:       { kind: 'offer',    field: 'sellerContribution' },
@@ -31,7 +28,6 @@ function getTitleCo() {
 
 export default function Step8Title({ onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
-  const [activeTooltip, setActiveTooltip] = useState(null)
 
   const [titleCo] = useState(() => typeof window !== 'undefined' ? getTitleCo() : null)
 
@@ -392,9 +388,6 @@ export default function Step8Title({ onSelectStep }) {
                     <div className="flex justify-between items-center px-3 py-1.5 text-xs">
                       <span className="text-gray-500 flex items-center gap-1.5">
                         Para 12
-                        <HelpTip id="step8-para12" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                          {PARA_12_TOOLTIP}
-                        </HelpTip>
                         {renderPencil('para12', result.sellerContrib, 'Edit Para 12')}
                       </span>
                       <span className="text-gray-700 font-medium tabular-nums">
