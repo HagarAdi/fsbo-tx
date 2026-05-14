@@ -43,7 +43,7 @@ function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
           <p className="text-xl font-bold leading-none" style={{ color: r.net >= 0 ? '#15803d' : '#dc2626' }}>
             {fmtCurrency(String(Math.round(r.net)))}
           </p>
-          <p className="text-xs text-gray-400 mt-1">Est. net check</p>
+          <p className="text-xs text-gray-400 mt-1">Est. net proceeds</p>
         </div>
         <div className="flex-1 divide-y divide-gray-100">
           <div className="flex justify-between px-3 py-1.5 text-xs">

@@ -268,28 +268,44 @@ function getRedFlags(offer) {
   return RED_FLAG_CHECKS.filter(r => r.check(offer)).map(r => r.message)
 }
 
-function calcNetProceeds(offer, annualTaxesOverride) {
+function calcNetProceeds(offer, annualTaxesOverride, overrides = {}) {
   const price = parseFloat(offer?.price) || 0
   if (!price) return null
 
-  const sellerContrib = parseFloat(offer.sellerContribution) || 0
-  const titlePolicy = price > 100000 ? ((price - 100000) * 0.00494) + 780 : 780
-  const escrow = 600
+  const sellerContrib = parseFloat(overrides.sellerContribution ?? offer.sellerContribution) || 0
+  const titlePolicy = overrides.titlePolicy != null
+    ? parseFloat(overrides.titlePolicy) || 0
+    : price > 100000 ? ((price - 100000) * 0.00494) + 780 : 780
+  const escrow = overrides.escrow != null ? parseFloat(overrides.escrow) || 0 : 600
   const annualTax = annualTaxesOverride ? parseFloat(annualTaxesOverride) : price * 0.022
 
-  let taxProration = annualTax / 2
+  let taxProration
   let hasClosingDate = false
-  if (offer.closingDate) {
+  if (overrides.taxProration != null) {
+    taxProration = parseFloat(overrides.taxProration) || 0
+    hasClosingDate = !!offer.closingDate
+  } else if (offer.closingDate) {
     hasClosingDate = true
     const closing = new Date(offer.closingDate + 'T00:00:00')
     const janFirst = new Date(closing.getFullYear(), 0, 1)
     const daysElapsed = Math.round((closing - janFirst) / 86400000)
     taxProration = (annualTax / 365) * Math.max(0, daysElapsed)
+  } else {
+    taxProration = annualTax / 2
   }
 
-  const net = price - sellerContrib - titlePolicy - taxProration - escrow
+  const mortgagePayoff    = parseFloat(overrides.mortgagePayoff)    || 0
+  const hoaFees           = parseFloat(overrides.hoaFees)           || 0
+  const repairConcessions = parseFloat(overrides.repairConcessions) || 0
+  const misc              = parseFloat(overrides.misc)              || 0
 
-  return { price, sellerContrib, titlePolicy, taxProration, escrow, net, hasClosingDate }
+  const net = price - sellerContrib - mortgagePayoff - titlePolicy - escrow
+            - taxProration - hoaFees - repairConcessions - misc
+
+  return {
+    price, sellerContrib, mortgagePayoff, titlePolicy, escrow, taxProration,
+    hoaFees, repairConcessions, misc, net, hasClosingDate,
+  }
 }
 
 function loadStep6() {

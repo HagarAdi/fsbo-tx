@@ -7,7 +7,20 @@ import {
   NET_PROCEEDS_FIELDS, CLOSING_DATE_FIELDS,
   loadStep8, saveStep8, daysUntilDate, initNetProceeds, initClosingDates, inputCls,
 } from './Step8Title.data'
+import { calcNetProceeds } from './Step6Offers.data'
+import HelpTip from '../Tooltip'
 import ClosingTimeline from '../ClosingTimeline'
+
+const PARA_12_TOOLTIP = 'Check Paragraph 12A(1)(b) of the contract. This is the amount the buyer is asking you to pay toward their closing costs or agent fees.'
+
+function hasAcceptedOfferSellerContribution() {
+  if (typeof window === 'undefined') return false
+  try {
+    const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
+    const accepted = (all.step6?.offers || []).find(o => o.status === 'Accepted')
+    return !!(accepted && parseFloat(accepted.sellerContribution) > 0)
+  } catch { return false }
+}
 
 function getTitleCo() {
   try {
@@ -18,6 +31,7 @@ function getTitleCo() {
 
 export default function Step8Title({ onSelectStep }) {
   const [activeDrawer, setActiveDrawer] = useState(null)
+  const [activeTooltip, setActiveTooltip] = useState(null)
 
   const [titleCo] = useState(() => typeof window !== 'undefined' ? getTitleCo() : null)
 
@@ -38,18 +52,35 @@ export default function Step8Title({ onSelectStep }) {
     saveStep8({ titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, netProceeds, utilitiesChecked })
   }, [titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, netProceeds, utilitiesChecked])
 
-  const sp    = parseFloat(netProceeds.salePrice)      || 0
-  const mp    = parseFloat(netProceeds.mortgagePayoff)  || 0
-  const tf    = parseFloat(netProceeds.titleFees)       || 0
-  const pt    = parseFloat(netProceeds.propertyTaxes)   || 0
-  const hf    = parseFloat(netProceeds.hoaFees)         || 0
-  const rc    = parseFloat(netProceeds.repairCredits)   || 0
-  const baPct = parseFloat(netProceeds.buyerAgentPct)   || 0
-  const ba    = sp > 0 && baPct > 0 ? sp * baPct / 100 : 0
-  const ms    = parseFloat(netProceeds.misc)            || 0
-  const estimatedNet     = sp - mp - tf - pt - hf - rc - ba - ms
-  const listingAgentCost = sp * 0.03
+  const sp = parseFloat(netProceeds.salePrice)          || 0
+  const mp = parseFloat(netProceeds.mortgagePayoff)     || 0
+  const tf = parseFloat(netProceeds.titleFees)          || 0
+  const pt = parseFloat(netProceeds.propertyTaxes)      || 0
+  const hf = parseFloat(netProceeds.hoaFees)            || 0
+  const rc = parseFloat(netProceeds.repairCredits)      || 0
+  const sc = parseFloat(netProceeds.sellerContribution) || 0
+  const ms = parseFloat(netProceeds.misc)               || 0
+
+  const result = sp > 0
+    ? calcNetProceeds(
+        { price: sp, sellerContribution: sc, closingDate: closingDates.closingDate },
+        '',
+        {
+          mortgagePayoff: mp,
+          titlePolicy: tf,
+          escrow: 0,
+          taxProration: pt,
+          hoaFees: hf,
+          repairConcessions: rc,
+          misc: ms,
+        },
+      )
+    : null
+
+  const estimatedNet     = result ? Math.round(result.net) : 0
+  const listingAgentCost = Math.round(sp * 0.03)
   const withAgentNet     = estimatedNet - listingAgentCost
+  const scAutoFilled     = sc > 0 && hasAcceptedOfferSellerContribution()
 
   const daysToClose = daysUntilDate(closingDates.closingDate)
 
@@ -257,7 +288,14 @@ export default function Step8Title({ onSelectStep }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {NET_PROCEEDS_FIELDS.map(({ field, label, placeholder }) => (
                 <div key={field}>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">{label}</label>
+                  <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+                    {label}
+                    {field === 'sellerContribution' && (
+                      <HelpTip id="step8-para12" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                        {PARA_12_TOOLTIP}
+                      </HelpTip>
+                    )}
+                  </label>
                   <input
                     type="number"
                     min="0"
@@ -266,28 +304,38 @@ export default function Step8Title({ onSelectStep }) {
                     placeholder={placeholder}
                     className={inputCls}
                   />
+                  {field === 'sellerContribution' && scAutoFilled && (
+                    <button
+                      type="button"
+                      onClick={() => onSelectStep?.(6)}
+                      className="mt-1 text-xs font-semibold transition-opacity hover:opacity-80"
+                      style={{ color: PURPLE }}
+                    >
+                      Set in Step 6 →
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
 
-            {sp > 0 && (
+            {sp > 0 && result && (
               <div className="border-t border-gray-100 pt-4">
                 <div className="space-y-1.5 text-sm mb-4">
                   <div className="flex justify-between text-gray-700"><span>Sale price</span><span className="font-medium">${sp.toLocaleString()}</span></div>
+                  {sc > 0 && <div className="flex justify-between text-gray-500"><span>Less: Para 12 (seller concession)</span><span>−${sc.toLocaleString()}</span></div>}
                   {mp > 0 && <div className="flex justify-between text-gray-500"><span>Less: Mortgage payoff</span><span>−${mp.toLocaleString()}</span></div>}
                   {tf > 0 && <div className="flex justify-between text-gray-500"><span>Less: Title fees</span><span>−${tf.toLocaleString()}</span></div>}
                   {pt > 0 && <div className="flex justify-between text-gray-500"><span>Less: Property taxes</span><span>−${pt.toLocaleString()}</span></div>}
                   {hf > 0 && <div className="flex justify-between text-gray-500"><span>Less: HOA fees</span><span>−${hf.toLocaleString()}</span></div>}
                   {rc > 0 && <div className="flex justify-between text-gray-500"><span>Less: Repair credits</span><span>−${rc.toLocaleString()}</span></div>}
-                  {ba > 0 && <div className="flex justify-between text-gray-500"><span>Less: Buyer&apos;s agent ({baPct}%)</span><span>−${Math.round(ba).toLocaleString()}</span></div>}
                   {ms > 0 && <div className="flex justify-between text-gray-500"><span>Less: Miscellaneous</span><span>−${ms.toLocaleString()}</span></div>}
                 </div>
                 <div className="flex justify-between items-center px-4 py-3 rounded-xl font-bold text-base mb-3" style={{ backgroundColor: '#f0fdf4', color: ACCENT }}>
                   <span>Estimated net proceeds</span>
-                  <span className="text-2xl">${Math.round(estimatedNet).toLocaleString()}</span>
+                  <span className="text-2xl">${estimatedNet.toLocaleString()}</span>
                 </div>
                 <div className="px-4 py-3 rounded-xl text-sm" style={{ backgroundColor: '#f8fafc', color: '#64748b' }}>
-                  vs. with a listing agent (additional 3% = −${Math.round(listingAgentCost).toLocaleString()}): <span className="font-semibold">${Math.round(withAgentNet).toLocaleString()}</span>
+                  vs. with a listing agent (additional 3% = −${listingAgentCost.toLocaleString()}): <span className="font-semibold">${withAgentNet.toLocaleString()}</span>
                 </div>
               </div>
             )}

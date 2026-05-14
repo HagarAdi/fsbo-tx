@@ -95,14 +95,14 @@ const DOCUMENTS = [
 ]
 
 const NET_PROCEEDS_FIELDS = [
-  { field: 'salePrice',      label: 'Sale price ($)',                     placeholder: '' },
-  { field: 'mortgagePayoff', label: 'Mortgage payoff balance ($)',         placeholder: '' },
-  { field: 'titleFees',      label: 'Title company fees ($)',              placeholder: '1500' },
-  { field: 'propertyTaxes',  label: 'Property taxes owed — prorated ($)', placeholder: '' },
-  { field: 'hoaFees',        label: 'HOA fees owed ($)',                   placeholder: '' },
-  { field: 'repairCredits',  label: 'Repair credits agreed to ($)',        placeholder: '' },
-  { field: 'buyerAgentPct',  label: "Buyer's agent commission (%)",        placeholder: 'e.g. 2.5' },
-  { field: 'misc',           label: 'Miscellaneous costs ($)',             placeholder: '' },
+  { field: 'salePrice',          label: 'Sale price ($)',                      placeholder: '' },
+  { field: 'mortgagePayoff',     label: 'Mortgage payoff balance ($)',         placeholder: '' },
+  { field: 'titleFees',          label: 'Title company fees ($)',              placeholder: '1500' },
+  { field: 'propertyTaxes',      label: 'Property taxes owed — prorated ($)', placeholder: '' },
+  { field: 'hoaFees',            label: 'HOA fees owed ($)',                   placeholder: '' },
+  { field: 'repairCredits',      label: 'Repair credits agreed to ($)',        placeholder: '' },
+  { field: 'sellerContribution', label: 'Seller concession — Para 12 ($)',    placeholder: '' },
+  { field: 'misc',               label: 'Miscellaneous costs ($)',             placeholder: '' },
 ]
 
 const CLOSING_DATE_FIELDS = [
@@ -138,43 +138,42 @@ function daysUntilDate(dateStr) {
 
 function initNetProceeds() {
   if (typeof window === 'undefined') {
-    return { salePrice: '', mortgagePayoff: '', titleFees: 1500, propertyTaxes: '', hoaFees: '', repairCredits: '', buyerAgentPct: '', misc: '' }
+    return { salePrice: '', mortgagePayoff: '', titleFees: 1500, propertyTaxes: '', hoaFees: '', repairCredits: '', sellerContribution: '', misc: '' }
   }
   const saved = loadStep8().netProceeds || {}
+  const all = (() => { try { return JSON.parse(localStorage.getItem('fsbo_stepData') || '{}') } catch { return {} } })()
+  const accepted = (all.step6?.offers || []).find(o => o.status === 'Accepted')
+
   let salePrice = saved.salePrice ?? ''
-  if (salePrice === '') {
-    try {
-      const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
-      const accepted = (all.step6?.offers || []).find(o => o.status === 'Accepted')
-      if (accepted?.price) salePrice = accepted.price
-    } catch {}
-  }
+  if (salePrice === '' && accepted?.price) salePrice = accepted.price
   if (salePrice === '') {
     try {
       const pe = JSON.parse(localStorage.getItem('fsbo_priceEstimate') || 'null')
       if (pe?.currentEstimate) salePrice = pe.currentEstimate
     } catch {}
   }
+
   let repairCredits = saved.repairCredits ?? ''
   if (repairCredits === '') {
-    try {
-      const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
-      const total = (all.step7?.repairRequests || []).reduce((sum, r) => {
-        if (r.response === 'Decline') return sum
-        return sum + (r.response === 'Counter' ? parseFloat(r.counterAmount) || 0 : parseFloat(r.requestedAmount) || 0)
-      }, 0)
-      if (total > 0) repairCredits = total
-    } catch {}
+    const total = (all.step7?.repairRequests || []).reduce((sum, r) => {
+      if (r.response === 'Decline') return sum
+      return sum + (r.response === 'Counter' ? parseFloat(r.counterAmount) || 0 : parseFloat(r.requestedAmount) || 0)
+    }, 0)
+    if (total > 0) repairCredits = total
   }
+
+  let sellerContribution = saved.sellerContribution ?? ''
+  if (sellerContribution === '' && accepted?.sellerContribution) sellerContribution = accepted.sellerContribution
+
   return {
     salePrice,
-    mortgagePayoff: saved.mortgagePayoff ?? '',
-    titleFees:      saved.titleFees      ?? 1500,
-    propertyTaxes:  saved.propertyTaxes  ?? '',
-    hoaFees:        saved.hoaFees        ?? '',
+    mortgagePayoff:     saved.mortgagePayoff     ?? '',
+    titleFees:          saved.titleFees          ?? 1500,
+    propertyTaxes:      saved.propertyTaxes      ?? '',
+    hoaFees:            saved.hoaFees            ?? '',
     repairCredits,
-    buyerAgentPct:  saved.buyerAgentPct  ?? '',
-    misc:           saved.misc           ?? '',
+    sellerContribution,
+    misc:               saved.misc               ?? '',
   }
 }
 
