@@ -142,6 +142,19 @@ function daysUntilDate(dateStr) {
   return Math.round((target - today) / (1000 * 60 * 60 * 24))
 }
 
+function updateAcceptedOffer(field, value) {
+  if (typeof window === 'undefined') return
+  try {
+    const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
+    const offers = (all.step6?.offers || []).slice()
+    const idx = offers.findIndex(o => o.status === 'Accepted')
+    if (idx === -1) return
+    offers[idx] = { ...offers[idx], [field]: value }
+    localStorage.setItem('fsbo_stepData', JSON.stringify({ ...all, step6: { ...all.step6, offers } }))
+    notifyStepDataChange()
+  } catch {}
+}
+
 function loadStep8Overrides() {
   if (typeof window === 'undefined') return { ...NET_PROCEEDS_EMPTY }
   const saved = loadStep8().netProceeds || {}
@@ -239,5 +252,5 @@ export {
   PRO_TIPS_CLOSE, VENDORS_CLOSE, WIRE_FRAUD_SOURCE,
   UTILITIES, CLOSING_DAY_ITEMS, DOCUMENTS,
   NET_PROCEEDS_FIELDS, CLOSING_DATE_FIELDS, AUTOFILLABLE_FIELDS,
-  loadStep8, saveStep8, daysUntilDate, loadStep8Overrides, deriveStep8Defaults, initClosingDates, inputCls,
+  loadStep8, saveStep8, daysUntilDate, loadStep8Overrides, deriveStep8Defaults, initClosingDates, inputCls, updateAcceptedOffer,
 }

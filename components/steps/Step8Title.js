@@ -4,14 +4,23 @@ import {
   PAYOFF_CARDS, SURVEY_OPTIONS,
   PRO_TIPS_CLOSE, VENDORS_CLOSE, WIRE_FRAUD_SOURCE,
   UTILITIES, CLOSING_DAY_ITEMS, DOCUMENTS,
-  NET_PROCEEDS_FIELDS, CLOSING_DATE_FIELDS, AUTOFILLABLE_FIELDS,
-  loadStep8, saveStep8, daysUntilDate, loadStep8Overrides, deriveStep8Defaults, initClosingDates, inputCls,
+  CLOSING_DATE_FIELDS,
+  loadStep8, saveStep8, daysUntilDate, loadStep8Overrides, initClosingDates, inputCls, updateAcceptedOffer,
 } from './Step8Title.data'
-import { calcNetProceeds } from './Step6Offers.data'
+import { calcNetProceeds, fmtCurrency } from './Step6Offers.data'
 import HelpTip from '../Tooltip'
 import ClosingTimeline from '../ClosingTimeline'
 
 const PARA_12_TOOLTIP = 'Check Paragraph 12A(1)(b) of the contract. This is the amount the buyer is asking you to pay toward their closing costs or agent fees.'
+
+const EDIT_TARGETS = {
+  para12:       { kind: 'offer',    field: 'sellerContribution' },
+  titlePolicy:  { kind: 'offer',    field: 'titlePolicyOverride' },
+  tax:          { kind: 'override', field: 'propertyTaxes' },
+  mortgage:     { kind: 'override', field: 'mortgagePayoff' },
+  hoa:          { kind: 'override', field: 'hoaFees' },
+  misc:         { kind: 'override', field: 'misc' },
+}
 
 function getTitleCo() {
   try {
@@ -38,6 +47,8 @@ export default function Step8Title({ onSelectStep }) {
   const [closingDates, setClosingDates]   = useState(initClosingDates)
   const [utilitiesChecked, setUtilitiesChecked] = useState(() => typeof window === 'undefined' ? [] : (loadStep8().utilitiesChecked || []))
   const [closingDayChecked, setClosingDayChecked] = useState([])
+  const [editingField, setEditingField] = useState(null)
+  const [editDraft, setEditDraft] = useState('')
 
   const [upstreamTick, setUpstreamTick] = useState(0)
   useEffect(() => {
@@ -46,52 +57,107 @@ export default function Step8Title({ onSelectStep }) {
     return () => window.removeEventListener('fsbo_stepdata_changed', bump)
   }, [])
 
-  const defaults = useMemo(
-    () => deriveStep8Defaults(closingDates.closingDate, overrides.salePrice),
+  const accepted = useMemo(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
+      return (all.step6?.offers || []).find(o => o.status === 'Accepted') || null
+    } catch { return null }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [closingDates.closingDate, upstreamTick, overrides.salePrice],
-  )
+  }, [upstreamTick])
 
-  const readOnlyFields = new Set(NET_PROCEEDS_FIELDS.filter(f => f.readOnly).map(f => f.field))
-
-  const fields = AUTOFILLABLE_FIELDS.reduce((acc, f) => {
-    acc[f] = (readOnlyFields.has(f) || overrides[f] === '') ? defaults[f] : overrides[f]
-    return acc
-  }, { ...overrides })
+  const repairConcessionsFromStep7 = useMemo(() => {
+    if (typeof window === 'undefined') return 0
+    try {
+      const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
+      return (all.step7?.repairRequests || []).reduce((sum, r) => {
+        if (r.response === 'Decline') return sum
+        return sum + (r.response === 'Counter' ? parseFloat(r.counterAmount) || 0 : parseFloat(r.requestedAmount) || 0)
+      }, 0)
+    } catch { return 0 }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [upstreamTick])
 
   useEffect(() => {
     saveStep8({ titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, netProceeds: overrides, utilitiesChecked })
   }, [titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, overrides, utilitiesChecked])
 
-  const sp = parseFloat(fields.salePrice)          || 0
-  const mp = parseFloat(fields.mortgagePayoff)     || 0
-  const tf = parseFloat(fields.titleFees)          || 0
-  const pt = parseFloat(fields.propertyTaxes)      || 0
-  const hf = parseFloat(fields.hoaFees)            || 0
-  const rc = parseFloat(fields.repairCredits)      || 0
-  const sc = parseFloat(fields.sellerContribution) || 0
-  const ms = parseFloat(fields.misc)               || 0
+  const mp = parseFloat(overrides.mortgagePayoff)  || 0
+  const hf = parseFloat(overrides.hoaFees)         || 0
+  const ms = parseFloat(overrides.misc)            || 0
+  const ptOverride = overrides.propertyTaxes !== '' ? parseFloat(overrides.propertyTaxes) : null
 
-  const result = sp > 0
-    ? calcNetProceeds(
-        { price: sp, sellerContribution: sc, closingDate: closingDates.closingDate },
-        '',
-        {
-          mortgagePayoff: mp,
-          titlePolicy: tf,
-          escrow: 0,
-          taxProration: pt,
-          hoaFees: hf,
-          repairConcessions: rc,
-          misc: ms,
-        },
-      )
+  const offerForCalc = accepted ? { ...accepted, closingDate: accepted.closingDate || closingDates.closingDate } : null
+  const result = offerForCalc && parseFloat(offerForCalc.price) > 0
+    ? calcNetProceeds(offerForCalc, '', {
+        mortgagePayoff: mp,
+        hoaFees: hf,
+        repairConcessions: repairConcessionsFromStep7,
+        misc: ms,
+        ...(ptOverride != null ? { taxProration: ptOverride } : {}),
+      })
     : null
 
+  const sp = result ? result.price : 0
   const estimatedNet     = result ? Math.round(result.net) : 0
   const listingAgentCost = Math.round(sp * 0.03)
   const withAgentNet     = estimatedNet - listingAgentCost
-  const isAutofilled     = (f) => AUTOFILLABLE_FIELDS.includes(f) && overrides[f] === '' && defaults[f] !== ''
+
+  function startEdit(field, currentValue) {
+    setEditDraft(currentValue == null || currentValue === '' ? '' : String(Math.round(parseFloat(currentValue) || 0)))
+    setEditingField(field)
+  }
+  function commitEdit() {
+    const target = EDIT_TARGETS[editingField]
+    if (!target) { setEditingField(null); return }
+    if (editDraft === '') {
+      if (target.kind === 'offer')    updateAcceptedOffer(target.field, '')
+      if (target.kind === 'override') setOverrides(prev => ({ ...prev, [target.field]: '' }))
+    } else {
+      const amt = parseFloat(editDraft)
+      if (!isNaN(amt) && amt >= 0) {
+        if (target.kind === 'offer')    updateAcceptedOffer(target.field, amt)
+        if (target.kind === 'override') setOverrides(prev => ({ ...prev, [target.field]: editDraft }))
+      }
+    }
+    setEditingField(null)
+  }
+  function cancelEdit() { setEditingField(null) }
+
+  const renderPencil = (field, currentValue, ariaLabel) => (
+    editingField === field ? (
+      <span className="inline-flex items-center gap-1">
+        <span className="text-gray-400">$</span>
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={editDraft}
+          onChange={e => setEditDraft(e.target.value)}
+          onBlur={commitEdit}
+          onKeyDown={e => {
+            if (e.key === 'Enter') commitEdit()
+            if (e.key === 'Escape') cancelEdit()
+          }}
+          autoFocus
+          aria-label={ariaLabel}
+          className="w-20 px-1.5 py-0.5 rounded border border-gray-200 text-xs text-gray-700 tabular-nums focus:outline-none focus:ring-1 focus:ring-green-500"
+        />
+      </span>
+    ) : (
+      <button
+        type="button"
+        onClick={() => startEdit(field, currentValue)}
+        aria-label={ariaLabel}
+        title={ariaLabel}
+        className="text-gray-300 hover:text-gray-600 transition-colors"
+      >
+        <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M11.5 2.5l2 2-8 8-2.5.5.5-2.5 8-8z" />
+        </svg>
+      </button>
+    )
+  )
 
   const daysToClose = daysUntilDate(closingDates.closingDate)
 
@@ -293,74 +359,123 @@ export default function Step8Title({ onSelectStep }) {
         {/* Net Proceeds Calculator */}
         <section className="mb-8">
           <h3 className="text-xl font-bold text-gray-900 mb-1">Net Proceeds Calculator 💰</h3>
-          <p className="text-sm text-gray-500 mb-5">What will you actually walk away with after closing costs?</p>
+          <p className="text-sm text-gray-500 mb-5">What will you actually walk away with after closing costs? Auto-filled from the accepted Step 6 offer; click any pencil to override.</p>
 
-          <div className="rounded-xl border-2 border-green-200 bg-white px-5 py-5" style={{ boxShadow: '0 0 0 4px #f0fdf4' }}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              {NET_PROCEEDS_FIELDS.map(({ field, label, placeholder, readOnly }) => {
-                const autofilled = readOnly || isAutofilled(field)
-                const showJumpLink = readOnly || (autofilled && (field === 'sellerContribution' || field === 'repairCredits'))
-                return (
-                  <div key={field}>
-                    <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
-                      {label}
-                      {field === 'sellerContribution' && (
+          {!result && (
+            <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 text-sm text-gray-500">
+              No accepted offer in Step 6 yet — mark an offer as <span className="font-semibold">Accepted</span> there to populate this panel.
+            </div>
+          )}
+
+          {result && (
+            <>
+              <div className="rounded-xl border border-gray-100 overflow-hidden bg-white">
+                <div className="flex">
+                  <div className="px-4 py-4 flex flex-col items-center justify-center min-w-[140px]" style={{ backgroundColor: '#f0fdf4' }}>
+                    <p className="text-2xl font-bold leading-none" style={{ color: estimatedNet >= 0 ? '#15803d' : '#dc2626' }}>
+                      {fmtCurrency(String(estimatedNet))}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1 text-center">Est. net proceeds</p>
+                  </div>
+                  <div className="flex-1 divide-y divide-gray-100">
+
+                    <div className="flex justify-between items-center px-3 py-1.5 text-xs">
+                      <span className="text-gray-500 flex items-center gap-1.5">
+                        Sale price
+                        <button type="button" onClick={() => onSelectStep?.(6)} className="text-[10px] font-semibold uppercase tracking-wide hover:opacity-80" style={{ color: PURPLE }}>
+                          Set in Step 6 →
+                        </button>
+                      </span>
+                      <span className="text-gray-800 font-bold tabular-nums">{fmtCurrency(String(sp))}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center px-3 py-1.5 text-xs">
+                      <span className="text-gray-500 flex items-center gap-1.5">
+                        Para 12
                         <HelpTip id="step8-para12" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
                           {PARA_12_TOOLTIP}
                         </HelpTip>
-                      )}
-                      {autofilled && (
-                        <span className="ml-2 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded" style={{ backgroundColor: '#ede9fe', color: PURPLE }}>
-                          Auto
-                        </span>
-                      )}
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={fields[field]}
-                      onChange={readOnly ? undefined : e => setOverrides(prev => ({ ...prev, [field]: e.target.value }))}
-                      placeholder={placeholder}
-                      readOnly={!!readOnly}
-                      className={`${inputCls}${readOnly ? ' bg-gray-50 text-gray-600 cursor-not-allowed' : ''}`}
-                    />
-                    {showJumpLink && (
-                      <button
-                        type="button"
-                        onClick={() => onSelectStep?.(field === 'repairCredits' ? 7 : 6)}
-                        className="mt-1 text-xs font-semibold transition-opacity hover:opacity-80"
-                        style={{ color: PURPLE }}
-                      >
-                        {field === 'repairCredits' ? 'Set in Step 7 →' : 'Set in Step 6 →'}
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+                        {renderPencil('para12', result.sellerContrib, 'Edit Para 12')}
+                      </span>
+                      <span className="text-gray-700 font-medium tabular-nums">
+                        {result.sellerContrib > 0 ? `−${fmtCurrency(String(Math.round(result.sellerContrib)))}` : '—'}
+                      </span>
+                    </div>
 
-            {sp > 0 && result && (
-              <div className="border-t border-gray-100 pt-4">
-                <div className="space-y-1.5 text-sm mb-4">
-                  <div className="flex justify-between text-gray-700"><span>Sale price</span><span className="font-medium">${sp.toLocaleString()}</span></div>
-                  {sc > 0 && <div className="flex justify-between text-gray-500"><span>Less: Para 12 (seller concession)</span><span>−${sc.toLocaleString()}</span></div>}
-                  {mp > 0 && <div className="flex justify-between text-gray-500"><span>Less: Mortgage payoff</span><span>−${mp.toLocaleString()}</span></div>}
-                  {tf > 0 && <div className="flex justify-between text-gray-500"><span>Less: Title fees</span><span>−${tf.toLocaleString()}</span></div>}
-                  {pt > 0 && <div className="flex justify-between text-gray-500"><span>Less: Property taxes</span><span>−${pt.toLocaleString()}</span></div>}
-                  {hf > 0 && <div className="flex justify-between text-gray-500"><span>Less: HOA fees</span><span>−${hf.toLocaleString()}</span></div>}
-                  {rc > 0 && <div className="flex justify-between text-gray-500"><span>Less: Repair credits</span><span>−${rc.toLocaleString()}</span></div>}
-                  {ms > 0 && <div className="flex justify-between text-gray-500"><span>Less: Miscellaneous</span><span>−${ms.toLocaleString()}</span></div>}
-                </div>
-                <div className="flex justify-between items-center px-4 py-3 rounded-xl font-bold text-base mb-3" style={{ backgroundColor: '#f0fdf4', color: ACCENT }}>
-                  <span>Estimated net proceeds</span>
-                  <span className="text-2xl">${estimatedNet.toLocaleString()}</span>
-                </div>
-                <div className="px-4 py-3 rounded-xl text-sm" style={{ backgroundColor: '#f8fafc', color: '#64748b' }}>
-                  vs. with a listing agent (additional 3% = −${listingAgentCost.toLocaleString()}): <span className="font-semibold">${withAgentNet.toLocaleString()}</span>
+                    <div className="flex justify-between items-center px-3 py-1.5 text-xs">
+                      <span className="text-gray-500 flex items-center gap-1.5">
+                        Title Policy
+                        {renderPencil('titlePolicy', result.titlePolicy, 'Edit title policy amount')}
+                        <span className="text-gray-300">·</span>
+                        <span className="text-gray-400">{Math.round(result.titlePolicy) > 0 ? 'Paid by you' : 'Paid by buyer'}</span>
+                      </span>
+                      <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(result.titlePolicy)))}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center px-3 py-1.5 text-xs">
+                      <span className="text-gray-500 flex items-center gap-1.5">
+                        Tax{!result.hasClosingDate ? ' (est.)' : ''}
+                        {renderPencil('tax', result.taxProration, 'Edit prorated property tax')}
+                      </span>
+                      <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(result.taxProration)))}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center px-3 py-1.5 text-xs">
+                      <span className="text-gray-500">Escrow &amp; Rec.</span>
+                      <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(result.escrow))}</span>
+                    </div>
+
+                    {result.repairConcessions > 0 && (
+                      <div className="flex justify-between items-center px-3 py-1.5 text-xs bg-amber-50">
+                        <span className="text-amber-700 font-semibold flex items-center gap-1.5">
+                          Repair Concessions
+                          <button type="button" onClick={() => onSelectStep?.(7)} className="text-[10px] font-semibold uppercase tracking-wide hover:opacity-80" style={{ color: PURPLE }}>
+                            Set in Step 7 →
+                          </button>
+                        </span>
+                        <span className="text-amber-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(result.repairConcessions)))}</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-center px-3 py-1.5 text-xs">
+                      <span className="text-gray-500 flex items-center gap-1.5">
+                        Mortgage payoff
+                        {renderPencil('mortgage', result.mortgagePayoff, 'Edit mortgage payoff balance')}
+                      </span>
+                      <span className="text-gray-700 font-medium tabular-nums">
+                        {result.mortgagePayoff > 0 ? `−${fmtCurrency(String(Math.round(result.mortgagePayoff)))}` : '—'}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center px-3 py-1.5 text-xs">
+                      <span className="text-gray-500 flex items-center gap-1.5">
+                        HOA fees owed
+                        {renderPencil('hoa', result.hoaFees, 'Edit HOA fees')}
+                      </span>
+                      <span className="text-gray-700 font-medium tabular-nums">
+                        {result.hoaFees > 0 ? `−${fmtCurrency(String(Math.round(result.hoaFees)))}` : '—'}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center px-3 py-1.5 text-xs">
+                      <span className="text-gray-500 flex items-center gap-1.5">
+                        Miscellaneous
+                        {renderPencil('misc', result.misc, 'Edit miscellaneous costs')}
+                      </span>
+                      <span className="text-gray-700 font-medium tabular-nums">
+                        {result.misc > 0 ? `−${fmtCurrency(String(Math.round(result.misc)))}` : '—'}
+                      </span>
+                    </div>
+
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
+
+              <div className="mt-3 px-4 py-3 rounded-xl text-sm" style={{ backgroundColor: '#f8fafc', color: '#64748b' }}>
+                vs. with a listing agent (additional 3% = −${listingAgentCost.toLocaleString()}): <span className="font-semibold">${withAgentNet.toLocaleString()}</span>
+              </div>
+            </>
+          )}
         </section>
 
         {/* Closing Date Tracker */}
