@@ -58,12 +58,25 @@ export function useAppState() {
     .filter(([, status]) => status === 'complete')
     .map(([id]) => Number(id))
 
+  const accepted = (stepData?.step6?.offers || []).find((o) => o.status === 'Accepted')
+  const acceptedPrice = parseFloat(accepted?.price) || 0
+  const estimatePrice = parseFloat(priceEstimate?.currentEstimate) || 0
+  const basisPrice = acceptedPrice > 0 ? acceptedPrice : estimatePrice
+  const fsboSavings = basisPrice > 0
+    ? {
+        amount: Math.round(basisPrice * 0.03),
+        basisPrice: Math.round(basisPrice),
+        basis: acceptedPrice > 0 ? 'accepted' : 'estimate',
+      }
+    : null
+
   return {
     homeAddress,
     showOnboarding,
     stepStatuses,
     completed,
     priceEstimate,
+    fsboSavings,
     handleAddressSave,
     handleShowOnboarding,
     handlePriceUpdate,

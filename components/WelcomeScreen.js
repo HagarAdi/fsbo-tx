@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { steps } from '../data/steps'
+import { useAppStateContext } from '../hooks/AppStateContext'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -169,18 +170,16 @@ function HeroCard({ allDone, nextStep, onSelectStep }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, priceEstimate, completedSteps = [], onSelectStep }) {
+export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, completedSteps = [], onSelectStep }) {
+  const { fsboSavings } = useAppStateContext()
   const { showings } = useShowingData()
   const { showingCount, activeDays } = deriveStats(showings)
 
   const nextStep = steps.find((s) => !completedSteps.includes(s.id))
   const allDone  = !nextStep
-  const savings  = priceEstimate?.currentEstimate
-    ? Math.round(priceEstimate.currentEstimate * 0.03).toLocaleString()
-    : null
-  const estimate = priceEstimate?.currentEstimate
-    ? `$${Math.round(priceEstimate.currentEstimate).toLocaleString()}`
-    : null
+  const savings  = fsboSavings ? fsboSavings.amount.toLocaleString() : null
+  const estimate = fsboSavings ? `$${fsboSavings.basisPrice.toLocaleString()}` : null
+  const basisLabel = fsboSavings?.basis === 'accepted' ? 'accepted' : 'est.'
   const svUrl    = streetViewUrl(homeAddress)
   const inMarket = completedSteps.includes(4) || completedSteps.includes(5)
 
@@ -228,7 +227,7 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, pric
             </button>
           )}
           {estimate && (
-            <p className="text-[10px] text-slate-500">on {estimate} est.</p>
+            <p className="text-[10px] text-slate-500">on {estimate} {basisLabel}</p>
           )}
         </div>
       </div>
