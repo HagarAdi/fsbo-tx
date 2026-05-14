@@ -514,7 +514,7 @@ export default function Step8Title({ onSelectStep }) {
             className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
             style={{ backgroundColor: ACCENT }}
           >
-            Next up: Closing Day →
+            Move to the next step: Closing Day →
           </button>
         </div>
       </div>

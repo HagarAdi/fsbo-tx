@@ -960,7 +960,7 @@ export default function Step4Listing({ onSelectStep }) {
                     <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-center justify-between gap-4">
                       <p className="text-sm text-amber-800">Complete Step 1 first to auto-fill your home specs</p>
                       <button type="button" onClick={() => onSelectStep && onSelectStep(1)} className="flex-shrink-0 text-sm font-semibold underline underline-offset-2 text-amber-700 hover:text-amber-900 transition-colors">
-                        Go to Step 1 →
+                        Open Step 1: Price Your Home Correctly →
                       </button>
                     </div>
                   )}
@@ -1275,7 +1275,7 @@ export default function Step4Listing({ onSelectStep }) {
                       ← Back
                     </button>
                     <button type="button" onClick={() => onSelectStep && onSelectStep(5)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
-                      Next up: Showings &amp; Open Houses →
+                      Move to the next step: Showings &amp; Open Houses →
                     </button>
                   </div>
                 </div>

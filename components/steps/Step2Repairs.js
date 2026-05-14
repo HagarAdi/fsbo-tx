@@ -427,7 +427,7 @@ export default function Step2Repairs({ onSelectStep }) {
                 className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: ACCENT }}
               >
-                Next up: Staging &amp; Curb Appeal →
+                Move to the next step: Staging &amp; Curb Appeal →
               </button>
             </div>
           </div>

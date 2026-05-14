@@ -597,7 +597,7 @@ export default function Step3Staging({ onSelectStep }) {
                         ← Back
                       </button>
                       <button type="button" onClick={() => setShowMilestone(true)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
-                        Next up: Photography &amp; Listing →
+                        Move to the next step: Photography &amp; Listing →
                       </button>
                     </div>
                   </div>
@@ -664,7 +664,7 @@ export default function Step3Staging({ onSelectStep }) {
         phaseTitle="Prepare phase complete!"
         subtitle="Pricing, repairs, and staging — done. Most sellers spend weeks here. You crushed it. Time to take it to market."
         summaryItems={showMilestone ? buildPrepareSummary() : []}
-        continueLabel="Continue to Step 4: Listing →"
+        continueLabel="Move to the next step: Photography & Listing →"
         badge="Phase 1 of 3 unlocked"
       />
     </div>

@@ -407,7 +407,7 @@ export default function Step5Showings({ onSelectStep }) {
                       className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
                       style={{ backgroundColor: ACCENT }}
                     >
-                      Next up: Review &amp; Negotiate Offers →
+                      Move to the next step: Review &amp; Negotiate Offers →
                     </button>
                   </div>
                 </div>
@@ -538,7 +538,7 @@ export default function Step5Showings({ onSelectStep }) {
         phaseTitle="Market phase complete!"
         subtitle="Your home is live, showings are set up, and the title company is lined up. The hard part is behind you — now the offers come in."
         summaryItems={showMilestone ? buildMarketSummary() : []}
-        continueLabel="Continue to Step 6: Offers →"
+        continueLabel="Move to the next step: Review & Negotiate Offers →"
         badge="Phase 2 of 3 unlocked"
       />
     </>
