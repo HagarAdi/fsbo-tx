@@ -1,26 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   ACCENT, PURPLE, DRAWERS,
   PAYOFF_CARDS, SURVEY_OPTIONS,
   PRO_TIPS_CLOSE, VENDORS_CLOSE, WIRE_FRAUD_SOURCE,
   UTILITIES, CLOSING_DAY_ITEMS, DOCUMENTS,
-  NET_PROCEEDS_FIELDS, CLOSING_DATE_FIELDS,
-  loadStep8, saveStep8, daysUntilDate, initNetProceeds, initClosingDates, inputCls,
+  NET_PROCEEDS_FIELDS, CLOSING_DATE_FIELDS, AUTOFILLABLE_FIELDS,
+  loadStep8, saveStep8, daysUntilDate, loadStep8Overrides, deriveStep8Defaults, initClosingDates, inputCls,
 } from './Step8Title.data'
 import { calcNetProceeds } from './Step6Offers.data'
 import HelpTip from '../Tooltip'
 import ClosingTimeline from '../ClosingTimeline'
 
 const PARA_12_TOOLTIP = 'Check Paragraph 12A(1)(b) of the contract. This is the amount the buyer is asking you to pay toward their closing costs or agent fees.'
-
-function hasAcceptedOfferSellerContribution() {
-  if (typeof window === 'undefined') return false
-  try {
-    const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
-    const accepted = (all.step6?.offers || []).find(o => o.status === 'Accepted')
-    return !!(accepted && parseFloat(accepted.sellerContribution) > 0)
-  } catch { return false }
-}
 
 function getTitleCo() {
   try {
@@ -41,25 +32,43 @@ export default function Step8Title({ onSelectStep }) {
   const [payoffRequested, setPayoffRequested]             = useState(() => typeof window === 'undefined' ? false : (loadStep8().payoffRequested || false))
   const [surveyStatus, setSurveyStatus]   = useState(() => typeof window === 'undefined' ? '' : (loadStep8().surveyStatus || ''))
   const [surveyConfirmed, setSurveyConfirmed] = useState(() => typeof window === 'undefined' ? false : (loadStep8().surveyConfirmed || false))
-  const [netProceeds, setNetProceeds]     = useState(initNetProceeds)
+  const [overrides, setOverrides] = useState(loadStep8Overrides)
   const [wireFraudAcknowledged, setWireFraudAcknowledged] = useState(() => typeof window === 'undefined' ? false : (loadStep8().wireFraudAcknowledged || false))
   const [documentsChecked, setDocumentsChecked] = useState(() => typeof window === 'undefined' ? [] : (loadStep8().documentsChecked || []))
   const [closingDates, setClosingDates]   = useState(initClosingDates)
   const [utilitiesChecked, setUtilitiesChecked] = useState(() => typeof window === 'undefined' ? [] : (loadStep8().utilitiesChecked || []))
   const [closingDayChecked, setClosingDayChecked] = useState([])
 
+  const [upstreamTick, setUpstreamTick] = useState(0)
   useEffect(() => {
-    saveStep8({ titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, netProceeds, utilitiesChecked })
-  }, [titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, netProceeds, utilitiesChecked])
+    function bump() { setUpstreamTick(t => t + 1) }
+    window.addEventListener('fsbo_stepdata_changed', bump)
+    return () => window.removeEventListener('fsbo_stepdata_changed', bump)
+  }, [])
 
-  const sp = parseFloat(netProceeds.salePrice)          || 0
-  const mp = parseFloat(netProceeds.mortgagePayoff)     || 0
-  const tf = parseFloat(netProceeds.titleFees)          || 0
-  const pt = parseFloat(netProceeds.propertyTaxes)      || 0
-  const hf = parseFloat(netProceeds.hoaFees)            || 0
-  const rc = parseFloat(netProceeds.repairCredits)      || 0
-  const sc = parseFloat(netProceeds.sellerContribution) || 0
-  const ms = parseFloat(netProceeds.misc)               || 0
+  const defaults = useMemo(
+    () => deriveStep8Defaults(closingDates.closingDate),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [closingDates.closingDate, upstreamTick],
+  )
+
+  const fields = AUTOFILLABLE_FIELDS.reduce((acc, f) => {
+    acc[f] = overrides[f] !== '' ? overrides[f] : defaults[f]
+    return acc
+  }, { ...overrides })
+
+  useEffect(() => {
+    saveStep8({ titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, netProceeds: overrides, utilitiesChecked })
+  }, [titleOpened, hasHOA, hoaClearanceRequested, payoffRequested, surveyStatus, surveyConfirmed, closingDates, documentsChecked, wireFraudAcknowledged, overrides, utilitiesChecked])
+
+  const sp = parseFloat(fields.salePrice)          || 0
+  const mp = parseFloat(fields.mortgagePayoff)     || 0
+  const tf = parseFloat(fields.titleFees)          || 0
+  const pt = parseFloat(fields.propertyTaxes)      || 0
+  const hf = parseFloat(fields.hoaFees)            || 0
+  const rc = parseFloat(fields.repairCredits)      || 0
+  const sc = parseFloat(fields.sellerContribution) || 0
+  const ms = parseFloat(fields.misc)               || 0
 
   const result = sp > 0
     ? calcNetProceeds(
@@ -80,7 +89,7 @@ export default function Step8Title({ onSelectStep }) {
   const estimatedNet     = result ? Math.round(result.net) : 0
   const listingAgentCost = Math.round(sp * 0.03)
   const withAgentNet     = estimatedNet - listingAgentCost
-  const scAutoFilled     = sc > 0 && hasAcceptedOfferSellerContribution()
+  const isAutofilled     = (f) => AUTOFILLABLE_FIELDS.includes(f) && overrides[f] === '' && defaults[f] !== ''
 
   const daysToClose = daysUntilDate(closingDates.closingDate)
 
@@ -286,36 +295,44 @@ export default function Step8Title({ onSelectStep }) {
 
           <div className="rounded-xl border-2 border-green-200 bg-white px-5 py-5" style={{ boxShadow: '0 0 0 4px #f0fdf4' }}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              {NET_PROCEEDS_FIELDS.map(({ field, label, placeholder }) => (
-                <div key={field}>
-                  <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
-                    {label}
-                    {field === 'sellerContribution' && (
-                      <HelpTip id="step8-para12" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
-                        {PARA_12_TOOLTIP}
-                      </HelpTip>
+              {NET_PROCEEDS_FIELDS.map(({ field, label, placeholder }) => {
+                const autofilled = isAutofilled(field)
+                return (
+                  <div key={field}>
+                    <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
+                      {label}
+                      {field === 'sellerContribution' && (
+                        <HelpTip id="step8-para12" activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip}>
+                          {PARA_12_TOOLTIP}
+                        </HelpTip>
+                      )}
+                      {autofilled && (
+                        <span className="ml-2 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded" style={{ backgroundColor: '#ede9fe', color: PURPLE }}>
+                          Auto
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={fields[field]}
+                      onChange={e => setOverrides(prev => ({ ...prev, [field]: e.target.value }))}
+                      placeholder={placeholder}
+                      className={inputCls}
+                    />
+                    {autofilled && (field === 'sellerContribution' || field === 'repairCredits') && (
+                      <button
+                        type="button"
+                        onClick={() => onSelectStep?.(field === 'repairCredits' ? 7 : 6)}
+                        className="mt-1 text-xs font-semibold transition-opacity hover:opacity-80"
+                        style={{ color: PURPLE }}
+                      >
+                        {field === 'repairCredits' ? 'Set in Step 7 →' : 'Set in Step 6 →'}
+                      </button>
                     )}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={netProceeds[field]}
-                    onChange={e => setNetProceeds(prev => ({ ...prev, [field]: e.target.value }))}
-                    placeholder={placeholder}
-                    className={inputCls}
-                  />
-                  {field === 'sellerContribution' && scAutoFilled && (
-                    <button
-                      type="button"
-                      onClick={() => onSelectStep?.(6)}
-                      className="mt-1 text-xs font-semibold transition-opacity hover:opacity-80"
-                      style={{ color: PURPLE }}
-                    >
-                      Set in Step 6 →
-                    </button>
-                  )}
-                </div>
-              ))}
+                  </div>
+                )
+              })}
             </div>
 
             {sp > 0 && result && (
