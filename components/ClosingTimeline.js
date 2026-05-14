@@ -104,6 +104,14 @@ function getCurrentWeekIndex(daysToClose) {
   return 4
 }
 
+function RoleLabel({ children }) {
+  return (
+    <div className="self-center text-[10px] uppercase tracking-wider font-semibold text-gray-400 pr-2 text-right">
+      {children}
+    </div>
+  )
+}
+
 export default function ClosingTimeline({ daysToClose }) {
   const currentWeekIdx = getCurrentWeekIndex(daysToClose)
   const hasCurrent = currentWeekIdx !== -1
@@ -112,6 +120,19 @@ export default function ClosingTimeline({ daysToClose }) {
   const [activeTooltip, setActiveTooltip] = useState(null)
   const [optionStatus, setOptionStatus] = useState({ hasDates: false, isActive: false, daysRemaining: null, hoursRemaining: null })
   useEffect(() => { setOptionStatus(getOptionPeriodStatusFromStorage()) }, [daysToClose])
+
+  const gridTemplateColumns = hasCurrent
+    ? '84px ' + CLOSING_TIMELINE.map((_, i) => (i === currentWeekIdx ? '2.4fr' : '0.65fr')).join(' ')
+    : '84px repeat(5, minmax(0, 1fr))'
+
+  const cellMeta = (i, phase) => {
+    const isActive = !hasCurrent || i === currentWeekIdx
+    return {
+      isActive,
+      cardCls: isActive ? PHASE_TINTS[phase] : 'border-gray-200 bg-white',
+      tipAlign: i === 0 ? 'start' : i === 4 ? 'end' : 'center',
+    }
+  }
 
   return (
     <div className="overflow-x-auto -mx-1 px-1 pb-2">
@@ -136,45 +157,60 @@ export default function ClosingTimeline({ daysToClose }) {
         </span>
       )}
 
-      <ol
-        role="list"
+      <div
+        role="grid"
         aria-label="Closing timeline by week"
-        className="relative grid grid-cols-5 gap-2"
-        style={{ minWidth: 760 }}
+        className="relative grid gap-2 transition-[grid-template-columns] duration-300 ease-out"
+        style={{ gridTemplateColumns, minWidth: 760 }}
       >
-        <div aria-hidden className="absolute left-[10%] right-[10%] top-1/2 -translate-y-1/2 flex pointer-events-none">
+        <div aria-hidden />
+        {CLOSING_TIMELINE.map((row, i) => (
+          <div key={`hdr-${i}`} className="text-center text-[11px] font-semibold text-gray-700 whitespace-nowrap">
+            {row.period}
+          </div>
+        ))}
+
+        <RoleLabel>You</RoleLabel>
+        {CLOSING_TIMELINE.map((row, i) => {
+          const { isActive, cardCls, tipAlign } = cellMeta(i, row.phase)
+          return (
+            <div key={`s-${i}`} className={`rounded-xl border px-3 py-3 text-left ${cardCls} ${isActive ? '' : 'self-start'}`}>
+              <span className="inline-flex items-baseline">
+                <span className="text-xs font-bold text-gray-900 leading-snug">{row.sellerShort}</span>
+                {isActive && (
+                  <HelpTip id={`ct-${i}-seller`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} placement="bottom" align={tipAlign}>
+                    {PRO_TIPS[i].seller}
+                  </HelpTip>
+                )}
+              </span>
+              {isActive && <p className="text-[11px] text-gray-600 leading-snug mt-1">{row.seller}</p>}
+            </div>
+          )
+        })}
+
+        <div aria-hidden />
+        <div
+          aria-hidden
+          style={{ gridColumn: '2 / -1', gridRow: 3 }}
+          className="self-center h-1 flex pointer-events-none mx-[10%]"
+        >
           {CLOSING_TIMELINE.slice(0, 4).map((_, i) => {
             const segPhase = CLOSING_TIMELINE[i + 1].phase
             return <div key={i} className="flex-1 h-1" style={{ backgroundColor: PHASES[segPhase].color }} />
           })}
         </div>
-
         {CLOSING_TIMELINE.map((row, i) => {
           const phase = PHASES[row.phase]
           const isCurrent = i === currentWeekIdx
-          const cardCls = isCurrent
-            ? PHASE_TINTS[row.phase]
-            : 'border-gray-200 bg-white'
-          const tipAlign = i === 0 ? 'start' : i === 4 ? 'end' : 'center'
           return (
-            <li key={i} role="listitem" className="relative flex flex-col items-center">
-
-              <div className={`w-full rounded-xl border px-3 py-3 mb-2 text-left ${cardCls}`}>
-                <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold mb-0.5">You</p>
-                <span className="inline-flex items-baseline">
-                  <span className="text-xs font-bold text-gray-900 leading-snug">{row.sellerShort}</span>
-                  <HelpTip id={`ct-${i}-seller`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} placement="bottom" align={tipAlign}>
-                    {PRO_TIPS[i].seller}
-                  </HelpTip>
-                </span>
-                <p className="text-[11px] text-gray-600 leading-snug mt-1">{row.seller}</p>
-              </div>
-
-              <div aria-hidden className="w-px h-[5px] bg-gray-300" />
-
+            <div
+              key={`st-${i}`}
+              style={{ gridColumn: i + 2, gridRow: 3 }}
+              className="relative z-10 flex justify-center items-center"
+            >
               <div
                 aria-current={isCurrent ? 'true' : undefined}
-                className={`relative z-10 rounded-full flex items-center justify-center font-bold text-white shrink-0 ring-4 ring-white transition-transform ${
+                className={`rounded-full flex items-center justify-center font-bold text-white shrink-0 ring-4 ring-white transition-transform ${
                   isCurrent && i === 4 ? 'w-10 h-10 text-base scale-[1.15]' : 'w-9 h-9 text-sm'
                 }`}
                 style={{
@@ -185,51 +221,61 @@ export default function ClosingTimeline({ daysToClose }) {
                 {isCurrent && i === 4 ? '🏁' : i + 1}
                 {isCurrent && <span className="sr-only">You are here. </span>}
               </div>
+            </div>
+          )
+        })}
 
-              <span className="mt-1 text-[11px] font-semibold text-gray-700 whitespace-nowrap">{row.period}</span>
-
-              <div aria-hidden className="w-px h-[5px] bg-gray-300" />
-
-              <div className={`w-full rounded-xl border px-3 py-3 mt-1 text-left ${cardCls}`}>
-                <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold mb-0.5">Title co.</p>
-                <span className="inline-flex items-baseline">
-                  <span className="text-xs font-bold text-gray-800 leading-snug">{row.titleShort}</span>
+        <RoleLabel>Title co.</RoleLabel>
+        {CLOSING_TIMELINE.map((row, i) => {
+          const { isActive, cardCls, tipAlign } = cellMeta(i, row.phase)
+          return (
+            <div key={`t-${i}`} className={`rounded-xl border px-3 py-3 text-left ${cardCls} ${isActive ? '' : 'self-start'}`}>
+              <span className="inline-flex items-baseline">
+                <span className="text-xs font-bold text-gray-800 leading-snug">{row.titleShort}</span>
+                {isActive && (
                   <HelpTip id={`ct-${i}-title`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} placement="top" align={tipAlign}>
                     {PRO_TIPS[i].title}
                   </HelpTip>
-                </span>
-                <p className="text-[11px] text-gray-600 leading-snug mt-1">{row.title}</p>
-              </div>
+                )}
+              </span>
+              {isActive && <p className="text-[11px] text-gray-600 leading-snug mt-1">{row.title}</p>}
+            </div>
+          )
+        })}
 
-              <div className={`w-full rounded-xl border px-3 py-3 mt-2 text-left ${cardCls}`}>
-                <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold mb-0.5">Buyer</p>
-                <span className="inline-flex items-baseline">
-                  <span className="text-xs font-bold italic text-gray-700 leading-snug">{row.buyerShort}</span>
+        <RoleLabel>Buyer</RoleLabel>
+        {CLOSING_TIMELINE.map((row, i) => {
+          const { isActive, cardCls, tipAlign } = cellMeta(i, row.phase)
+          return (
+            <div key={`b-${i}`} className={`rounded-xl border px-3 py-3 text-left ${cardCls} ${isActive ? '' : 'self-start'}`}>
+              <span className="inline-flex items-baseline">
+                <span className="text-xs font-bold italic text-gray-700 leading-snug">{row.buyerShort}</span>
+                {isActive && (
                   <HelpTip id={`ct-${i}-buyer`} activeTooltip={activeTooltip} setActiveTooltip={setActiveTooltip} placement="top" align={tipAlign}>
                     {PRO_TIPS[i].buyer}
                   </HelpTip>
-                </span>
-                <p className="text-[11px] italic text-gray-500 leading-snug mt-1">{row.buyer}</p>
-                {i === 0 && optionStatus.isActive && (
-                  <>
-                    <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-red-100 text-red-700 border border-red-200">
-                      Action required
-                      {optionStatus.daysRemaining !== null && (
-                        <span className="font-medium normal-case">
-                          · {optionStatus.daysRemaining}d {optionStatus.hoursRemaining}h left
-                        </span>
-                      )}
-                    </span>
-                    <p className="text-[10px] text-gray-500 italic mt-1 leading-snug">
-                      Option Period ends at 5:00 PM local time on the final day.
-                    </p>
-                  </>
                 )}
-              </div>
-            </li>
+              </span>
+              {isActive && <p className="text-[11px] italic text-gray-500 leading-snug mt-1">{row.buyer}</p>}
+              {i === 0 && isActive && optionStatus.isActive && (
+                <>
+                  <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-red-100 text-red-700 border border-red-200">
+                    Action required
+                    {optionStatus.daysRemaining !== null && (
+                      <span className="font-medium normal-case">
+                        · {optionStatus.daysRemaining}d {optionStatus.hoursRemaining}h left
+                      </span>
+                    )}
+                  </span>
+                  <p className="text-[10px] text-gray-500 italic mt-1 leading-snug">
+                    Option Period ends at 5:00 PM local time on the final day.
+                  </p>
+                </>
+              )}
+            </div>
           )
         })}
-      </ol>
+      </div>
     </div>
   )
 }
