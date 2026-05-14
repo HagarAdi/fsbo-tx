@@ -1,4 +1,10 @@
 import { notifyStepDataChange } from '../../utils/notifyStepData'
+import { calcNetProceeds } from './Step6Offers.data'
+
+const NET_PROCEEDS_EMPTY = {
+  salePrice: '', mortgagePayoff: '', titleFees: '', propertyTaxes: '',
+  hoaFees: '', repairCredits: '', sellerContribution: '', misc: '',
+}
 
 const ACCENT = '#16a34a'
 const PURPLE = '#7c3aed'
@@ -136,46 +142,72 @@ function daysUntilDate(dateStr) {
   return Math.round((target - today) / (1000 * 60 * 60 * 24))
 }
 
-function initNetProceeds() {
-  if (typeof window === 'undefined') {
-    return { salePrice: '', mortgagePayoff: '', titleFees: 1500, propertyTaxes: '', hoaFees: '', repairCredits: '', sellerContribution: '', misc: '' }
-  }
+function loadStep8Overrides() {
+  if (typeof window === 'undefined') return { ...NET_PROCEEDS_EMPTY }
   const saved = loadStep8().netProceeds || {}
-  const all = (() => { try { return JSON.parse(localStorage.getItem('fsbo_stepData') || '{}') } catch { return {} } })()
+  return {
+    salePrice:          toOverrideString(saved.salePrice),
+    mortgagePayoff:     toOverrideString(saved.mortgagePayoff),
+    titleFees:          toOverrideString(saved.titleFees),
+    propertyTaxes:      toOverrideString(saved.propertyTaxes),
+    hoaFees:            toOverrideString(saved.hoaFees),
+    repairCredits:      toOverrideString(saved.repairCredits),
+    sellerContribution: toOverrideString(saved.sellerContribution),
+    misc:               toOverrideString(saved.misc),
+  }
+}
+
+function toOverrideString(v) {
+  if (v === undefined || v === null) return ''
+  return String(v)
+}
+
+function deriveStep8Defaults(closingDate) {
+  if (typeof window === 'undefined') return { ...NET_PROCEEDS_EMPTY }
+  let all = {}
+  try { all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}') } catch {}
   const accepted = (all.step6?.offers || []).find(o => o.status === 'Accepted')
 
-  let salePrice = saved.salePrice ?? ''
-  if (salePrice === '' && accepted?.price) salePrice = accepted.price
-  if (salePrice === '') {
+  let salePrice = accepted?.price ? String(accepted.price) : ''
+  if (!salePrice) {
     try {
       const pe = JSON.parse(localStorage.getItem('fsbo_priceEstimate') || 'null')
-      if (pe?.currentEstimate) salePrice = pe.currentEstimate
+      if (pe?.currentEstimate) salePrice = String(pe.currentEstimate)
     } catch {}
   }
 
-  let repairCredits = saved.repairCredits ?? ''
-  if (repairCredits === '') {
-    const total = (all.step7?.repairRequests || []).reduce((sum, r) => {
-      if (r.response === 'Decline') return sum
-      return sum + (r.response === 'Counter' ? parseFloat(r.counterAmount) || 0 : parseFloat(r.requestedAmount) || 0)
-    }, 0)
-    if (total > 0) repairCredits = total
-  }
+  const repairTotal = (all.step7?.repairRequests || []).reduce((sum, r) => {
+    if (r.response === 'Decline') return sum
+    return sum + (r.response === 'Counter' ? parseFloat(r.counterAmount) || 0 : parseFloat(r.requestedAmount) || 0)
+  }, 0)
+  const repairCredits = repairTotal > 0 ? String(repairTotal) : ''
 
-  let sellerContribution = saved.sellerContribution ?? ''
-  if (sellerContribution === '' && accepted?.sellerContribution) sellerContribution = accepted.sellerContribution
+  const sellerContribution = accepted?.sellerContribution ? String(accepted.sellerContribution) : ''
+
+  const priceNum = parseFloat(salePrice) || 0
+  let titleFees = ''
+  let propertyTaxes = ''
+  if (priceNum > 0) {
+    const r = calcNetProceeds({ price: priceNum, closingDate: closingDate || '' }, '')
+    if (r) {
+      titleFees     = String(Math.round(r.titlePolicy + r.escrow))
+      propertyTaxes = String(Math.round(r.taxProration))
+    }
+  }
 
   return {
     salePrice,
-    mortgagePayoff:     saved.mortgagePayoff     ?? '',
-    titleFees:          saved.titleFees          ?? 1500,
-    propertyTaxes:      saved.propertyTaxes      ?? '',
-    hoaFees:            saved.hoaFees            ?? '',
+    mortgagePayoff: '',
+    titleFees,
+    propertyTaxes,
+    hoaFees: '',
     repairCredits,
     sellerContribution,
-    misc:               saved.misc               ?? '',
+    misc: '',
   }
 }
+
+const AUTOFILLABLE_FIELDS = ['salePrice', 'titleFees', 'propertyTaxes', 'repairCredits', 'sellerContribution']
 
 function initClosingDates() {
   if (typeof window === 'undefined') {
@@ -205,6 +237,6 @@ export {
   TITLE_COMPANIES, TITLE_TIMELINE, PAYOFF_CARDS, SURVEY_OPTIONS,
   PRO_TIPS_CLOSE, VENDORS_CLOSE, WIRE_FRAUD_SOURCE,
   UTILITIES, CLOSING_DAY_ITEMS, DOCUMENTS,
-  NET_PROCEEDS_FIELDS, CLOSING_DATE_FIELDS,
-  loadStep8, saveStep8, daysUntilDate, initNetProceeds, initClosingDates, inputCls,
+  NET_PROCEEDS_FIELDS, CLOSING_DATE_FIELDS, AUTOFILLABLE_FIELDS,
+  loadStep8, saveStep8, daysUntilDate, loadStep8Overrides, deriveStep8Defaults, initClosingDates, inputCls,
 }
