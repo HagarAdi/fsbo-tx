@@ -71,7 +71,54 @@ export default function Step5Showings({ onSelectStep }) {
   const [showings, setShowings]           = useState([])
 
   const [expandedShowingId, setExpandedShowingId] = useState(null)
+  const [orderSnapshot, setOrderSnapshot] = useState(null)
+  const [logView, setLogView] = useState('list')
+  const [calendarCursor, setCalendarCursor] = useState(() => {
+    const d = new Date()
+    return { y: d.getFullYear(), m: d.getMonth() }
+  })
   const [showMilestone, setShowMilestone] = useState(false)
+
+  const sortKey = (s) => `${s.date || '9999-99-99'} ${s.time || '99:99'}`
+  const sortShowings = (arr) => [...arr].sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
+
+  const toggleExpand = (id) => {
+    if (expandedShowingId === id) {
+      setExpandedShowingId(null)
+      setOrderSnapshot(null)
+    } else {
+      setOrderSnapshot(sortShowings(showings).map(s => s.id))
+      setExpandedShowingId(id)
+    }
+  }
+
+  const displayShowings = orderSnapshot
+    ? [
+        ...orderSnapshot.map(id => showings.find(s => s.id === id)).filter(Boolean),
+        ...showings.filter(s => !orderSnapshot.includes(s.id)),
+      ]
+    : sortShowings(showings)
+
+  const calendarMonthLabel = new Date(calendarCursor.y, calendarCursor.m, 1)
+    .toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  const daysInCalendarMonth = new Date(calendarCursor.y, calendarCursor.m + 1, 0).getDate()
+  const firstWeekdayOfCalendar = new Date(calendarCursor.y, calendarCursor.m, 1).getDay()
+  const showingsByDate = showings.reduce((acc, s) => {
+    if (!s.date) return acc
+    acc[s.date] = (acc[s.date] || 0) + 1
+    return acc
+  }, {})
+  const isoForCell = (day) => {
+    const mm = String(calendarCursor.m + 1).padStart(2, '0')
+    const dd = String(day).padStart(2, '0')
+    return `${calendarCursor.y}-${mm}-${dd}`
+  }
+  const goPrevMonth = () => setCalendarCursor(({ y, m }) => m === 0 ? { y: y - 1, m: 11 } : { y, m: m - 1 })
+  const goNextMonth = () => setCalendarCursor(({ y, m }) => m === 11 ? { y: y + 1, m: 0 } : { y, m: m + 1 })
+  const goThisMonth = () => {
+    const d = new Date()
+    setCalendarCursor({ y: d.getFullYear(), m: d.getMonth() })
+  }
 
   const buildMarketSummary = () => {
     let listingLabel = 'Listing in progress'
@@ -118,7 +165,10 @@ export default function Step5Showings({ onSelectStep }) {
 
   const deleteShowing = (id) => {
     setShowings(prev => prev.filter(s => s.id !== id))
-    if (expandedShowingId === id) setExpandedShowingId(null)
+    if (expandedShowingId === id) {
+      setExpandedShowingId(null)
+      setOrderSnapshot(null)
+    }
   }
 
   const formatShowingWhen = (dateStr, timeStr) => {
@@ -192,9 +242,9 @@ export default function Step5Showings({ onSelectStep }) {
                       </button>
                     </div>
 
-                    {showings.length > 0 && (
+                    {showings.length > 0 && logView === 'list' && (
                       <div className="space-y-3">
-                        {showings.map(s => {
+                        {displayShowings.map(s => {
                           const colors = STATUS_COLORS[s.status] || STATUS_COLORS['Scheduled']
                           const isExpanded = expandedShowingId === s.id
                           const whenLabel = formatShowingWhen(s.date, s.time) || 'New showing'
@@ -203,7 +253,7 @@ export default function Step5Showings({ onSelectStep }) {
                               <div className="px-5 py-4 flex items-center gap-2">
                                 <button
                                   type="button"
-                                  onClick={() => setExpandedShowingId(isExpanded ? null : s.id)}
+                                  onClick={() => toggleExpand(s.id)}
                                   className="flex-1 min-w-0 text-left rounded-md hover:bg-gray-50 -mx-1 px-1 py-1 transition-colors"
                                   aria-expanded={isExpanded}
                                 >
@@ -230,7 +280,7 @@ export default function Step5Showings({ onSelectStep }) {
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => setExpandedShowingId(isExpanded ? null : s.id)}
+                                    onClick={() => toggleExpand(s.id)}
                                     className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                                     aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
                                     title={isExpanded ? 'Hide details' : 'Show details'}
@@ -298,7 +348,7 @@ export default function Step5Showings({ onSelectStep }) {
                       </div>
                     )}
 
-                    {showings.length === 0 && (
+                    {showings.length === 0 && logView === 'list' && (
                       <div className="rounded-xl border border-dashed border-gray-200 py-10 flex flex-col items-center gap-3">
                         <p className="text-sm text-gray-400">No showings logged yet.</p>
                         <button type="button" onClick={addShowing} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
@@ -306,6 +356,60 @@ export default function Step5Showings({ onSelectStep }) {
                         </button>
                       </div>
                     )}
+
+                    {logView === 'calendar' && (
+                      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                          <div className="flex items-center gap-1">
+                            <button type="button" onClick={goPrevMonth} aria-label="Previous month" className="w-8 h-8 rounded-md text-gray-500 hover:bg-gray-100 transition-colors">‹</button>
+                            <button type="button" onClick={goNextMonth} aria-label="Next month" className="w-8 h-8 rounded-md text-gray-500 hover:bg-gray-100 transition-colors">›</button>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-800">{calendarMonthLabel}</p>
+                          <button type="button" onClick={goThisMonth} className="text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors px-2 py-1 rounded-md hover:bg-gray-100">
+                            Today
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-7 gap-px bg-gray-100 text-center">
+                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                            <div key={d} className="bg-gray-50 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{d}</div>
+                          ))}
+                          {Array.from({ length: firstWeekdayOfCalendar }).map((_, i) => (
+                            <div key={`pad-${i}`} className="bg-white aspect-square" />
+                          ))}
+                          {Array.from({ length: daysInCalendarMonth }).map((_, i) => {
+                            const day = i + 1
+                            const iso = isoForCell(day)
+                            const count = showingsByDate[iso] || 0
+                            const today = new Date()
+                            const isToday = today.getFullYear() === calendarCursor.y && today.getMonth() === calendarCursor.m && today.getDate() === day
+                            return (
+                              <div key={day} className="bg-white aspect-square flex flex-col items-center justify-start p-1.5 relative">
+                                <span className={`text-xs ${isToday ? 'font-bold text-green-700' : 'text-gray-600'}`}>{day}</span>
+                                {count > 0 && (
+                                  <span className="mt-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[10px] font-bold text-white" style={{ backgroundColor: ACCENT }}>
+                                    {count}
+                                  </span>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setLogView(v => v === 'list' ? 'calendar' : 'list')}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <svg className="w-4 h-4 text-gray-500" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4.5" width="14" height="13" rx="2" />
+                          <path d="M3 8h14M7 2.5v4M13 2.5v4" />
+                        </svg>
+                        {logView === 'list' ? 'Show in calendar view' : 'Show as list'}
+                      </button>
+                    </div>
                   </section>
 
                   <div className="pt-6 border-t border-gray-100 flex justify-end">
