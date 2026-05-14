@@ -101,7 +101,7 @@ const DOCUMENTS = [
 ]
 
 const NET_PROCEEDS_FIELDS = [
-  { field: 'salePrice',          label: 'Sale price ($)',                      placeholder: '' },
+  { field: 'salePrice',          label: 'Sale price ($)',                      placeholder: '', readOnly: true },
   { field: 'mortgagePayoff',     label: 'Mortgage payoff balance ($)',         placeholder: '' },
   { field: 'titleFees',          label: 'Title company fees ($)',              placeholder: '1500' },
   { field: 'propertyTaxes',      label: 'Property taxes owed — prorated ($)', placeholder: '' },

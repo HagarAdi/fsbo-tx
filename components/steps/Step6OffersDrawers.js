@@ -78,7 +78,7 @@ export default function Step6OffersDrawers({
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">What&apos;s negotiable</p>
                 <ul className="space-y-1.5 text-sm text-gray-700">
-                  {['Purchase price', 'Option period length and fee', 'Closing date', 'Earnest money amount', 'Repair requests or credits', 'Inclusions (appliances, fixtures)'].map((item, i) => (
+                  {['Sale price', 'Option period length and fee', 'Closing date', 'Earnest money amount', 'Repair requests or credits', 'Inclusions (appliances, fixtures)'].map((item, i) => (
                     <li key={i} className="flex items-center gap-2">
                       <span className="text-green-500 font-bold">✓</span> {item}
                     </li>
