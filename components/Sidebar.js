@@ -35,39 +35,23 @@ function PhaseGroup({ phase, steps, activeId, stepStatuses, onClose }) {
         const isSelected = step.id === activeId
         const status = stepStatuses[step.id] ?? 'none'
         return (
-          <div key={step.id} className="relative flex items-stretch">
-            <Link
-              href={`/step/${step.id}`}
-              onClick={onClose}
-              className="flex-1 flex items-center px-4 py-3 text-left hover:bg-gray-100 transition-colors min-h-[44px]"
-              style={isSelected ? { borderLeft: `4px solid ${ACCENT}`, paddingLeft: '12px', backgroundColor: '#f0fdf4' } : { borderLeft: '4px solid transparent' }}
-            >
-              <span className="w-5 h-5 flex items-center justify-center text-xs font-semibold text-gray-400 mr-3 shrink-0">
-                {step.id}
-              </span>
-              <span className={`flex-1 text-sm ${isSelected ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
-                {step.title}
-              </span>
-              <span className="ml-2 shrink-0">
-                <StepStatusIcon status={status} />
-              </span>
-            </Link>
-            {step.id === 5 && (
-              <Link
-                href="/step/5#log"
-                onClick={onClose}
-                title="Jump to Showing Log"
-                aria-label="Jump to Showing Log"
-                className="flex items-center justify-center w-9 mr-2 my-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition-colors"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="5" y="3.5" width="10" height="13" rx="1.5" />
-                  <path d="M8 3.5v-.5a1 1 0 011-1h2a1 1 0 011 1v.5" />
-                  <path d="M7.5 8h5M7.5 11h5M7.5 14h3" />
-                </svg>
-              </Link>
-            )}
-          </div>
+          <Link
+            key={step.id}
+            href={`/step/${step.id}`}
+            onClick={onClose}
+            className="w-full flex items-center px-4 py-3 text-left hover:bg-gray-100 transition-colors relative min-h-[44px]"
+            style={isSelected ? { borderLeft: `4px solid ${ACCENT}`, paddingLeft: '12px', backgroundColor: '#f0fdf4' } : { borderLeft: '4px solid transparent' }}
+          >
+            <span className="w-5 h-5 flex items-center justify-center text-xs font-semibold text-gray-400 mr-3 shrink-0">
+              {step.id}
+            </span>
+            <span className={`flex-1 text-sm ${isSelected ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
+              {step.title}
+            </span>
+            <span className="ml-2 shrink-0">
+              <StepStatusIcon status={status} />
+            </span>
+          </Link>
         )
       })}
     </div>

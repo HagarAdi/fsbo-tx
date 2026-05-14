@@ -109,19 +109,6 @@ export default function Step5Showings({ onSelectStep }) {
     setActiveSubStep(step)
   }
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const applyHash = () => {
-      if (window.location.hash === '#log') {
-        setDirection(1)
-        setActiveSubStep(2)
-      }
-    }
-    applyHash()
-    window.addEventListener('hashchange', applyHash)
-    return () => window.removeEventListener('hashchange', applyHash)
-  }, [])
-
   const [activeModal, setActiveModal] = useState(null)
   const [timelineOpen, setTimelineOpen] = useState(false)
 
