@@ -146,7 +146,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     { ...EMPTY_COMP },
     { ...EMPTY_COMP },
   ])
-  const [showMath, setShowMath] = useState(false)
   const [activeSubStep, setActiveSubStep] = useState(1)
   const [direction, setDirection] = useState(1)
   const [appraiserPanelOpen, setAppraiserPanelOpen] = useState(false)
@@ -697,8 +696,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         <div className="space-y-3">
           {comps.map((comp, i) => {
             const stats = compStats[i]
-            const rawPpsf = stats.rawPpsf
-            const adjPpsf = stats.adjustedPpsf
 
             const compSqftNum = comp.sqft !== '' ? parseFloat(comp.sqft) : NaN
             const sqftOutlier = sqftNum > 0 && !isNaN(compSqftNum)
@@ -734,9 +731,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             const propertyTypeMismatch = !!comp.propertyType && !!propertyType && comp.propertyType !== propertyType
             const hasAnyNote = propertyTypeMismatch || !!domNote || sqftOutlier || yearBuiltNewer || yearBuiltOlder || bedroomsMismatch || bathroomsMismatch || lotMismatch
             const showFeatureRow = priceNum > 0 && parseFloat(comp.sqft) > 0
-            const ppsfDiffers = rawPpsf !== null && adjPpsf !== null
-              && Math.abs(adjPpsf - rawPpsf) / rawPpsf > 0.005
-            const adjustedDirection = adjPpsf !== null && rawPpsf !== null && adjPpsf < rawPpsf ? 'down' : 'up'
 
             return (
               <div key={i} className="rounded-lg border border-gray-200 bg-white p-5">
@@ -744,21 +738,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                   <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
                     Comp {i + 1} of {comps.length}
                   </span>
-                  {showMath && adjPpsf !== null && (
-                    <div className="text-right leading-tight">
-                      <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                        Adj $/sqft
-                      </div>
-                      <div className="text-sm font-semibold" style={{ color: ppsfDiffers ? (adjustedDirection === 'up' ? ACCENT : '#dc2626') : '#374151' }}>
-                        ${adjPpsf.toFixed(2)}
-                      </div>
-                      {ppsfDiffers && (
-                        <div className="text-[10px] font-normal text-gray-400">
-                          raw ${rawPpsf.toFixed(2)}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
 
                 <div className="mb-4">
@@ -985,36 +964,10 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                   </div>
                 )}
 
-                {showMath && stats.deltas.length > 0 && (
-                  <p className="mt-3 inline-flex flex-wrap items-center gap-x-1 text-[11px] text-gray-500 italic">
-                    <span>Comp price normalized to match your home</span>
-                    <HelpTip
-                      id={`comp_deltas_${i}`}
-                      activeTooltip={activeTooltip}
-                      setActiveTooltip={setActiveTooltip}
-                      align="start"
-                    >
-                      +$ means the comp lacked a feature your home has, so we bump it up. −$ means the comp had something your home doesn&apos;t, so we strip its value out. The average $/sqft below is computed from these normalized prices.
-                    </HelpTip>
-                    <span>:</span>
-                    {stats.deltas.map((d, di) => (
-                      <span key={d.category} title={d.label}>
-                        {d.category} {d.amount >= 0 ? '+' : '−'}${formatDollars(Math.abs(d.amount))}{di < stats.deltas.length - 1 ? ',' : ''}
-                      </span>
-                    ))}
-                  </p>
-                )}
               </div>
             )
           })}
         </div>
-
-        {showMath && adjustedAvgPpsf !== null && (
-          <div className="mt-4 flex items-center justify-end gap-3 text-sm">
-            <span className="text-gray-500">Average adjusted $/sqft</span>
-            <span className="font-bold" style={{ color: ACCENT }}>${adjustedAvgPpsf.toFixed(2)}</span>
-          </div>
-        )}
 
         {comps.length < 5 && (
           <button
@@ -1074,44 +1027,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
               </div>
             )}
 
-            <p className="mt-3 text-xs text-gray-500">
-              📊 This is an AI-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setShowMath((v) => !v)}
-              className="mt-3 text-xs text-gray-500 underline underline-offset-2 hover:text-gray-700 transition-colors"
-            >
-              {showMath ? 'Hide how this was calculated ▴' : 'Show how this was calculated ▾'}
-            </button>
-
-            {showMath && (
-              <div className="mt-3 rounded-lg border border-gray-200 overflow-hidden divide-y divide-gray-100">
-                <div className="flex items-center justify-between px-5 py-3 bg-white">
-                  <span className="text-sm text-gray-600">
-                    Adjusted comp average: ${adjustedAvgPpsf.toFixed(2)}/sqft × {Number(sqft).toLocaleString()} sqft
-                  </span>
-                  <span className="text-sm font-semibold text-gray-900">${formatDollars(baseValue)}</span>
-                </div>
-                <div className="flex items-center justify-between px-5 py-3 bg-white">
-                  <span className="text-sm text-gray-600">Round up to the next $25k bucket</span>
-                  <span className="text-sm font-semibold text-gray-900">${formatDollars(Math.ceil(baseValue / 25000) * 25000)}</span>
-                </div>
-                <div className="flex items-center justify-between px-5 py-3 bg-white">
-                  <span className="text-sm text-gray-600">Subtract $100 to land under the filter</span>
-                  <span className="text-sm font-semibold" style={{ color: '#dc2626' }}>−$100</span>
-                </div>
-                <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
-                  <span className="text-sm font-semibold text-gray-700">Recommended list price</span>
-                  <span className="text-sm font-bold" style={{ color: ACCENT }}>${formatDollars(suggestedListPrice)}</span>
-                </div>
-                <div className="flex items-center justify-between px-5 py-3 bg-white">
-                  <span className="text-sm text-gray-600">Calculated range (Adjusted comp value ± 5%, accounting for market noise)</span>
-                  <span className="text-sm font-semibold text-gray-900">${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}</span>
-                </div>
-              </div>
-            )}
           </section>
         )}
 

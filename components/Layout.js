@@ -80,20 +80,31 @@ export default function Layout({ children }) {
             {/* Cockpit header — hidden on home (WelcomeScreen has its own) */}
             {!isHome && homeAddress && (
               <div
-                className="flex-shrink-0 flex items-center gap-3 px-4 py-2 border-b border-gray-100 z-10"
+                className="flex-shrink-0 flex items-center gap-4 px-4 py-3 border-b border-green-100 z-10"
                 style={{ backgroundColor: '#f0fdf4' }}
               >
                 <span className="text-xs text-gray-500 truncate flex-1 min-w-0">
                   📍 {homeAddress}
                 </span>
                 {fsboSavings && (
-                  <span className="text-xs flex items-center gap-1.5 flex-shrink-0">
-                    <span className="text-gray-400">💰 FSBO savings:</span>
-                    <span className="font-bold text-green-700">${fsboSavings.amount.toLocaleString()}</span>
-                    <span className="text-gray-400 hidden sm:inline">
-                      on ${fsboSavings.basisPrice.toLocaleString()} {fsboSavings.basis === 'accepted' ? 'accepted' : 'est.'}
+                  <div
+                    className="flex items-center gap-2.5 flex-shrink-0 rounded-xl px-3.5 py-2 shadow-sm"
+                    style={{ backgroundColor: '#dcfce7', border: '1px solid #86efac' }}
+                  >
+                    <span className="text-lg leading-none" aria-hidden>💰</span>
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-green-700/80">
+                        Your FSBO savings
+                      </span>
+                      <span className="text-xl font-extrabold text-green-700 drop-shadow-[0_0_4px_rgba(34,197,94,0.25)]">
+                        ${fsboSavings.amount.toLocaleString()}
+                      </span>
+                    </div>
+                    <span className="hidden sm:inline text-[11px] text-green-700/70 pl-2 border-l border-green-300">
+                      on ${fsboSavings.basisPrice.toLocaleString()}<br />
+                      {fsboSavings.basis === 'accepted' ? 'accepted offer' : 'Step 1 estimate'}
                     </span>
-                  </span>
+                  </div>
                 )}
               </div>
             )}
