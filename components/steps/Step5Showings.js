@@ -512,6 +512,19 @@ export default function Step5Showings({ onSelectStep }) {
                                     <label className="block text-xs font-semibold text-gray-700 mb-1">Notes (optional)</label>
                                     <input type="text" value={s.notes} onChange={e => updateShowing(s.id, 'notes', e.target.value)} placeholder="e.g. Very interested, asked about the backyard" className={inputCls} />
                                   </div>
+                                  <div className="mt-4">
+                                    <button
+                                      type="button"
+                                      onClick={() => setActiveModal('comingSoon')}
+                                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+                                    >
+                                      <svg className="w-4 h-4 text-gray-500" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="3" y="4.5" width="14" height="13" rx="2" />
+                                        <path d="M3 8h14M7 2.5v4M13 2.5v4" />
+                                      </svg>
+                                      Add to calendar
+                                    </button>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -643,6 +656,27 @@ export default function Step5Showings({ onSelectStep }) {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </SetupModal>
+
+      <SetupModal open={activeModal === 'comingSoon'} onClose={closeModal} title="🗓️ Add to calendar">
+        <div className="space-y-3">
+          <p className="text-sm text-gray-700">
+            Calendar export is coming soon — we&apos;ll let you push showings to Google Calendar, Apple Calendar, and Outlook with one click.
+          </p>
+          <p className="text-xs text-gray-500">
+            In the meantime, keep using the date and time fields above so the showing is tracked here.
+          </p>
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={closeModal}
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              style={{ backgroundColor: ACCENT }}
+            >
+              Got it
+            </button>
           </div>
         </div>
       </SetupModal>
