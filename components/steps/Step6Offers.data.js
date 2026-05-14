@@ -287,9 +287,12 @@ function calcNetProceeds(offer, annualTaxesOverride, overrides = {}) {
   if (!price) return null
 
   const sellerContrib = parseFloat(overrides.sellerContribution ?? offer.sellerContribution) || 0
-  const titlePolicy = overrides.titlePolicy != null
-    ? parseFloat(overrides.titlePolicy) || 0
-    : defaultTitlePolicy(price)
+  const titlePolicy =
+    overrides.titlePolicy != null
+      ? parseFloat(overrides.titlePolicy) || 0
+      : offer?.titlePolicyOverride !== undefined && offer?.titlePolicyOverride !== null && offer?.titlePolicyOverride !== ''
+        ? parseFloat(offer.titlePolicyOverride) || 0
+        : defaultTitlePolicy(price)
   const escrow = overrides.escrow != null ? parseFloat(overrides.escrow) || 0 : 600
   const annualTax = annualTaxesOverride ? parseFloat(annualTaxesOverride) : price * 0.022
 

@@ -5,7 +5,7 @@ import {
 } from './Step6Offers.data'
 import HelpTip from '../Tooltip'
 
-function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
+function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes, updateOffer }) {
   const r = calcNetProceeds(offer, annualTaxes)
   const price = parseFloat(offer?.price) || 0
   const taxNum = parseFloat(annualTaxes)
@@ -14,6 +14,8 @@ function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
     : '2.2'
   const [editingRate, setEditingRate] = useState(false)
   const [rateDraft, setRateDraft] = useState(currentRatePct)
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleDraft, setTitleDraft] = useState('')
 
   function startEditingRate() {
     setRateDraft(currentRatePct)
@@ -32,6 +34,25 @@ function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
 
   function cancelRate() {
     setEditingRate(false)
+  }
+
+  function startEditingTitle() {
+    setTitleDraft(r ? String(Math.round(r.titlePolicy)) : '')
+    setEditingTitle(true)
+  }
+
+  function commitTitle() {
+    if (titleDraft === '') {
+      updateOffer(offer.id, 'titlePolicyOverride', '')
+    } else {
+      const amt = parseFloat(titleDraft)
+      if (!isNaN(amt) && amt >= 0) updateOffer(offer.id, 'titlePolicyOverride', amt)
+    }
+    setEditingTitle(false)
+  }
+
+  function cancelTitle() {
+    setEditingTitle(false)
   }
 
   if (!r) return null
@@ -56,8 +77,46 @@ function NetCheckPanel({ offer, annualTaxes, setAnnualTaxes }) {
               {r.sellerContrib > 0 ? `−${fmtCurrency(String(Math.round(r.sellerContrib)))}` : '—'}
             </span>
           </div>
-          <div className="flex justify-between px-3 py-1.5 text-xs">
-            <span className="text-gray-500">Title Policy</span>
+          <div className="flex justify-between items-center px-3 py-1.5 text-xs">
+            <span className="text-gray-500 flex items-center gap-1.5">
+              Title Policy
+              {editingTitle ? (
+                <span className="inline-flex items-center gap-1">
+                  <span className="text-gray-400">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={titleDraft}
+                    onChange={e => setTitleDraft(e.target.value)}
+                    onBlur={commitTitle}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') commitTitle()
+                      if (e.key === 'Escape') cancelTitle()
+                    }}
+                    autoFocus
+                    aria-label="Title policy amount"
+                    className="w-20 px-1.5 py-0.5 rounded border border-gray-200 text-xs text-gray-700 tabular-nums focus:outline-none focus:ring-1 focus:ring-green-500"
+                  />
+                </span>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={startEditingTitle}
+                    aria-label="Edit title policy amount"
+                    title="Edit title policy amount"
+                    className="text-gray-300 hover:text-gray-600 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11.5 2.5l2 2-8 8-2.5.5.5-2.5 8-8z" />
+                    </svg>
+                  </button>
+                  <span className="text-gray-300">·</span>
+                  <span className="text-gray-400">{Math.round(r.titlePolicy) > 0 ? 'Paid by you' : 'Paid by buyer'}</span>
+                </>
+              )}
+            </span>
             <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(r.titlePolicy)))}</span>
           </div>
           <div className="flex justify-between items-center px-3 py-1.5 text-xs">
@@ -241,7 +300,7 @@ export default function Step6OfferCard({
         <div className="border-t border-gray-100 px-5 py-5 space-y-5">
 
           {offer.price && (
-            <NetCheckPanel offer={offer} annualTaxes={annualTaxes} setAnnualTaxes={setAnnualTaxes} />
+            <NetCheckPanel offer={offer} annualTaxes={annualTaxes} setAnnualTaxes={setAnnualTaxes} updateOffer={updateOffer} />
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
