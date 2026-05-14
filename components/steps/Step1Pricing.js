@@ -88,6 +88,7 @@ function adjustCompPrice(comp, subject) {
 function getCompsStrength(validCount) {
   if (validCount >= 5) return { tier: 'excellent', label: 'Excellent (defensible)', emoji: '🟢', color: '#16a34a' }
   if (validCount >= 3) return { tier: 'good', label: 'Good (standard)', emoji: '🟡', color: '#d97706' }
+  if (validCount === 0) return { tier: 'empty', label: 'Get started', emoji: 'ℹ️', color: '#6b7280' }
   return { tier: 'weak', label: 'Weak (inaccurate)', emoji: '🔴', color: '#dc2626' }
 }
 
@@ -679,7 +680,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 Comp strength: {compsStrength.label}
               </p>
               <p className="text-xs text-gray-600">
-                {validCount === 0 && 'Enter at least 3 valid comps (price + sqft) for a defensible baseline.'}
+                {validCount === 0 && 'Enter comps — at least 3 are recommended, 5 is better.'}
                 {validCount === 1 && '1 comp entered — add 2 more to reach Good.'}
                 {validCount === 2 && '2 comps entered — add 1 more to reach Good.'}
                 {validCount === 3 && '3 comps — enough for a defensible price. A 4th adds extra confidence if you can find a close match.'}
