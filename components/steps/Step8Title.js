@@ -47,9 +47,9 @@ export default function Step8Title({ onSelectStep }) {
   }, [])
 
   const defaults = useMemo(
-    () => deriveStep8Defaults(closingDates.closingDate),
+    () => deriveStep8Defaults(closingDates.closingDate, overrides.salePrice),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [closingDates.closingDate, upstreamTick],
+    [closingDates.closingDate, upstreamTick, overrides.salePrice],
   )
 
   const fields = AUTOFILLABLE_FIELDS.reduce((acc, f) => {

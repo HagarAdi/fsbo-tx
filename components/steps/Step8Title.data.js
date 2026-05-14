@@ -162,7 +162,7 @@ function toOverrideString(v) {
   return String(v)
 }
 
-function deriveStep8Defaults(closingDate) {
+function deriveStep8Defaults(closingDate, salePriceOverride = '') {
   if (typeof window === 'undefined') return { ...NET_PROCEEDS_EMPTY }
   let all = {}
   try { all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}') } catch {}
@@ -184,7 +184,8 @@ function deriveStep8Defaults(closingDate) {
 
   const sellerContribution = accepted?.sellerContribution ? String(accepted.sellerContribution) : ''
 
-  const priceNum = parseFloat(salePrice) || 0
+  const effectivePriceStr = salePriceOverride !== '' ? salePriceOverride : salePrice
+  const priceNum = parseFloat(effectivePriceStr) || 0
   let titleFees = ''
   let propertyTaxes = ''
   if (priceNum > 0) {

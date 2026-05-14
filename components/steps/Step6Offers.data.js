@@ -268,6 +268,20 @@ function getRedFlags(offer) {
   return RED_FLAG_CHECKS.filter(r => r.check(offer)).map(r => r.message)
 }
 
+function defaultTitlePolicy(price) {
+  // Texas TDI Owner's Title Insurance — tiered marginal rates per $1,000 of policy.
+  // Calibrated to published TDI tariff: rates step down as policy size grows.
+  // Within each bracket, contribution is (range × per-$1K rate).
+  if (price <= 100000) return 780
+  let policy = 780
+  policy += Math.min(price - 100000,    400000) * 0.00494  // $100K → $500K
+  if (price > 500000)    policy += Math.min(price -    500000,   500000) * 0.00250  // $500K → $1M
+  if (price > 1000000)   policy += Math.min(price -   1000000,  4000000) * 0.00150  // $1M → $5M
+  if (price > 5000000)   policy += Math.min(price -   5000000, 20000000) * 0.00080  // $5M → $25M
+  if (price > 25000000)  policy += (price - 25000000) * 0.00050                     // $25M+
+  return policy
+}
+
 function calcNetProceeds(offer, annualTaxesOverride, overrides = {}) {
   const price = parseFloat(offer?.price) || 0
   if (!price) return null
@@ -275,7 +289,7 @@ function calcNetProceeds(offer, annualTaxesOverride, overrides = {}) {
   const sellerContrib = parseFloat(overrides.sellerContribution ?? offer.sellerContribution) || 0
   const titlePolicy = overrides.titlePolicy != null
     ? parseFloat(overrides.titlePolicy) || 0
-    : price > 100000 ? ((price - 100000) * 0.00494) + 780 : 780
+    : defaultTitlePolicy(price)
   const escrow = overrides.escrow != null ? parseFloat(overrides.escrow) || 0 : 600
   const annualTax = annualTaxesOverride ? parseFloat(annualTaxesOverride) : price * 0.022
 
