@@ -336,7 +336,7 @@ export default function Step2Repairs({ onSelectStep }) {
                       </button>
                       {isOpen && (
                         <div className="border-t border-gray-100 divide-y divide-gray-50">
-                          {category.items.map((item) => {
+                          {[...category.items].sort((a, b) => negotiationRisk(b) - negotiationRisk(a)).map((item) => {
                             const isChecked = checkedItems.has(item.id)
                             const risk = negotiationRisk(item)
                             const showRiskPill = section.contributesToShield && risk > 0
