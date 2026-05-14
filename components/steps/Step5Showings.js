@@ -1,21 +1,9 @@
 import { useState, useEffect } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
 import MilestoneCelebration from '../MilestoneCelebration'
 import SetupModal from '../SetupModal'
 
 const ACCENT = '#16a34a'
-
-const SUB_STEPS = [
-  { id: 1, label: 'Showing Method' },
-  { id: 2, label: 'Showing Log' },
-]
-
-const slideVariants = {
-  initial: (dir) => ({ opacity: 0, x: dir * 40 }),
-  animate: { opacity: 1, x: 0, transition: { duration: 0.22, ease: 'easeOut' } },
-  exit: (dir) => ({ opacity: 0, x: dir * -40, transition: { duration: 0.16, ease: 'easeIn' } }),
-}
 
 const SAFETY_ITEMS = [
   'Never show alone — have someone present',
@@ -77,13 +65,6 @@ function saveStep5(data) {
 const inputCls = 'w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition'
 
 export default function Step5Showings({ onSelectStep }) {
-  const [activeSubStep, setActiveSubStep] = useState(1)
-  const [direction, setDirection] = useState(1)
-  const goTo = (step) => {
-    setDirection(step > activeSubStep ? 1 : -1)
-    setActiveSubStep(step)
-  }
-
   const [activeModal, setActiveModal] = useState(null)
 
   const [showingMethod, setShowingMethod] = useState('')
@@ -178,93 +159,29 @@ export default function Step5Showings({ onSelectStep }) {
             Configure your listing, track buyer visits, and manage everything from one place.
           </p>
 
-          {/* Sub-step pills */}
-          <div className="flex items-center mb-8">
-            {SUB_STEPS.map((step, i) => {
-              const done = step.id < activeSubStep
-              const active = step.id === activeSubStep
-              return (
-                <div key={step.id} className="flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => goTo(step.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
-                      active
-                        ? 'text-white'
-                        : done
-                        ? 'text-green-700 hover:bg-green-50'
-                        : 'text-gray-400 hover:bg-gray-100'
-                    }`}
-                    style={active ? { backgroundColor: ACCENT } : {}}
-                  >
-                    <span
-                      className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                        done
-                          ? 'bg-green-500 text-white'
-                          : active
-                          ? 'bg-white/30 text-white'
-                          : 'bg-gray-200 text-gray-500'
-                      }`}
-                    >
-                      {done ? '✓' : step.id}
-                    </span>
-                    {step.label}
-                  </button>
-                  {i < SUB_STEPS.length - 1 && (
-                    <div className={`w-5 h-px mx-1 ${activeSubStep > step.id ? 'bg-green-400' : 'bg-gray-200'}`} />
-                  )}
-                </div>
-              )
-            })}
-          </div>
+          {/* Showing method picker */}
+          <button
+            type="button"
+            onClick={() => setActiveModal('method')}
+            className="mb-8 w-full sm:w-auto inline-flex items-center gap-3 rounded-xl border border-gray-200 px-5 py-3 text-left hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-2xl">🔑</span>
+            <span>
+              <span className="block text-sm font-semibold text-gray-800">Showing Method</span>
+              <span className="block text-xs text-gray-500 mt-0.5">
+                {showingMethod
+                  ? `Selected: ${SHOWING_METHOD_OPTIONS.find(o => o.id === showingMethod)?.label || showingMethod}`
+                  : 'Choose how buyers will tour the home'}
+              </span>
+            </span>
+          </button>
 
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div key={activeSubStep} custom={direction} variants={slideVariants} initial="initial" animate="animate" exit="exit">
-
-              {/* Sub-step 1: Setup */}
-              {activeSubStep === 1 && (
-                <div>
-                  {/* Showing method picker */}
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal('method')}
-                    className="mb-10 w-full sm:w-auto inline-flex items-center gap-3 rounded-xl border border-gray-200 px-5 py-3 text-left hover:bg-gray-50 transition-colors"
-                  >
-                    <span className="text-2xl">🔑</span>
-                    <span>
-                      <span className="block text-sm font-semibold text-gray-800">Showing Method</span>
-                      <span className="block text-xs text-gray-500 mt-0.5">
-                        {showingMethod
-                          ? `Selected: ${SHOWING_METHOD_OPTIONS.find(o => o.id === showingMethod)?.label || showingMethod}`
-                          : 'Choose how buyers will tour the home'}
-                      </span>
-                    </span>
-                  </button>
-
-                  <div className="pt-6 border-t border-gray-100 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => goTo(2)}
-                      className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                      style={{ backgroundColor: ACCENT }}
-                    >
-                      Continue to Showing Log →
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Sub-step 2: Showing Log */}
-              {activeSubStep === 2 && (
-                <div>
+          <div>
                   <section className="mb-12">
                     <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Showing Log</h3>
-                        <p className="text-sm text-gray-500">
-                          {showings.length} showing{showings.length !== 1 ? 's' : ''} logged
-                        </p>
-                      </div>
+                      <p className="text-sm text-gray-500">
+                        {showings.length} showing{showings.length !== 1 ? 's' : ''} logged
+                      </p>
                       <button
                         type="button"
                         onClick={addShowing}
@@ -393,14 +310,7 @@ export default function Step5Showings({ onSelectStep }) {
                     )}
                   </section>
 
-                  <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => goTo(1)}
-                      className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors"
-                    >
-                      ← Back
-                    </button>
+                  <div className="pt-6 border-t border-gray-100 flex justify-end">
                     <button
                       type="button"
                       onClick={() => setShowMilestone(true)}
@@ -411,10 +321,6 @@ export default function Step5Showings({ onSelectStep }) {
                     </button>
                   </div>
                 </div>
-              )}
-
-            </motion.div>
-          </AnimatePresence>
 
         </div>
 
@@ -436,22 +342,16 @@ export default function Step5Showings({ onSelectStep }) {
               </ol>
             </div>
 
-            {activeSubStep === 1 && (
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Checklist</p>
-                <p className="text-xs text-gray-400 mb-3 leading-snug">Pick how buyers will tour your home</p>
-                <div className="space-y-2">
-                  {[
-                    { emoji: '🔑', label: 'Showing method', done: !!showingMethod },
-                  ].map(({ emoji, label, done }) => (
-                    <div key={label} className="flex items-center gap-2 text-xs">
-                      <span className={done ? 'text-green-500' : 'text-gray-300'} style={{ fontSize: 13 }}>{done ? '✓' : '○'}</span>
-                      <span className={done ? 'text-gray-700 font-medium' : 'text-gray-400'}>{emoji} {label}</span>
-                    </div>
-                  ))}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Checklist</p>
+              <p className="text-xs text-gray-400 mb-3 leading-snug">Pick how buyers will tour your home</p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className={showingMethod ? 'text-green-500' : 'text-gray-300'} style={{ fontSize: 13 }}>{showingMethod ? '✓' : '○'}</span>
+                  <span className={showingMethod ? 'text-gray-700 font-medium' : 'text-gray-400'}>🔑 Showing method</span>
                 </div>
               </div>
-            )}
+            </div>
 
           </div>
         </aside>
