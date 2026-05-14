@@ -141,8 +141,10 @@ export default function Step7Inspection({ onSelectStep }) {
   const overCeiling = maxCreditNum > 0 && totalConcessions > maxCreditNum
 
   const finalizeAmendments = () => {
-    const netCheckResult = acceptedOffer?.price ? calcNetProceeds(acceptedOffer, '') : null
-    const finalNet = netCheckResult ? Math.round(netCheckResult.net - totalConcessions) : null
+    const netProceedsResult = acceptedOffer?.price
+      ? calcNetProceeds(acceptedOffer, '', { repairConcessions: totalConcessions })
+      : null
+    const finalNet = netProceedsResult ? Math.round(netProceedsResult.net) : null
     setIsLocked(true)
     saveStep7(buildSavePayload({ isLocked: true, finalNetProceeds: finalNet }))
   }
@@ -158,7 +160,9 @@ export default function Step7Inspection({ onSelectStep }) {
     : daysRemaining !== null && daysRemaining <= 5 ? '#ca8a04'
     : ACCENT
 
-  const netCheckResult = acceptedOffer?.price ? calcNetProceeds(acceptedOffer, '') : null
+  const netProceedsResult = acceptedOffer?.price
+    ? calcNetProceeds(acceptedOffer, '', { repairConcessions: totalConcessions })
+    : null
 
   return (
     <>
@@ -565,55 +569,48 @@ export default function Step7Inspection({ onSelectStep }) {
           )}
         </div>
 
-        {/* Updated Net Check */}
-        {netCheckResult && (
+        {/* Updated Net Proceeds */}
+        {netProceedsResult && (
           <div className="mb-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-1">Updated Net Check</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Updated Net Proceeds</h3>
             <p className="text-sm text-gray-500 mb-4">Repair concessions deducted from your estimated proceeds in real-time.</p>
             <div className="rounded-xl border border-gray-100 overflow-hidden">
               <div className="flex">
                 <div className="px-4 py-4 flex flex-col items-center justify-center min-w-[120px]"
                   style={{ backgroundColor: '#f0fdf4' }}>
-                  {(() => {
-                    const net = Math.round(netCheckResult.net - totalConcessions)
-                    return (
-                      <>
-                        <p className="text-xl font-bold leading-none"
-                          style={{ color: net >= 0 ? '#15803d' : '#dc2626' }}>
-                          {fmtCurrency(String(net))}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">Est. net check</p>
-                      </>
-                    )
-                  })()}
+                  <p className="text-xl font-bold leading-none"
+                    style={{ color: netProceedsResult.net >= 0 ? '#15803d' : '#dc2626' }}>
+                    {fmtCurrency(String(Math.round(netProceedsResult.net)))}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">Est. net proceeds</p>
                 </div>
                 <div className="flex-1 divide-y divide-gray-100">
                   <div className="flex justify-between px-3 py-1.5 text-xs">
                     <span className="text-gray-500">Gross Price</span>
                     <span className="text-gray-800 font-bold tabular-nums">{fmtCurrency(acceptedOffer.price)}</span>
                   </div>
-                  {netCheckResult.sellerContrib > 0 && (
+                  {netProceedsResult.sellerContrib > 0 && (
                     <div className="flex justify-between px-3 py-1.5 text-xs">
                       <span className="text-gray-500">Para 12</span>
-                      <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(netCheckResult.sellerContrib)))}</span>
+                      <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(netProceedsResult.sellerContrib)))}</span>
                     </div>
                   )}
                   <div className="flex justify-between px-3 py-1.5 text-xs">
                     <span className="text-gray-500">Title Policy</span>
-                    <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(netCheckResult.titlePolicy)))}</span>
+                    <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(netProceedsResult.titlePolicy)))}</span>
                   </div>
                   <div className="flex justify-between px-3 py-1.5 text-xs">
-                    <span className="text-gray-500">Tax{!netCheckResult.hasClosingDate ? ' (est.)' : ''}</span>
-                    <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(netCheckResult.taxProration)))}</span>
+                    <span className="text-gray-500">Tax{!netProceedsResult.hasClosingDate ? ' (est.)' : ''}</span>
+                    <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(netProceedsResult.taxProration)))}</span>
                   </div>
                   <div className="flex justify-between px-3 py-1.5 text-xs">
                     <span className="text-gray-500">Escrow &amp; Rec.</span>
-                    <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(netCheckResult.escrow))}</span>
+                    <span className="text-gray-700 font-medium tabular-nums">−{fmtCurrency(String(netProceedsResult.escrow))}</span>
                   </div>
-                  {totalConcessions > 0 && (
+                  {netProceedsResult.repairConcessions > 0 && (
                     <div className="flex justify-between px-3 py-1.5 text-xs bg-amber-50">
                       <span className="text-amber-700 font-semibold">Repair Concessions</span>
-                      <span className="text-amber-700 font-medium tabular-nums">−{fmtCurrency(String(totalConcessions))}</span>
+                      <span className="text-amber-700 font-medium tabular-nums">−{fmtCurrency(String(Math.round(netProceedsResult.repairConcessions)))}</span>
                     </div>
                   )}
                 </div>
@@ -676,11 +673,11 @@ export default function Step7Inspection({ onSelectStep }) {
                   ${totalConcessions.toLocaleString()}
                 </span>
               </div>
-              {netCheckResult && (
+              {netProceedsResult && (
                 <div className="flex justify-between pt-1 border-t border-gray-100">
                   <span className="text-gray-600">Est. Net</span>
                   <span className="font-semibold" style={{ color: '#15803d' }}>
-                    {fmtCurrency(String(Math.round(netCheckResult.net - totalConcessions)))}
+                    {fmtCurrency(String(Math.round(netProceedsResult.net)))}
                   </span>
                 </div>
               )}
