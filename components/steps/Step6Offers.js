@@ -215,7 +215,7 @@ export default function Step6Offers({ onSelectStep }) {
                 className="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: ACCENT }}
               >
-                → Go to Step 7
+                Move to the next step: Option Period &amp; Inspection →
               </button>
             </div>
           )}
@@ -365,7 +365,7 @@ export default function Step6Offers({ onSelectStep }) {
               className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
               style={{ backgroundColor: ACCENT }}
             >
-              Next up: Option Period &amp; Inspection →
+              Move to the next step: Option Period &amp; Inspection →
             </button>
           </div>
         </div>
