@@ -232,7 +232,7 @@ export default function Step7Inspection({ onSelectStep }) {
                 <label className="block text-xs font-semibold text-gray-700 mb-1">Start date</label>
                 <input
                   type="date"
-                  value={startDate}
+                  value={optionPeriod.startDate}
                   onChange={e => {
                     const s = e.target.value
                     setAndSaveOptionPeriod(prev => {
@@ -252,14 +252,14 @@ export default function Step7Inspection({ onSelectStep }) {
                 <label className="block text-xs font-semibold text-gray-700 mb-1">End date</label>
                 <input
                   type="date"
-                  value={endDate}
+                  value={optionPeriod.endDate}
                   onChange={e => setAndSaveOptionPeriod(prev => ({ ...prev, endDate: e.target.value }))}
                   className={inputCls}
                 />
               </div>
             </div>
 
-            {startDate && endDate && (
+            {optionPeriod.startDate && optionPeriod.endDate && (
               <div>
                 <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden mb-3">
                   <div
@@ -641,7 +641,7 @@ export default function Step7Inspection({ onSelectStep }) {
 
           <div className="rounded-xl border border-gray-200 bg-white px-4 py-4">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Days Remaining</p>
-            {startDate && endDate ? (
+            {optionPeriod.startDate && optionPeriod.endDate ? (
               isExpired ? (
                 <div style={{ color: ACCENT }}>
                   <span className="text-3xl">✅</span>
