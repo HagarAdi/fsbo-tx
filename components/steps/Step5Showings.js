@@ -194,11 +194,7 @@ export default function Step5Showings({ onSelectStep }) {
 
                     {showings.length > 0 && (
                       <div className="space-y-3">
-                        {(expandedShowingId
-                          ? showings
-                          : [...showings].sort((a, b) => `${a.date || ''} ${a.time || ''}`.localeCompare(`${b.date || ''} ${b.time || ''}`))
-                        )
-                          .map(s => {
+                        {showings.map(s => {
                           const colors = STATUS_COLORS[s.status] || STATUS_COLORS['Scheduled']
                           const isExpanded = expandedShowingId === s.id
                           const whenLabel = formatShowingWhen(s.date, s.time) || 'New showing'
