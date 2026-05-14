@@ -22,7 +22,7 @@ const EDIT_TARGETS = {
 function getTitleCo() {
   try {
     const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
-    return all.step5?.titleCompany || null
+    return all.step4?.titleCompany || all.step5?.titleCompany || null
   } catch { return null }
 }
 

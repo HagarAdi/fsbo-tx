@@ -22,16 +22,16 @@ export function getStepStatuses(stepData = {}) {
   const s3complete = STEP3_HIGH.every(id => checked3.includes(id))
 
   const step4 = s.step4 || {}
+  const step5 = s.step5 || {}
   const rooms = Array.isArray(step4.uploadedRooms) ? step4.uploadedRooms : []
   const desc = step4.listingDetails?.description || ''
-  const s4partial = rooms.length > 0 || desc.length > 0
-  const s4complete = rooms.length > 0 && desc.length > 0
+  const tc4 = step4.titleCompany || step5.titleCompany || {}
+  const s4partial = rooms.length > 0 || desc.length > 0 || !!tc4.name
+  const s4complete = rooms.length > 0 && desc.length > 0 && !!tc4.name
 
-  const step5 = s.step5 || {}
-  const tc5 = step5.titleCompany || {}
   const showings5 = Array.isArray(step5.showings) ? step5.showings : []
-  const s5partial = !!(step5.showingMethod || tc5.name || showings5.length)
-  const s5complete = !!(step5.showingMethod && tc5.name)
+  const s5partial = !!(step5.showingMethod || showings5.length)
+  const s5complete = !!step5.showingMethod
 
   const step6 = s.step6 || {}
   const offers = Array.isArray(step6.offers) ? step6.offers : []

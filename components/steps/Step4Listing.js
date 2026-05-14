@@ -229,9 +229,36 @@ const VIRTUAL_TOUR_PROVIDERS = [
 
 const EMPTY_MEDIA = { yardSignOrdered: false, virtualTourUrl: '', virtualTourType: '' }
 
+const EMPTY_TITLE_CO = { name: '', escrow: '', email: '', phone: '' }
+
+const TITLE_COMPANIES = [
+  { name: 'Republic Title',      coverage: 'Dallas/Fort Worth & Austin', url: 'https://republictitle.com' },
+  { name: 'Chicago Title Texas', coverage: 'All TX counties',            url: 'https://cttexas.com' },
+  { name: 'Independence Title',  coverage: 'Austin & Central TX',        url: 'https://independencetitle.com' },
+]
+
+const TITLE_BENEFITS = [
+  {
+    icon: '🛡️',
+    label: 'Earnest money on day one',
+    detail: 'Having an open escrow lets the buyer deposit funds the moment the contract is signed — satisfying Paragraph 5 immediately and signaling a committed deal.',
+  },
+  {
+    icon: '🔍',
+    label: 'Catch problems before the Option Period clock starts',
+    detail: "A preliminary title search can surface liens, boundary errors, or ownership gaps before the buyer's 10-day inspection window even begins.",
+  },
+  {
+    icon: '✅',
+    label: 'Signal you are a prepared seller',
+    detail: 'Buyer agents notice when a FSBO has an established escrow team. It removes a common objection and speeds up offer negotiations.',
+  },
+]
+
 const SUB_STEPS = [
   { id: 1, label: 'Photography' },
   { id: 2, label: 'Your Listing' },
+  { id: 3, label: 'Title Company' },
 ]
 
 const slideVariants = {
@@ -524,6 +551,20 @@ export default function Step4Listing({ onSelectStep }) {
     return { ...EMPTY_MEDIA, ...(loadStepData().step4?.media || {}) }
   })
   const [activeMediaModal, setActiveMediaModal] = useState(null)
+  const [titleCompany, setTitleCompany] = useState(() => {
+    if (typeof window === 'undefined') return EMPTY_TITLE_CO
+    const data = loadStepData()
+    const stored = data.step4?.titleCompany
+    if (stored && (stored.name || stored.escrow || stored.email || stored.phone)) {
+      return { ...EMPTY_TITLE_CO, ...stored }
+    }
+    const legacy = data.step5?.titleCompany
+    if (legacy && (legacy.name || legacy.escrow || legacy.email || legacy.phone)) {
+      return { ...EMPTY_TITLE_CO, ...legacy }
+    }
+    return EMPTY_TITLE_CO
+  })
+  const [titleBenefitsOpen, setTitleBenefitsOpen] = useState(false)
   const listNowMenuRef = useRef(null)
 
   // Derived — before wizard
@@ -619,6 +660,23 @@ export default function Step4Listing({ onSelectStep }) {
       notifyStepDataChange()
     } catch {}
   }, [features, neighborhood, vibe, description, specs, platformDrafts, platformDraftsDirty, activePlatform, selectedMls, media])
+
+  // Persist title company (and clear legacy step5.titleCompany slot once migrated)
+  useEffect(() => {
+    try {
+      const existing = loadStepData()
+      const next = {
+        ...existing,
+        step4: { ...existing.step4, titleCompany },
+      }
+      if (existing.step5?.titleCompany) {
+        const { titleCompany: _legacy, ...step5Rest } = existing.step5
+        next.step5 = step5Rest
+      }
+      localStorage.setItem('fsbo_stepData', JSON.stringify(next))
+      notifyStepDataChange()
+    } catch {}
+  }, [titleCompany])
 
   const addBeforePhotos = (id, newPhotos) => {
     setPhotos(prev => ({ ...prev, [id]: [...prev[id], ...newPhotos] }))
@@ -1080,10 +1138,145 @@ export default function Step4Listing({ onSelectStep }) {
                       <button type="button" onClick={() => goTo(1)} className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors">
                         ← Back
                       </button>
-                      <button type="button" onClick={() => onSelectStep && onSelectStep(5)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
-                        Next up: Showings &amp; Open Houses →
+                      <button type="button" onClick={() => goTo(3)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                        Continue to Title Company →
                       </button>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-step 3: Title Company */}
+              {activeSubStep === 3 && (
+                <div>
+                  <section className="mb-8">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Preferred Title Company</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      In Texas, the seller pays for the Title Policy and typically chooses the title company. Locking this in now means buyers can send earnest money to the right place immediately after you accept an offer — preventing delays at Step 8.
+                    </p>
+
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+
+                      <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50">
+                        <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: ACCENT }} />
+                        <p className="text-xs text-gray-500">Escrow opens the moment you accept an offer. Lock this in now.</p>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+
+                        <div className="flex-1 px-5 py-5 min-w-0">
+                          <div className="space-y-4 max-w-xs">
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Company name</label>
+                              <input
+                                type="text"
+                                value={titleCompany.name}
+                                onChange={e => setTitleCompany(p => ({ ...p, name: e.target.value }))}
+                                placeholder="e.g. Capital Title of Texas"
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Escrow officer name</label>
+                              <input
+                                type="text"
+                                value={titleCompany.escrow}
+                                onChange={e => setTitleCompany(p => ({ ...p, escrow: e.target.value }))}
+                                placeholder="e.g. Maria Gonzalez"
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Email</label>
+                              <input
+                                type="email"
+                                value={titleCompany.email}
+                                onChange={e => setTitleCompany(p => ({ ...p, email: e.target.value }))}
+                                placeholder="escrow@titleco.com"
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">Phone</label>
+                              <input
+                                type="tel"
+                                value={titleCompany.phone}
+                                onChange={e => setTitleCompany(p => ({ ...p, phone: e.target.value }))}
+                                placeholder="(512) 555-0100"
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="w-full sm:w-64 shrink-0 px-5 py-5 bg-gray-50">
+                          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Popular in Texas</p>
+                          <div className="space-y-2">
+                            {TITLE_COMPANIES.map(co => (
+                              <a
+                                key={co.name}
+                                href={co.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-start justify-between gap-2 px-3 py-3 rounded-lg border border-gray-200 bg-white hover:border-green-400 hover:shadow-sm transition-all group"
+                              >
+                                <div className="min-w-0">
+                                  <p className="text-sm font-semibold text-gray-800 group-hover:text-green-700 transition-colors truncate">{co.name}</p>
+                                  <p className="text-xs text-gray-500 mt-0.5 leading-snug">{co.coverage}</p>
+                                </div>
+                                <svg className="w-4 h-4 text-gray-300 group-hover:text-green-500 flex-shrink-0 mt-0.5 transition-colors" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M3 8h10M9 4l4 4-4 4" />
+                                </svg>
+                              </a>
+                            ))}
+                          </div>
+
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <button
+                              type="button"
+                              onClick={() => setTitleBenefitsOpen(o => !o)}
+                              className="w-full flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-widest hover:text-gray-700 transition-colors"
+                            >
+                              <span>Why choose title now?</span>
+                              <span>{titleBenefitsOpen ? '▲' : '▼'}</span>
+                            </button>
+                            {titleBenefitsOpen && (
+                              <div className="mt-3 space-y-3">
+                                {TITLE_BENEFITS.map(({ icon, label, detail }, i) => (
+                                  <div key={i} className="flex gap-3 rounded-lg border border-gray-100 bg-white px-3 py-2">
+                                    <span className="text-base flex-shrink-0">{icon}</span>
+                                    <div>
+                                      <p className="text-xs font-semibold text-gray-800">{label}</p>
+                                      <p className="text-xs text-gray-500 mt-0.5 leading-snug">{detail}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {titleCompany.name && (
+                        <div className="px-5 py-3 border-t border-green-100 bg-green-50 flex items-center gap-2">
+                          <svg className="w-4 h-4 text-green-600 flex-shrink-0" viewBox="0 0 16 16" fill="none">
+                            <circle cx="8" cy="8" r="7" fill="#16a34a" />
+                            <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <p className="text-xs text-green-700 font-medium">Will auto-populate Para 5C (Escrow Agent) in your Step 6 offer cards</p>
+                        </div>
+                      )}
+
+                    </div>
+                  </section>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <button type="button" onClick={() => goTo(2)} className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors">
+                      ← Back
+                    </button>
+                    <button type="button" onClick={() => onSelectStep && onSelectStep(5)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                      Next up: Showings &amp; Open Houses →
+                    </button>
                   </div>
                 </div>
               )}
@@ -1094,7 +1287,19 @@ export default function Step4Listing({ onSelectStep }) {
 
         {/* Context-aware sidebar */}
         <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-4 space-y-4">
-          {activeSubStep === 1 ? (
+          {activeSubStep === 3 ? (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Why now?</h4>
+              <div className="space-y-3">
+                {TITLE_BENEFITS.map(({ icon, label, detail }, i) => (
+                  <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
+                    <p className="text-xs font-semibold text-gray-800 leading-snug mb-0.5">{icon} {label}</p>
+                    <p className="text-xs text-gray-500 leading-snug">{detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : activeSubStep === 1 ? (
             <>
               <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                 <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Before You Shoot 📸</h4>

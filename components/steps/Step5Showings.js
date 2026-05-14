@@ -7,7 +7,7 @@ import SetupModal from '../SetupModal'
 const ACCENT = '#16a34a'
 
 const SUB_STEPS = [
-  { id: 1, label: 'Setup' },
+  { id: 1, label: 'Showing Method' },
   { id: 2, label: 'Showing Log' },
 ]
 
@@ -58,32 +58,6 @@ const STATUS_COLORS = {
   'No Show':  { bg: '#fef3c7', text: '#92400e' },
 }
 
-const EMPTY_TITLE_CO = { name: '', escrow: '', email: '', phone: '' }
-
-const TITLE_COMPANIES = [
-  { name: 'Republic Title',      coverage: 'Dallas/Fort Worth & Austin', url: 'https://republictitle.com' },
-  { name: 'Chicago Title Texas', coverage: 'All TX counties',            url: 'https://cttexas.com' },
-  { name: 'Independence Title',  coverage: 'Austin & Central TX',        url: 'https://independencetitle.com' },
-]
-
-const TITLE_BENEFITS = [
-  {
-    icon: '🛡️',
-    label: 'Earnest money on day one',
-    detail: 'Having an open escrow lets the buyer deposit funds the moment the contract is signed — satisfying Paragraph 5 immediately and signaling a committed deal.',
-  },
-  {
-    icon: '🔍',
-    label: 'Catch problems before the Option Period clock starts',
-    detail: "A preliminary title search can surface liens, boundary errors, or ownership gaps before the buyer's 10-day inspection window even begins.",
-  },
-  {
-    icon: '✅',
-    label: 'Signal you are a prepared seller',
-    detail: 'Buyer agents notice when a FSBO has an established escrow team. It removes a common objection and speeds up offer negotiations.',
-  },
-]
-
 function loadStep5() {
   try {
     const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
@@ -94,7 +68,8 @@ function loadStep5() {
 function saveStep5(data) {
   try {
     const all = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
-    localStorage.setItem('fsbo_stepData', JSON.stringify({ ...all, step5: data }))
+    const merged = { ...(all.step5 || {}), ...data }
+    localStorage.setItem('fsbo_stepData', JSON.stringify({ ...all, step5: merged }))
     notifyStepDataChange()
   } catch {}
 }
@@ -110,11 +85,9 @@ export default function Step5Showings({ onSelectStep }) {
   }
 
   const [activeModal, setActiveModal] = useState(null)
-  const [timelineOpen, setTimelineOpen] = useState(false)
 
   const [showingMethod, setShowingMethod] = useState('')
   const [showings, setShowings]           = useState([])
-  const [titleCompany, setTitleCompany]   = useState(EMPTY_TITLE_CO)
 
   const [expandedShowingId, setExpandedShowingId] = useState(null)
   const [showMilestone, setShowMilestone] = useState(false)
@@ -122,9 +95,11 @@ export default function Step5Showings({ onSelectStep }) {
   const buildMarketSummary = () => {
     let listingLabel = 'Listing in progress'
     const showingLabel = showingMethod || 'Method not yet selected'
-    const titleLabel = titleCompany?.name || 'Title company not yet set'
+    let titleLabel = 'Title company not yet set'
     try {
       const data = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
+      const tc = data.step4?.titleCompany || data.step5?.titleCompany
+      if (tc?.name) titleLabel = tc.name
       const photoCount = Array.isArray(data.step4?.uploadedRooms) ? data.step4.uploadedRooms.length : 0
       const hasDescription = !!(data.step4?.listingDetails?.description && String(data.step4.listingDetails.description).trim())
       if (photoCount > 0 || hasDescription) {
@@ -145,12 +120,11 @@ export default function Step5Showings({ onSelectStep }) {
     const saved = loadStep5()
     setShowingMethod(saved.showingMethod || '')
     setShowings(saved.showings || [])
-    setTitleCompany(saved.titleCompany || EMPTY_TITLE_CO)
   }, [])
 
   useEffect(() => {
-    saveStep5({ showingMethod, showings, titleCompany })
-  }, [showingMethod, showings, titleCompany])
+    saveStep5({ showingMethod, showings })
+  }, [showingMethod, showings])
 
   const addShowing = () => {
     const newShowing = { id: Date.now(), date: '', time: '', agent: '', status: 'Scheduled', notes: '' }
@@ -266,130 +240,6 @@ export default function Step5Showings({ onSelectStep }) {
                       </span>
                     </span>
                   </button>
-
-                  {/* Preferred Title Company */}
-                  <section className="mb-8">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Preferred Title Company</h3>
-                    <p className="text-sm text-gray-500 mb-4">
-                      In Texas, the seller pays for the Title Policy and typically chooses the title company.
-                      Locking this in now means buyers can send earnest money to the right place immediately
-                      after you accept an offer — preventing delays at Step 8.
-                    </p>
-
-                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-
-                      <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50">
-                        <div className="w-1 h-6 rounded-full flex-shrink-0" style={{ backgroundColor: ACCENT }} />
-                        <p className="text-xs text-gray-500">Escrow opens the moment you accept an offer. Lock this in now.</p>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
-
-                        <div className="flex-1 px-5 py-5 min-w-0">
-                          <div className="space-y-4 max-w-xs">
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">Company name</label>
-                              <input
-                                type="text"
-                                value={titleCompany.name}
-                                onChange={e => setTitleCompany(p => ({ ...p, name: e.target.value }))}
-                                placeholder="e.g. Capital Title of Texas"
-                                className={inputCls}
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">Escrow officer name</label>
-                              <input
-                                type="text"
-                                value={titleCompany.escrow}
-                                onChange={e => setTitleCompany(p => ({ ...p, escrow: e.target.value }))}
-                                placeholder="e.g. Maria Gonzalez"
-                                className={inputCls}
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">Email</label>
-                              <input
-                                type="email"
-                                value={titleCompany.email}
-                                onChange={e => setTitleCompany(p => ({ ...p, email: e.target.value }))}
-                                placeholder="escrow@titleco.com"
-                                className={inputCls}
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">Phone</label>
-                              <input
-                                type="tel"
-                                value={titleCompany.phone}
-                                onChange={e => setTitleCompany(p => ({ ...p, phone: e.target.value }))}
-                                placeholder="(512) 555-0100"
-                                className={inputCls}
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="w-full sm:w-64 shrink-0 px-5 py-5 bg-gray-50">
-                          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Popular in Texas</p>
-                          <div className="space-y-2">
-                            {TITLE_COMPANIES.map(co => (
-                              <a
-                                key={co.name}
-                                href={co.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-start justify-between gap-2 px-3 py-3 rounded-lg border border-gray-200 bg-white hover:border-green-400 hover:shadow-sm transition-all group"
-                              >
-                                <div className="min-w-0">
-                                  <p className="text-sm font-semibold text-gray-800 group-hover:text-green-700 transition-colors truncate">{co.name}</p>
-                                  <p className="text-xs text-gray-500 mt-0.5 leading-snug">{co.coverage}</p>
-                                </div>
-                                <svg className="w-4 h-4 text-gray-300 group-hover:text-green-500 flex-shrink-0 mt-0.5 transition-colors" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M3 8h10M9 4l4 4-4 4" />
-                                </svg>
-                              </a>
-                            ))}
-                          </div>
-
-                          <div className="mt-4 pt-4 border-t border-gray-200">
-                            <button
-                              type="button"
-                              onClick={() => setTimelineOpen(o => !o)}
-                              className="w-full flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-widest hover:text-gray-700 transition-colors"
-                            >
-                              <span>Why choose title now?</span>
-                              <span>{timelineOpen ? '▲' : '▼'}</span>
-                            </button>
-                            {timelineOpen && (
-                              <div className="mt-3 space-y-3">
-                                {TITLE_BENEFITS.map(({ icon, label, detail }, i) => (
-                                  <div key={i} className="flex gap-3 rounded-lg border border-gray-100 bg-white px-3 py-2">
-                                    <span className="text-base flex-shrink-0">{icon}</span>
-                                    <div>
-                                      <p className="text-xs font-semibold text-gray-800">{label}</p>
-                                      <p className="text-xs text-gray-500 mt-0.5 leading-snug">{detail}</p>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {titleCompany.name && (
-                        <div className="px-5 py-3 border-t border-green-100 bg-green-50 flex items-center gap-2">
-                          <svg className="w-4 h-4 text-green-600 flex-shrink-0" viewBox="0 0 16 16" fill="none">
-                            <circle cx="8" cy="8" r="7" fill="#16a34a" />
-                            <path d="M5 8l2.5 2.5L11 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          <p className="text-xs text-green-700 font-medium">Will auto-populate Para 5C (Escrow Agent) in your Step 6 offer cards</p>
-                        </div>
-                      )}
-
-                    </div>
-                  </section>
 
                   <div className="pt-6 border-t border-gray-100 flex justify-end">
                     <button
