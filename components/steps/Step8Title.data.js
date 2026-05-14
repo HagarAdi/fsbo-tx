@@ -189,7 +189,7 @@ function deriveStep8Defaults(closingDate, salePriceOverride = '') {
   let titleFees = ''
   let propertyTaxes = ''
   if (priceNum > 0) {
-    const r = calcNetProceeds({ price: priceNum, closingDate: closingDate || '' }, '')
+    const r = calcNetProceeds({ price: priceNum, closingDate: closingDate || '', titlePolicyOverride: accepted?.titlePolicyOverride }, '')
     if (r) {
       titleFees     = String(Math.round(r.titlePolicy + r.escrow))
       propertyTaxes = String(Math.round(r.taxProration))
