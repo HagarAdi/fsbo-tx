@@ -52,8 +52,10 @@ export default function Step8Title({ onSelectStep }) {
     [closingDates.closingDate, upstreamTick, overrides.salePrice],
   )
 
+  const readOnlyFields = new Set(NET_PROCEEDS_FIELDS.filter(f => f.readOnly).map(f => f.field))
+
   const fields = AUTOFILLABLE_FIELDS.reduce((acc, f) => {
-    acc[f] = overrides[f] !== '' ? overrides[f] : defaults[f]
+    acc[f] = (readOnlyFields.has(f) || overrides[f] === '') ? defaults[f] : overrides[f]
     return acc
   }, { ...overrides })
 
@@ -295,8 +297,9 @@ export default function Step8Title({ onSelectStep }) {
 
           <div className="rounded-xl border-2 border-green-200 bg-white px-5 py-5" style={{ boxShadow: '0 0 0 4px #f0fdf4' }}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              {NET_PROCEEDS_FIELDS.map(({ field, label, placeholder }) => {
-                const autofilled = isAutofilled(field)
+              {NET_PROCEEDS_FIELDS.map(({ field, label, placeholder, readOnly }) => {
+                const autofilled = readOnly || isAutofilled(field)
+                const showJumpLink = readOnly || (autofilled && (field === 'sellerContribution' || field === 'repairCredits'))
                 return (
                   <div key={field}>
                     <label className="flex items-center text-xs font-semibold text-gray-700 mb-1">
@@ -316,11 +319,12 @@ export default function Step8Title({ onSelectStep }) {
                       type="number"
                       min="0"
                       value={fields[field]}
-                      onChange={e => setOverrides(prev => ({ ...prev, [field]: e.target.value }))}
+                      onChange={readOnly ? undefined : e => setOverrides(prev => ({ ...prev, [field]: e.target.value }))}
                       placeholder={placeholder}
-                      className={inputCls}
+                      readOnly={!!readOnly}
+                      className={`${inputCls}${readOnly ? ' bg-gray-50 text-gray-600 cursor-not-allowed' : ''}`}
                     />
-                    {autofilled && (field === 'sellerContribution' || field === 'repairCredits') && (
+                    {showJumpLink && (
                       <button
                         type="button"
                         onClick={() => onSelectStep?.(field === 'repairCredits' ? 7 : 6)}
