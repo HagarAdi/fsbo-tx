@@ -439,11 +439,10 @@ export default function Step5Showings({ onSelectStep }) {
             {activeSubStep === 1 && (
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Checklist</p>
-                <p className="text-xs text-gray-400 mb-3 leading-snug">2 things to lock in</p>
+                <p className="text-xs text-gray-400 mb-3 leading-snug">Pick how buyers will tour your home</p>
                 <div className="space-y-2">
                   {[
                     { emoji: '🔑', label: 'Showing method', done: !!showingMethod },
-                    { emoji: '🏢', label: 'Title company', done: !!titleCompany.name },
                   ].map(({ emoji, label, done }) => (
                     <div key={label} className="flex items-center gap-2 text-xs">
                       <span className={done ? 'text-green-500' : 'text-gray-300'} style={{ fontSize: 13 }}>{done ? '✓' : '○'}</span>
