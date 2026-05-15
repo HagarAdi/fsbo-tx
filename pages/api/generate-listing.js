@@ -54,7 +54,8 @@ Write in a genuine seller voice — personal, not corporate. Make each version f
       body: JSON.stringify({
         model: 'google:gemini@3.1-pro',
         messages: [{ role: 'user', content: prompt }],
-        max_completion_tokens: 2048,
+        max_completion_tokens: 8000,
+        reasoning_effort: 'low',
       }),
     }
   )
