@@ -518,7 +518,7 @@ export default function Step4Listing({ onSelectStep }) {
   const [specs, setSpecs] = useState(() => {
     if (typeof window === 'undefined') return { sqft: '', bedrooms: '', bathrooms: '', yearBuilt: '' }
     const saved = loadStepData().step4?.listingDetails?.specs
-    if (saved) return saved
+    if (saved && (saved.sqft || saved.bedrooms || saved.bathrooms || saved.yearBuilt)) return saved
     const s1 = loadStepData().step1 || {}
     return {
       sqft: s1.sqft || '',
