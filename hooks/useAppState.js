@@ -42,6 +42,7 @@ export function useAppState() {
 
   const handleShowOnboarding = () => {
     localStorage.removeItem('fsbo_homeAddress')
+    localStorage.removeItem('fsbo_homeAddressMeta')
     setHomeAddress('')
     setShowOnboarding(true)
   }
