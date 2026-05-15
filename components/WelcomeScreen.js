@@ -175,30 +175,59 @@ function HeroCard({ allDone, nextStep, onSelectStep }) {
 }
 
 function PropertyCard({ homeAddress, addressMeta, onShowOnboarding, onReset }) {
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+
   return (
-    <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-900 p-6 flex items-center gap-4">
-      <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-800 flex items-center justify-center">
-        <StreetViewWithFallback lat={addressMeta?.lat} lng={addressMeta?.lng} size="192x128" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-white font-semibold text-sm truncate">{homeAddress || 'Your Property'}</p>
-        <div className="flex items-center gap-3 mt-1">
-          <button
-            onClick={onShowOnboarding}
-            className="text-slate-400 text-xs hover:text-emerald-400 transition-colors underline underline-offset-2"
-          >
-            Change address
-          </button>
-          <span className="text-slate-700 text-xs">·</span>
-          <button
-            onClick={onReset}
-            className="text-slate-500 text-xs hover:text-red-400 transition-colors"
-          >
-            ↺ Reset all data
-          </button>
+    <>
+      <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-900 p-6 flex items-center gap-4">
+        <button
+          onClick={() => setLightboxOpen(true)}
+          className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-800 flex items-center justify-center hover:opacity-80 transition-opacity"
+          aria-label="Enlarge street view"
+        >
+          <StreetViewWithFallback lat={addressMeta?.lat} lng={addressMeta?.lng} size="192x128" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-semibold text-sm truncate">{homeAddress || 'Your Property'}</p>
+          <div className="flex items-center gap-3 mt-1">
+            <button
+              onClick={onShowOnboarding}
+              className="text-slate-400 text-xs hover:text-emerald-400 transition-colors underline underline-offset-2"
+            >
+              Change address
+            </button>
+            <span className="text-slate-700 text-xs">·</span>
+            <button
+              onClick={onReset}
+              className="text-slate-500 text-xs hover:text-red-400 transition-colors"
+            >
+              ↺ Reset all data
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <div className="relative max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setLightboxOpen(false)}
+              className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center
+                         text-slate-900 font-bold text-lg leading-none hover:bg-slate-100 shadow-lg z-10"
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <div className="w-full aspect-video rounded-xl overflow-hidden bg-slate-800">
+              <StreetViewWithFallback lat={addressMeta?.lat} lng={addressMeta?.lng} size="800x450" />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
