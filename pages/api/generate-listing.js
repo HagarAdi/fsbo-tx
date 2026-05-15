@@ -71,7 +71,6 @@ Write in a genuine seller voice — personal, not corporate. Make each version f
         messages: [{ role: 'user', content: prompt }],
         max_completion_tokens: 8000,
         reasoning_effort: 'low',
-        response_format: { type: 'json_object' },
       }),
     }
   )
