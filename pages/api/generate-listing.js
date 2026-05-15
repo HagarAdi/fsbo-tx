@@ -67,6 +67,6 @@ Write in a genuine seller voice — personal, not corporate. Make each version f
     const drafts = JSON.parse(clean)
     res.status(200).json({ drafts })
   } catch {
-    res.status(200).json({ drafts: null, error: 'Could not parse response' })
+    res.status(200).json({ drafts: null, error: 'Could not parse response', status: response.status, runware: data })
   }
 }
