@@ -1044,10 +1044,15 @@ export default function Step4Listing({ onSelectStep }) {
                         type="button"
                         onClick={handleGenerateAll}
                         disabled={generating}
-                        className="w-full px-5 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full px-5 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                         style={{ backgroundColor: ACCENT }}
                       >
-                        {generating ? 'Improving… 🤖' : 'Improve with AI →'}
+                        {generating ? (
+                          <>
+                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+                            Improving… 🤖
+                          </>
+                        ) : 'Improve with AI →'}
                       </button>
                     </div>
 
