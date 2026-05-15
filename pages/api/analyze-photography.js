@@ -1,3 +1,18 @@
+function extractLastBalanced(text, open, close) {
+  const stripped = text.replace(/```json|```/g, '');
+  const lastClose = stripped.lastIndexOf(close);
+  if (lastClose === -1) return null;
+  let depth = 0;
+  for (let i = lastClose; i >= 0; i--) {
+    if (stripped[i] === close) depth++;
+    else if (stripped[i] === open) {
+      depth--;
+      if (depth === 0) return stripped.slice(i, lastClose + 1);
+    }
+  }
+  return null;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -58,8 +73,8 @@ export default async function handler(req, res) {
 
   try {
     const text = data.choices[0].message.content;
-    const clean = text.replace(/```json|```/g, '').trim();
-    const findings = JSON.parse(clean);
+    const jsonText = extractLastBalanced(text, '[', ']') || text.trim();
+    const findings = JSON.parse(jsonText);
     res.status(200).json({ findings });
   } catch (e) {
     res.status(200).json({ findings: [], error: 'Could not parse response' });
