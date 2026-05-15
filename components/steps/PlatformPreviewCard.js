@@ -63,7 +63,7 @@ export default function PlatformPreviewCard({
       <textarea
         value={activeText}
         onChange={e => onDraftChange(activePlatform, e.target.value)}
-        rows={14}
+        rows={24}
         className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-800 leading-relaxed focus:outline-none focus:ring-2 focus:border-transparent transition resize-none font-mono"
       />
 
