@@ -174,6 +174,33 @@ function HeroCard({ allDone, nextStep, onSelectStep }) {
   )
 }
 
+function PropertyCard({ homeAddress, addressMeta, onShowOnboarding, onReset }) {
+  return (
+    <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-900">
+      <div className="w-full aspect-video bg-slate-800 flex items-center justify-center">
+        <StreetViewWithFallback lat={addressMeta?.lat} lng={addressMeta?.lng} size="640x360" />
+      </div>
+      <div className="px-4 py-3 flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-white font-semibold text-sm truncate">{homeAddress || 'Your Property'}</p>
+          <button
+            onClick={onShowOnboarding}
+            className="text-slate-400 text-xs hover:text-emerald-400 transition-colors underline underline-offset-2"
+          >
+            Change address
+          </button>
+        </div>
+        <button
+          onClick={onReset}
+          className="shrink-0 text-xs text-slate-600 hover:text-red-400 transition-colors whitespace-nowrap"
+        >
+          ↺ Reset all data
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, completedSteps = [], onSelectStep }) {
@@ -199,22 +226,10 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, comp
     <div className="min-h-full bg-slate-950 flex flex-col">
 
       {/* ── Sticky Header ── */}
-      <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center gap-4">
-        <div className="w-16 h-10 rounded-lg overflow-hidden shrink-0 bg-slate-800 flex items-center justify-center">
-          <StreetViewWithFallback lat={addressMeta?.lat} lng={addressMeta?.lng} />
-        </div>
+      <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between">
+        <p className="text-white font-bold text-sm tracking-wide">FSBO Texas Guide</p>
 
-        <div className="flex-1 min-w-0">
-          <p className="text-white font-semibold text-sm truncate">{homeAddress || 'Your Property'}</p>
-          <button
-            onClick={onShowOnboarding}
-            className="text-slate-400 text-xs hover:text-emerald-400 transition-colors underline underline-offset-2"
-          >
-            Change address
-          </button>
-        </div>
-
-        <div className="text-right shrink-0">
+        <div className="text-right">
           <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-0.5">FSBO Savings</p>
           {savings ? (
             <p className="text-2xl font-extrabold text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">
@@ -238,7 +253,15 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, comp
       {/* ── Main Content ── */}
       <div className="flex-1 p-4 md:p-6 flex flex-col gap-4 md:gap-6 max-w-7xl mx-auto w-full">
 
-        {/* Mobile: Hero first — CTA is the first thing seen */}
+        {/* Property hero — image + address + controls */}
+        <PropertyCard
+          homeAddress={homeAddress}
+          addressMeta={addressMeta}
+          onShowOnboarding={onShowOnboarding}
+          onReset={handleReset}
+        />
+
+        {/* Mobile: Hero CTA first */}
         <div className="md:hidden">
           <HeroCard allDone={allDone} nextStep={nextStep} onSelectStep={onSelectStep} />
         </div>
@@ -276,11 +299,6 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, comp
           <HeroCard allDone={allDone} nextStep={nextStep} onSelectStep={onSelectStep} />
         </div>
 
-        <div className="flex justify-center pt-1 pb-2">
-          <button onClick={handleReset} className="text-xs text-slate-600 hover:text-red-400 transition-colors">
-            ↺ Reset all data
-          </button>
-        </div>
       </div>
     </div>
   )
