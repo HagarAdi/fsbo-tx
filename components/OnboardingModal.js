@@ -1,14 +1,19 @@
 import { useState } from 'react'
+import PlaceAutocomplete from './PlaceAutocomplete'
 
 const ACCENT = '#16a34a'
 
 export default function OnboardingModal({ onAddressSave }) {
-  const [value, setValue] = useState('')
-  const isValid = value.trim().length >= 10
+  const [place, setPlace] = useState(null)
 
   const handleSubmit = () => {
-    if (!isValid) return
-    onAddressSave(value.trim())
+    if (!place) return
+    localStorage.setItem('fsbo_homeAddressMeta', JSON.stringify({
+      lat: place.lat,
+      lng: place.lng,
+      components: place.components,
+    }))
+    onAddressSave(place.formattedAddress)
   }
 
   return (
@@ -20,20 +25,12 @@ export default function OnboardingModal({ onAddressSave }) {
           <p className="text-gray-500 text-sm">What&apos;s the address of the home you&apos;re selling?</p>
         </div>
 
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-          placeholder="123 Elm St, Round Rock TX 78664"
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base text-gray-800 placeholder-gray-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 mb-4"
-          autoFocus
-        />
+        <PlaceAutocomplete onSelect={setPlace} />
 
         <button
           onClick={handleSubmit}
-          disabled={!isValid}
-          className="w-full py-3 rounded-xl text-white text-base font-semibold transition-opacity disabled:opacity-40"
+          disabled={!place}
+          className="w-full mt-4 py-3 rounded-xl text-white text-base font-semibold transition-opacity disabled:opacity-40"
           style={{ backgroundColor: ACCENT }}
         >
           Let&apos;s get started →

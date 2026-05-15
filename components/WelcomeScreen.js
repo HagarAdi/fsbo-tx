@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { steps } from '../data/steps'
 import { useAppStateContext } from '../hooks/AppStateContext'
+import StreetViewWithFallback from './StreetViewWithFallback'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -33,10 +34,15 @@ function deriveStats(showings) {
   return { showingCount: showings.length, activeDays: uniqueDays }
 }
 
-function streetViewUrl(address) {
-  const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
-  if (!key || !address) return null
-  return `https://maps.googleapis.com/maps/api/streetview?size=320x180&location=${encodeURIComponent(address)}&key=${key}`
+function useAddressMeta() {
+  const [meta, setMeta] = useState(null)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('fsbo_homeAddressMeta')
+      if (raw) setMeta(JSON.parse(raw))
+    } catch {}
+  }, [])
+  return meta
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -174,13 +180,13 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, comp
   const { fsboSavings } = useAppStateContext()
   const { showings } = useShowingData()
   const { showingCount, activeDays } = deriveStats(showings)
+  const addressMeta = useAddressMeta()
 
   const nextStep = steps.find((s) => !completedSteps.includes(s.id))
   const allDone  = !nextStep
   const savings  = fsboSavings ? fsboSavings.amount.toLocaleString() : null
   const estimate = fsboSavings ? `$${fsboSavings.basisPrice.toLocaleString()}` : null
   const basisLabel = fsboSavings?.basis === 'accepted' ? 'accepted' : 'est.'
-  const svUrl    = streetViewUrl(homeAddress)
   const inMarket = completedSteps.includes(4) || completedSteps.includes(5)
 
   const handleReset = () => {
@@ -195,10 +201,7 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, comp
       {/* ── Sticky Header ── */}
       <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center gap-4">
         <div className="w-16 h-10 rounded-lg overflow-hidden shrink-0 bg-slate-800 flex items-center justify-center">
-          {svUrl
-            ? <img src={svUrl} alt="Street view" className="w-full h-full object-cover" />
-            : <span className="text-xl">📍</span>
-          }
+          <StreetViewWithFallback lat={addressMeta?.lat} lng={addressMeta?.lng} />
         </div>
 
         <div className="flex-1 min-w-0">
