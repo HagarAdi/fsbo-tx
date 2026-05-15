@@ -11,6 +11,7 @@ export default function PlaceAutocomplete({ onSelect }) {
   const [isOpen, setIsOpen] = useState(false)
   // null = loading, true = Maps ready, false = no key / load failed → freetext mode
   const [apiReady, setApiReady] = useState(null)
+  const [apiError, setApiError] = useState(null)
 
   const autocompleteService = useRef(null)
   const placesService = useRef(null)
@@ -22,6 +23,7 @@ export default function PlaceAutocomplete({ onSelect }) {
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY) {
       setApiReady(false)
+      setApiError('no-key')
       return
     }
     loadGoogleMaps()
@@ -30,7 +32,10 @@ export default function PlaceAutocomplete({ onSelect }) {
         placesService.current = new google.maps.places.PlacesService(attributionEl.current)
         setApiReady(true)
       })
-      .catch(() => setApiReady(false))
+      .catch((err) => {
+        setApiReady(false)
+        setApiError(err?.message || 'load-failed')
+      })
   }, [])
 
   // In freetext mode, emit a place-shaped object whenever input is long enough
@@ -171,6 +176,14 @@ export default function PlaceAutocomplete({ onSelect }) {
             <span className="text-[10px] text-gray-400">Powered by Google</span>
           </div>
         </div>
+      )}
+
+      {apiError && (
+        <p className="mt-1 text-[11px] text-amber-600">
+          {apiError === 'no-key'
+            ? 'Autocomplete unavailable — API key not detected in this build'
+            : `Autocomplete unavailable — ${apiError}`}
+        </p>
       )}
 
       {/* Required by PlacesService constructor — must be in DOM */}
