@@ -38,7 +38,8 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'google:gemini@3.1-pro',
-        max_completion_tokens: 2048,
+        max_completion_tokens: 8000,
+        reasoning_effort: 'low',
         messages: [{
           role: 'user',
           content: [
