@@ -131,6 +131,11 @@ export default function PlaceAutocomplete({ onSelect, onInputChange }) {
       const place = suggestion.placePrediction.toPlace()
       await place.fetchFields({ fields: ['location', 'addressComponents', 'formattedAddress'] })
 
+      const loc = place.location
+      // Handle both LatLng objects (.lat()) and plain literals (.lat)
+      const lat = typeof loc?.lat === 'function' ? loc.lat() : (loc?.lat ?? null)
+      const lng = typeof loc?.lng === 'function' ? loc.lng() : (loc?.lng ?? null)
+
       setInputValue(place.formattedAddress)
       setPredictions([])
       setIsOpen(false)
@@ -138,12 +143,12 @@ export default function PlaceAutocomplete({ onSelect, onInputChange }) {
 
       onSelect({
         formattedAddress: place.formattedAddress,
-        lat: place.location.lat(),
-        lng: place.location.lng(),
-        components: place.addressComponents,
+        lat,
+        lng,
+        components: place.addressComponents ?? null,
       })
-    } catch {
-      // selection failed silently — user can try again
+    } catch (err) {
+      setApiError(`selection-failed: ${err?.message}`)
     }
   }
 
