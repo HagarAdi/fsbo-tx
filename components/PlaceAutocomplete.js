@@ -10,8 +10,8 @@ export default function PlaceAutocomplete({ onSelect }) {
   const [inputValue, setInputValue] = useState('')
   const [predictions, setPredictions] = useState([])
   const [isOpen, setIsOpen] = useState(false)
-  // null = loading, true = new Places API ready, false = freetext fallback
-  const [apiReady, setApiReady] = useState(null)
+  // false = freetext mode (default), true = Places API ready
+  const [apiReady, setApiReady] = useState(false)
   const [apiError, setApiError] = useState(null)
 
   const googleRef = useRef(null)
