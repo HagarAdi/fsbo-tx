@@ -86,11 +86,21 @@ export default function PlaceAutocomplete({ onSelect, onInputChange }) {
         setPredictions([])
         setIsOpen(false)
       }
-    } catch {
+    } catch (err) {
       setPredictions([])
       setIsOpen(false)
+      setApiError(err?.message || 'prediction-failed')
     }
   }, [])
+
+  // If API loads after user has already typed, trigger predictions immediately
+  useEffect(() => {
+    if (apiReady === true && inputValue.length >= MIN_CHARS) {
+      if (!sessionToken.current) refreshSessionToken()
+      fetchPredictions(inputValue)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiReady])
 
   const handleFocus = () => {
     if (apiReady === true && !sessionToken.current) refreshSessionToken()
