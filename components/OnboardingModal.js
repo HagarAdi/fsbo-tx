@@ -2,18 +2,26 @@ import { useState } from 'react'
 import PlaceAutocomplete from './PlaceAutocomplete'
 
 const ACCENT = '#16a34a'
+const FREETEXT_MIN = 10
 
 export default function OnboardingModal({ onAddressSave }) {
   const [place, setPlace] = useState(null)
+  const [rawInput, setRawInput] = useState('')
+
+  const isValid = place !== null || rawInput.trim().length >= FREETEXT_MIN
 
   const handleSubmit = () => {
-    if (!place) return
-    localStorage.setItem('fsbo_homeAddressMeta', JSON.stringify({
-      lat: place.lat,
-      lng: place.lng,
-      components: place.components,
-    }))
-    onAddressSave(place.formattedAddress)
+    if (!isValid) return
+    if (place) {
+      localStorage.setItem('fsbo_homeAddressMeta', JSON.stringify({
+        lat: place.lat,
+        lng: place.lng,
+        components: place.components,
+      }))
+      onAddressSave(place.formattedAddress)
+    } else {
+      onAddressSave(rawInput.trim())
+    }
   }
 
   return (
@@ -25,11 +33,11 @@ export default function OnboardingModal({ onAddressSave }) {
           <p className="text-gray-500 text-sm">What&apos;s the address of the home you&apos;re selling?</p>
         </div>
 
-        <PlaceAutocomplete onSelect={setPlace} />
+        <PlaceAutocomplete onSelect={setPlace} onInputChange={setRawInput} />
 
         <button
           onClick={handleSubmit}
-          disabled={!place}
+          disabled={!isValid}
           className="w-full mt-4 py-3 rounded-xl text-white text-base font-semibold transition-opacity disabled:opacity-40"
           style={{ backgroundColor: ACCENT }}
         >

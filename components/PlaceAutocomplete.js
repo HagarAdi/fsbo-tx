@@ -6,7 +6,7 @@ const MIN_CHARS = 3
 const FREETEXT_MIN = 10
 const LOAD_TIMEOUT_MS = 8000
 
-export default function PlaceAutocomplete({ onSelect }) {
+export default function PlaceAutocomplete({ onSelect, onInputChange }) {
   const [inputValue, setInputValue] = useState('')
   const [predictions, setPredictions] = useState([])
   const [isOpen, setIsOpen] = useState(false)
@@ -99,6 +99,7 @@ export default function PlaceAutocomplete({ onSelect }) {
   const handleChange = (e) => {
     const value = e.target.value
     setInputValue(value)
+    onInputChange?.(value)
 
     if (apiReady !== true) return
 
