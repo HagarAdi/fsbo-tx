@@ -540,6 +540,7 @@ export default function Step4Listing({ onSelectStep }) {
     if (typeof window === 'undefined') return EMPTY_PLATFORM_DIRTY
     return loadStepData().step4?.listingDetails?.platformDraftsDirty || EMPTY_PLATFORM_DIRTY
   })
+  const [generating, setGenerating] = useState(false)
   const [listNowMenuOpen, setListNowMenuOpen] = useState(false)
   const [mlsExpanded, setMlsExpanded] = useState(false)
   const [selectedMls, setSelectedMls] = useState(() => {
@@ -722,6 +723,23 @@ export default function Step4Listing({ onSelectStep }) {
     setPlatformDrafts(p => ({ ...p, [key]: fresh }))
     setPlatformDraftsDirty(d => ({ ...d, [key]: false }))
   }
+  const handleGenerateAll = async () => {
+    setGenerating(true)
+    try {
+      const res = await fetch('/api/generate-listing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ specs, vibe, features, neighborhood, notes: description, homeAddress }),
+      })
+      const data = await res.json()
+      if (data.drafts) {
+        setPlatformDrafts(prev => ({ ...prev, ...data.drafts }))
+        setPlatformDraftsDirty({ zillow: true, facebook: true, instagram: true, craigslist: true })
+      }
+    } catch {}
+    setGenerating(false)
+  }
+
   const handleSpecChange = (field, value) =>
     setSpecs(prev => ({ ...prev, [field]: value }))
   const handleResetSpecsFromStep1 = () => {
@@ -1017,10 +1035,20 @@ export default function Step4Listing({ onSelectStep }) {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-2">Core description (seeds all platforms)</label>
-                        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={6} maxLength={2000} placeholder="A short body paragraph describing the home in your own voice. Each platform's preview is generated from this plus your inputs above." className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-800 leading-relaxed focus:outline-none focus:ring-2 focus:border-transparent transition resize-none" />
+                        <label className="block text-sm font-semibold text-gray-800 mb-2">Seller notes <span className="font-normal text-gray-400">(optional)</span></label>
+                        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={5} maxLength={2000} placeholder="Anything the AI should know — recent upgrades, your favorite things about the home, why you're selling…" className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-800 leading-relaxed focus:outline-none focus:ring-2 focus:border-transparent transition resize-none" />
                         <p className={`text-xs mt-1 ${description.length > 1900 ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>{description.length} / 2,000 characters</p>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={handleGenerateAll}
+                        disabled={generating}
+                        className="w-full px-5 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ backgroundColor: ACCENT }}
+                      >
+                        {generating ? 'Generating… 🤖' : 'Generate listing copy with AI →'}
+                      </button>
                     </div>
 
                     {/* Right: preview */}
