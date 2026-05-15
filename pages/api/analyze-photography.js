@@ -37,7 +37,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${process.env.RUNWARE_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'google:gemini@3.1-pro',
+        model: 'moonshotai:k2.6@0',
         max_completion_tokens: 2048,
         messages: [{
           role: 'user',
