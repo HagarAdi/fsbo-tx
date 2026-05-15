@@ -26,13 +26,20 @@ export default function PlaceAutocomplete({ onSelect }) {
       setApiError('no-key')
       return
     }
+    const timeout = setTimeout(() => {
+      setApiReady(false)
+      setApiError('load-timeout — check API key restrictions and enabled APIs in Google Cloud')
+    }, 6000)
+
     loadGoogleMaps()
       .then((google) => {
+        clearTimeout(timeout)
         autocompleteService.current = new google.maps.places.AutocompleteService()
         placesService.current = new google.maps.places.PlacesService(attributionEl.current)
         setApiReady(true)
       })
       .catch((err) => {
+        clearTimeout(timeout)
         setApiReady(false)
         setApiError(err?.message || 'load-failed')
       })
