@@ -176,26 +176,27 @@ function HeroCard({ allDone, nextStep, onSelectStep }) {
 
 function PropertyCard({ homeAddress, addressMeta, onShowOnboarding, onReset }) {
   return (
-    <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-900">
-      <div className="w-full aspect-video bg-slate-800 flex items-center justify-center">
-        <StreetViewWithFallback lat={addressMeta?.lat} lng={addressMeta?.lng} size="640x360" />
+    <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-900 px-4 py-3 flex items-center gap-4">
+      <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-800 flex items-center justify-center">
+        <StreetViewWithFallback lat={addressMeta?.lat} lng={addressMeta?.lng} size="192x128" />
       </div>
-      <div className="px-4 py-3 flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-white font-semibold text-sm truncate">{homeAddress || 'Your Property'}</p>
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-semibold text-sm truncate">{homeAddress || 'Your Property'}</p>
+        <div className="flex items-center gap-3 mt-1">
           <button
             onClick={onShowOnboarding}
             className="text-slate-400 text-xs hover:text-emerald-400 transition-colors underline underline-offset-2"
           >
             Change address
           </button>
+          <span className="text-slate-700 text-xs">·</span>
+          <button
+            onClick={onReset}
+            className="text-slate-500 text-xs hover:text-red-400 transition-colors"
+          >
+            ↺ Reset all data
+          </button>
         </div>
-        <button
-          onClick={onReset}
-          className="shrink-0 text-xs text-slate-600 hover:text-red-400 transition-colors whitespace-nowrap"
-        >
-          ↺ Reset all data
-        </button>
       </div>
     </div>
   )
