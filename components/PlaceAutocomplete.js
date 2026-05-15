@@ -3,11 +3,14 @@ import { loadGoogleMaps } from '../lib/googleMaps'
 
 const DEBOUNCE_MS = 300
 const MIN_CHARS = 3
+const FREETEXT_MIN = 10
 
 export default function PlaceAutocomplete({ onSelect }) {
   const [inputValue, setInputValue] = useState('')
   const [predictions, setPredictions] = useState([])
   const [isOpen, setIsOpen] = useState(false)
+  // null = loading, true = Maps ready, false = no key / load failed → freetext mode
+  const [apiReady, setApiReady] = useState(null)
 
   const autocompleteService = useRef(null)
   const placesService = useRef(null)
@@ -17,11 +20,29 @@ export default function PlaceAutocomplete({ onSelect }) {
   const containerRef = useRef(null)
 
   useEffect(() => {
-    loadGoogleMaps().then((google) => {
-      autocompleteService.current = new google.maps.places.AutocompleteService()
-      placesService.current = new google.maps.places.PlacesService(attributionEl.current)
-    })
+    if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY) {
+      setApiReady(false)
+      return
+    }
+    loadGoogleMaps()
+      .then((google) => {
+        autocompleteService.current = new google.maps.places.AutocompleteService()
+        placesService.current = new google.maps.places.PlacesService(attributionEl.current)
+        setApiReady(true)
+      })
+      .catch(() => setApiReady(false))
   }, [])
+
+  // In freetext mode, emit a place-shaped object whenever input is long enough
+  useEffect(() => {
+    if (apiReady === false) {
+      if (inputValue.trim().length >= FREETEXT_MIN) {
+        onSelect({ formattedAddress: inputValue.trim(), lat: null, lng: null, components: null })
+      } else {
+        onSelect(null)
+      }
+    }
+  }, [apiReady, inputValue, onSelect])
 
   const refreshSessionToken = useCallback(() => {
     if (window.google?.maps?.places) {
@@ -57,12 +78,15 @@ export default function PlaceAutocomplete({ onSelect }) {
   }, [])
 
   const handleFocus = () => {
-    if (!sessionToken.current) refreshSessionToken()
+    if (apiReady && !sessionToken.current) refreshSessionToken()
   }
 
   const handleChange = (e) => {
     const value = e.target.value
     setInputValue(value)
+
+    if (apiReady !== true) return // freetext effect handles onSelect
+
     onSelect(null)
 
     if (!value) {
@@ -129,7 +153,7 @@ export default function PlaceAutocomplete({ onSelect }) {
                    focus:ring-green-100"
       />
 
-      {isOpen && predictions.length > 0 && (
+      {apiReady === true && isOpen && predictions.length > 0 && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
           {predictions.map((p) => (
             <button
