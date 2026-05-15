@@ -1047,7 +1047,7 @@ export default function Step4Listing({ onSelectStep }) {
                         className="w-full px-5 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{ backgroundColor: ACCENT }}
                       >
-                        {generating ? 'Generating… 🤖' : 'Generate listing copy with AI →'}
+                        {generating ? 'Improving… 🤖' : 'Improve with AI →'}
                       </button>
                     </div>
 
