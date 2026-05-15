@@ -176,7 +176,7 @@ function HeroCard({ allDone, nextStep, onSelectStep }) {
 
 function PropertyCard({ homeAddress, addressMeta, onShowOnboarding, onReset }) {
   return (
-    <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-900 px-4 py-3 flex items-center gap-4">
+    <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-900 p-6 flex items-center gap-4">
       <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-800 flex items-center justify-center">
         <StreetViewWithFallback lat={addressMeta?.lat} lng={addressMeta?.lng} size="192x128" />
       </div>
