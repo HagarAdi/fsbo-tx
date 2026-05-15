@@ -52,7 +52,7 @@ Write in a genuine seller voice — personal, not corporate. Make each version f
         Authorization: `Bearer ${process.env.RUNWARE_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'moonshotai:k2.6@0',
+        model: 'minimax:m2.7@0',
         messages: [{ role: 'user', content: prompt }],
         max_completion_tokens: 2048,
       }),
