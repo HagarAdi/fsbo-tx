@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
+import { saveRoomPhotos, loadRoomPhotos } from '../../utils/photoStorage'
 import MilestoneCelebration from '../MilestoneCelebration'
 
 const ACCENT = '#16a34a'
@@ -230,7 +231,23 @@ export default function Step3Staging({ onSelectStep }) {
     }
   }
 
-  const addPhotos = (stageId, newPhotos) => setPhotos(prev => ({ ...prev, [stageId]: [...prev[stageId], ...newPhotos] }))
+  useEffect(() => {
+    const ROOMS = ['living', 'kitchen', 'bedroom', 'exterior']
+    Promise.all(ROOMS.map(room => loadRoomPhotos('step3', room))).then(results => {
+      const loaded = {}
+      ROOMS.forEach((room, i) => { loaded[room] = results[i] })
+      if (Object.values(loaded).some(arr => arr.length > 0)) {
+        setPhotos(loaded)
+        setWizardDone(true)
+      }
+    }).catch(() => {})
+  }, [])
+
+  const addPhotos = (stageId, newPhotos) => setPhotos(prev => {
+    const updated = { ...prev, [stageId]: [...prev[stageId], ...newPhotos] }
+    saveRoomPhotos('step3', stageId, updated[stageId]).catch(() => {})
+    return updated
+  })
   const advanceWizard = () => { if (wizardStage < WIZARD_STAGES.length - 1) setWizardStage(s => s + 1); else setWizardDone(true) }
   const handleLastStageAnalyze = () => { advanceWizard(); handleAnalyze() }
   const totalPhotos = Object.values(photos).reduce((sum, arr) => sum + arr.length, 0)

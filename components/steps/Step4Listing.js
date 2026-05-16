@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
+import { saveRoomPhotos, loadRoomPhotos } from '../../utils/photoStorage'
 import PlatformPreviewCard from './PlatformPreviewCard'
 import SetupModal from '../SetupModal'
 
@@ -681,8 +682,34 @@ export default function Step4Listing({ onSelectStep }) {
     } catch {}
   }, [titleCompany])
 
+  useEffect(() => {
+    const ROOMS = ['living', 'kitchen', 'bathrooms', 'exterior']
+    Promise.all(ROOMS.map(room => loadRoomPhotos('step4_before', room))).then(results => {
+      const loaded = {}
+      ROOMS.forEach((room, i) => { loaded[room] = results[i] })
+      if (Object.values(loaded).some(arr => arr.length > 0)) {
+        setPhotos(loaded)
+        setWizardDone(true)
+        setBeforeWizardComplete(true)
+        setSavedUploadedRooms(ROOMS.filter(r => loaded[r].length > 0))
+      }
+    }).catch(() => {})
+    Promise.all(ROOMS.map(room => loadRoomPhotos('step4_after', room))).then(results => {
+      const loaded = {}
+      ROOMS.forEach((room, i) => { loaded[room] = results[i] })
+      if (Object.values(loaded).some(arr => arr.length > 0)) {
+        setAfterPhotos(loaded)
+        setAfterWizardDone(true)
+      }
+    }).catch(() => {})
+  }, [])
+
   const addBeforePhotos = (id, newPhotos) => {
-    setPhotos(prev => ({ ...prev, [id]: [...prev[id], ...newPhotos] }))
+    setPhotos(prev => {
+      const updated = { ...prev, [id]: [...prev[id], ...newPhotos] }
+      saveRoomPhotos('step4_before', id, updated[id]).catch(() => {})
+      return updated
+    })
     try {
       const existing = JSON.parse(localStorage.getItem('fsbo_stepData') || '{}')
       existing.step4 = existing.step4 || {}
@@ -699,7 +726,11 @@ export default function Step4Listing({ onSelectStep }) {
   }
 
   const addAfterPhotos = (id, newPhotos) =>
-    setAfterPhotos(prev => ({ ...prev, [id]: [...(prev[id] || []), ...newPhotos] }))
+    setAfterPhotos(prev => {
+      const updated = { ...prev, [id]: [...(prev[id] || []), ...newPhotos] }
+      saveRoomPhotos('step4_after', id, updated[id]).catch(() => {})
+      return updated
+    })
 
   const advanceAfterWizard = () => {
     if (afterWizardStage < afterStages.length - 1) setAfterWizardStage(s => s + 1)
