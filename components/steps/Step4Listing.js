@@ -415,6 +415,7 @@ export default function Step4Listing({ onSelectStep }) {
   const [comparing, setComparing] = useState(false)
   const [compareError, setCompareError] = useState(null)
   const [compareResults, setCompareResults] = useState(null)
+  const [lightboxPhoto, setLightboxPhoto] = useState(null)
 
   const toBase64Compressed = (file) => new Promise(resolve => {
     const canvas = document.createElement('canvas')
@@ -862,35 +863,50 @@ export default function Step4Listing({ onSelectStep }) {
                         </button>
                       </div>
 
-                      {aiFeedback && aiFeedback.length > 0 && (
-                        <div className="mt-6">
-                          <h4 className="text-sm font-semibold text-gray-900 mb-3">📸 Technique feedback:</h4>
-                          <div className="space-y-3">
-                            {aiFeedback.map((f, i) => {
-                              const sev = f.severity || 'Improve'
-                              const sevStyle =
-                                sev === 'Reshoot' ? { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' } :
-                                sev === 'Looks Good' ? { bg: '#f0fdf4', text: '#15803d', border: '#bbf7d0' } :
-                                { bg: '#fefce8', text: '#ca8a04', border: '#fef08a' }
-                              return (
-                                <div key={i} className="rounded-lg border border-gray-200 bg-white p-4">
-                                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                    <span className="text-sm font-semibold text-gray-900">{f.shot}</span>
-                                    <span
-                                      className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                                      style={{ backgroundColor: sevStyle.bg, color: sevStyle.text, border: `1px solid ${sevStyle.border}` }}
-                                    >
-                                      {sev}
-                                    </span>
+                      {aiFeedback && aiFeedback.length > 0 && (() => {
+                        const allBeforePhotos = Object.values(photos).flat()
+                        return (
+                          <div className="mt-6">
+                            <h4 className="text-sm font-semibold text-gray-900 mb-3">📸 Technique feedback:</h4>
+                            <div className="space-y-3">
+                              {aiFeedback.map((f, i) => {
+                                const sev = f.severity || 'Improve'
+                                const sevStyle =
+                                  sev === 'Reshoot' ? { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' } :
+                                  sev === 'Looks Good' ? { bg: '#f0fdf4', text: '#15803d', border: '#bbf7d0' } :
+                                  { bg: '#fefce8', text: '#ca8a04', border: '#fef08a' }
+                                const photo = allBeforePhotos[i]
+                                return (
+                                  <div key={i} className="rounded-lg border border-gray-200 bg-white p-4 flex gap-4 items-start">
+                                    {photo && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setLightboxPhoto(photo.url)}
+                                        className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-gray-200 hover:opacity-80 transition-opacity cursor-zoom-in"
+                                      >
+                                        <img src={photo.url} alt={photo.name} className="w-full h-full object-cover" />
+                                      </button>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                        <span className="text-sm font-semibold text-gray-900">{f.shot}</span>
+                                        <span
+                                          className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                                          style={{ backgroundColor: sevStyle.bg, color: sevStyle.text, border: `1px solid ${sevStyle.border}` }}
+                                        >
+                                          {sev}
+                                        </span>
+                                      </div>
+                                      <p className="text-xs text-gray-600">{f.feedback}</p>
+                                      {f.fix && <p className="mt-1 text-xs text-gray-500 italic">Fix: {f.fix}</p>}
+                                    </div>
                                   </div>
-                                  <p className="text-xs text-gray-600">{f.feedback}</p>
-                                  {f.fix && <p className="mt-1 text-xs text-gray-500 italic">Fix: {f.fix}</p>}
-                                </div>
-                              )
-                            })}
+                                )
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )
+                      })()}
                     </div>
                   )}
 
@@ -926,35 +942,71 @@ export default function Step4Listing({ onSelectStep }) {
                             {compareError && <p className="mt-2 text-sm text-gray-500">{compareError}</p>}
                           </div>
 
-                          {compareResults && compareResults.length > 0 && (
-                            <div className="mt-6">
-                              <h4 className="text-sm font-semibold text-gray-900 mb-3">📊 Before vs. after:</h4>
-                              <div className="space-y-3">
-                                {compareResults.map((r, i) => {
-                                  const v = r.verdict || 'Similar'
-                                  const vStyle =
-                                    v === 'Much Better' || v === 'Better' ? { bg: '#f0fdf4', text: '#15803d', border: '#bbf7d0' } :
-                                    v === 'Worse' ? { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' } :
-                                    { bg: '#f9fafb', text: '#6b7280', border: '#e5e7eb' }
-                                  return (
-                                    <div key={i} className="rounded-lg border border-gray-200 bg-white p-4">
-                                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                        <span className="text-sm font-semibold text-gray-900">{r.room}</span>
-                                        <span
-                                          className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                                          style={{ backgroundColor: vStyle.bg, color: vStyle.text, border: `1px solid ${vStyle.border}` }}
-                                        >
-                                          {v}
-                                        </span>
+                          {compareResults && compareResults.length > 0 && (() => {
+                            const allBeforePhotos = Object.values(photos).flat()
+                            const allAfterPhotos  = Object.values(afterPhotos).flat()
+                            return (
+                              <div className="mt-6">
+                                <h4 className="text-sm font-semibold text-gray-900 mb-3">📊 Before vs. after:</h4>
+                                <div className="space-y-3">
+                                  {compareResults.map((r, i) => {
+                                    const v = r.verdict || 'Similar'
+                                    const vStyle =
+                                      v === 'Much Better' || v === 'Better' ? { bg: '#f0fdf4', text: '#15803d', border: '#bbf7d0' } :
+                                      v === 'Worse' ? { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' } :
+                                      { bg: '#f9fafb', text: '#6b7280', border: '#e5e7eb' }
+                                    const beforePhoto = allBeforePhotos[i]
+                                    const afterPhoto  = allAfterPhotos[i]
+                                    return (
+                                      <div key={i} className="rounded-lg border border-gray-200 bg-white p-4 flex gap-4 items-start">
+                                        {(beforePhoto || afterPhoto) && (
+                                          <div className="flex-shrink-0 flex gap-2">
+                                            {beforePhoto && (
+                                              <div className="flex flex-col items-center gap-1">
+                                                <span className="text-[10px] text-gray-400 font-medium">Before</span>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setLightboxPhoto(beforePhoto.url)}
+                                                  className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200 hover:opacity-80 transition-opacity cursor-zoom-in"
+                                                >
+                                                  <img src={beforePhoto.url} alt={beforePhoto.name} className="w-full h-full object-cover" />
+                                                </button>
+                                              </div>
+                                            )}
+                                            {afterPhoto && (
+                                              <div className="flex flex-col items-center gap-1">
+                                                <span className="text-[10px] text-gray-400 font-medium">After</span>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setLightboxPhoto(afterPhoto.url)}
+                                                  className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200 hover:opacity-80 transition-opacity cursor-zoom-in"
+                                                >
+                                                  <img src={afterPhoto.url} alt={afterPhoto.name} className="w-full h-full object-cover" />
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                            <span className="text-sm font-semibold text-gray-900">{r.room}</span>
+                                            <span
+                                              className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                                              style={{ backgroundColor: vStyle.bg, color: vStyle.text, border: `1px solid ${vStyle.border}` }}
+                                            >
+                                              {v}
+                                            </span>
+                                          </div>
+                                          {r.whatImproved && <p className="text-xs text-gray-600">✓ {r.whatImproved}</p>}
+                                          {r.stillNeedsWork && <p className="mt-1 text-xs text-gray-500 italic">Still needs work: {r.stillNeedsWork}</p>}
+                                        </div>
                                       </div>
-                                      {r.whatImproved && <p className="text-xs text-gray-600">✓ {r.whatImproved}</p>}
-                                      {r.stillNeedsWork && <p className="mt-1 text-xs text-gray-500 italic">Still needs work: {r.stillNeedsWork}</p>}
-                                    </div>
-                                  )
-                                })}
+                                    )
+                                  })}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )
+                          })()}
                         </div>
                       )}
                     </div>
@@ -1479,6 +1531,28 @@ export default function Step4Listing({ onSelectStep }) {
           </div>
         </div>
       </SetupModal>
+
+      <AnimatePresence>
+        {lightboxPhoto && (
+          <motion.div
+            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setLightboxPhoto(null)}
+          >
+            <motion.img
+              src={lightboxPhoto}
+              alt="Enlarged photo"
+              className="max-w-full max-h-full rounded-lg object-contain"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={e => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

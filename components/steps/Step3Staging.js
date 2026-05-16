@@ -163,6 +163,7 @@ export default function Step3Staging({ onSelectStep }) {
   const [photos, setPhotos] = useState({ living: [], kitchen: [], bedroom: [], exterior: [] })
   const [analyzing, setAnalyzing] = useState(false)
   const [analyzeError, setAnalyzeError] = useState(null)
+  const [lightboxPhoto, setLightboxPhoto] = useState(null)
   const [aiSuggestions, setAiSuggestions] = useState(() => {
     if (typeof window === 'undefined') return null
     try {
@@ -447,38 +448,65 @@ export default function Step3Staging({ onSelectStep }) {
                   )}
 
                   {/* AI suggestions */}
-                  {aiSuggestions && aiSuggestions.length > 0 && (
-                    <div className="mb-6">
-                      <h3 className="text-base font-semibold text-gray-900 mb-4">⏱️ Time-cost staging wins:</h3>
-                      <div className="space-y-3">
-                        {aiSuggestions.map((s, i) => (
-                          <div key={i} className="rounded-lg border border-gray-200 bg-white p-4">
-                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                              <span className="text-sm font-semibold text-gray-900">{s.suggestion}</span>
-                              {s.effort && (
-                                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-300">
-                                  {s.effort}
-                                </span>
-                              )}
-                              {s.impact && (
-                                <span
-                                  className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                                  style={{
-                                    backgroundColor: s.impact === 'High' ? '#fef2f2' : s.impact === 'Medium' ? '#fefce8' : '#f9fafb',
-                                    color: s.impact === 'High' ? '#dc2626' : s.impact === 'Medium' ? '#ca8a04' : '#6b7280',
-                                    border: `1px solid ${s.impact === 'High' ? '#fecaca' : s.impact === 'Medium' ? '#fef08a' : '#e5e7eb'}`,
-                                  }}
-                                >
-                                  {s.impact} Impact
-                                </span>
-                              )}
-                              <span className="text-xs text-gray-400 ml-auto">{s.room}</span>
-                            </div>
-                          </div>
-                        ))}
+                  {aiSuggestions && aiSuggestions.length > 0 && (() => {
+                    const ROOM_KEY_MAP = {
+                      'Living Room': 'living', 'Kitchen': 'kitchen',
+                      'Bedroom': 'bedroom', 'Bathroom': 'bedroom',
+                      'Exterior': 'exterior',
+                    }
+                    return (
+                      <div className="mb-6">
+                        <h3 className="text-base font-semibold text-gray-900 mb-4">⏱️ Time-cost staging wins:</h3>
+                        <div className="space-y-3">
+                          {aiSuggestions.map((s, i) => {
+                            const roomKey = ROOM_KEY_MAP[s.room]
+                            const roomPhotos = (roomKey && photos[roomKey]) ? photos[roomKey].slice(0, 3) : []
+                            return (
+                              <div key={i} className="rounded-lg border border-gray-200 bg-white p-4 flex gap-4 items-start">
+                                {roomPhotos.length > 0 && (
+                                  <div className="flex-shrink-0 flex gap-1.5">
+                                    {roomPhotos.map((p, pi) => (
+                                      <button
+                                        key={pi}
+                                        type="button"
+                                        onClick={() => setLightboxPhoto(p.url)}
+                                        className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 hover:opacity-80 transition-opacity cursor-zoom-in"
+                                      >
+                                        <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                    <span className="text-sm font-semibold text-gray-900">{s.suggestion}</span>
+                                    {s.effort && (
+                                      <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-300">
+                                        {s.effort}
+                                      </span>
+                                    )}
+                                    {s.impact && (
+                                      <span
+                                        className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+                                        style={{
+                                          backgroundColor: s.impact === 'High' ? '#fef2f2' : s.impact === 'Medium' ? '#fefce8' : '#f9fafb',
+                                          color: s.impact === 'High' ? '#dc2626' : s.impact === 'Medium' ? '#ca8a04' : '#6b7280',
+                                          border: `1px solid ${s.impact === 'High' ? '#fecaca' : s.impact === 'Medium' ? '#fef08a' : '#e5e7eb'}`,
+                                        }}
+                                      >
+                                        {s.impact} Impact
+                                      </span>
+                                    )}
+                                    <span className="text-xs text-gray-400 ml-auto">{s.room}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )
+                  })()}
 
                   <div className="flex justify-end pt-2">
                     <button type="button" onClick={() => goTo(2)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
@@ -667,6 +695,28 @@ export default function Step3Staging({ onSelectStep }) {
         continueLabel="Move to the next step: Photography & Listing →"
         badge="Phase 1 of 3 unlocked"
       />
+
+      <AnimatePresence>
+        {lightboxPhoto && (
+          <motion.div
+            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setLightboxPhoto(null)}
+          >
+            <motion.img
+              src={lightboxPhoto}
+              alt="Enlarged photo"
+              className="max-w-full max-h-full rounded-lg object-contain"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              onClick={e => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
