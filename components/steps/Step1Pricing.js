@@ -421,18 +421,18 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         )}
 
         {homeInfoLoading && (
-          <p className="mb-4 text-xs text-gray-500">Fetching your home details from Zillow…</p>
+          <p className="mb-4 text-xs text-gray-500">Fetching your home details…</p>
         )}
 
         {homeInfoFilled.length > 0 && (
           <p className="mb-4 text-xs text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2">
-            ✓ Filled {homeInfoFilled.length} of 9 fields from Zillow — please verify and fill in anything that&apos;s missing (condition is always manual).
+            ✓ Pre-filled {homeInfoFilled.length} fields — please verify and fill in anything that&apos;s missing.
           </p>
         )}
 
         {homeInfoError && (
           <p className="mb-4 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded px-3 py-2">
-            Could not load Zillow data — fill in the fields below manually.
+            Could not load home data — fill in the fields below manually.
           </p>
         )}
 
