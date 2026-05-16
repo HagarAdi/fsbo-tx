@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
 import { saveRoomPhotos, loadRoomPhotos } from '../../utils/photoStorage'
+import { canUse, recordUse } from '../../utils/usageLimits'
 import PlatformPreviewCard from './PlatformPreviewCard'
 import SetupModal from '../SetupModal'
 
@@ -443,6 +444,10 @@ export default function Step4Listing({ onSelectStep }) {
       setAnalyzeError('Upload a practice shot first, or skip to Your Listing.')
       return
     }
+    if (!canUse('analyze-photography')) {
+      setAnalyzeError("You've used today's 3 photo analyses. Resets at midnight.")
+      return
+    }
     setAnalyzing(true)
     setAiFeedback(null)
     setAnalyzeError(null)
@@ -454,6 +459,7 @@ export default function Step4Listing({ onSelectStep }) {
         body: JSON.stringify({ images: base64Images }),
       })
       const data = await res.json()
+      recordUse('analyze-photography')
       setAiFeedback(data.findings || [])
     } catch {
       setAnalyzeError("Couldn't analyze photos — try again, or skip ahead.")
@@ -469,6 +475,10 @@ export default function Step4Listing({ onSelectStep }) {
       setCompareError('Upload both practice and final shots to compare.')
       return
     }
+    if (!canUse('compare-photography')) {
+      setCompareError("You've used today's 2 photo comparisons. Resets at midnight.")
+      return
+    }
     setComparing(true)
     setCompareResults(null)
     setCompareError(null)
@@ -481,6 +491,7 @@ export default function Step4Listing({ onSelectStep }) {
         body: JSON.stringify({ images: base64Images, mode: 'compare' }),
       })
       const data = await res.json()
+      recordUse('compare-photography')
       setCompareResults(data.findings || [])
     } catch {
       setCompareError("Couldn't compare photos — try again, or skip ahead.")
@@ -544,6 +555,7 @@ export default function Step4Listing({ onSelectStep }) {
     return loadStepData().step4?.listingDetails?.platformDraftsDirty || EMPTY_PLATFORM_DIRTY
   })
   const [generating, setGenerating] = useState(false)
+  const [generateError, setGenerateError] = useState(null)
   const [listNowMenuOpen, setListNowMenuOpen] = useState(false)
   const [mlsExpanded, setMlsExpanded] = useState(false)
   const [selectedMls, setSelectedMls] = useState(() => {
@@ -757,7 +769,12 @@ export default function Step4Listing({ onSelectStep }) {
     setPlatformDraftsDirty(d => ({ ...d, [key]: false }))
   }
   const handleGenerateAll = async () => {
+    if (!canUse('generate-listing')) {
+      setGenerateError("You've used today's 3 listing generations. Resets at midnight.")
+      return
+    }
     setGenerating(true)
+    setGenerateError(null)
     try {
       const res = await fetch('/api/generate-listing', {
         method: 'POST',
@@ -766,6 +783,7 @@ export default function Step4Listing({ onSelectStep }) {
       })
       const data = await res.json()
       if (data.drafts) {
+        recordUse('generate-listing')
         setPlatformDrafts(prev => ({ ...prev, ...data.drafts }))
         setPlatformDraftsDirty({ zillow: true, facebook: true, instagram: true, craigslist: true })
       }
@@ -1140,6 +1158,9 @@ export default function Step4Listing({ onSelectStep }) {
                           </>
                         ) : 'Improve with AI →'}
                       </button>
+                      {generateError && (
+                        <p className="text-xs text-red-500 text-center mt-1">{generateError}</p>
+                      )}
                     </div>
 
                     {/* Right: preview */}
