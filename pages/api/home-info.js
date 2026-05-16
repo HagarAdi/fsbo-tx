@@ -109,12 +109,8 @@ export default async function handler(req, res) {
     }
   }
 
-  // _debug helps diagnose field-name mismatches without a server log
-  result._debug = {
-    topKeys: Object.keys(raw ?? {}),
-    dKeys: Object.keys(d ?? {}),
-    factsKeys: Object.keys(facts ?? {}),
-  }
+  // Temporary: return raw payload so field-name mismatches can be diagnosed from the network tab
+  result._raw = { raw, d, facts }
 
   return res.status(200).json(result)
 }
