@@ -149,10 +149,40 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
   const [activeSubStep, setActiveSubStep] = useState(1)
   const [direction, setDirection] = useState(1)
   const [appraiserPanelOpen, setAppraiserPanelOpen] = useState(false)
+  const [homeInfoLoading, setHomeInfoLoading] = useState(false)
+  const [homeInfoError, setHomeInfoError] = useState(null)
+  const [homeInfoFilled, setHomeInfoFilled] = useState([])
 
   const goTo = (step) => {
     setDirection(step > activeSubStep ? 1 : -1)
     setActiveSubStep(step)
+  }
+
+  const handleFetchHomeInfo = async () => {
+    if (!homeAddress) return
+    setHomeInfoLoading(true)
+    setHomeInfoError(null)
+    setHomeInfoFilled([])
+    try {
+      const res = await fetch(`/api/home-info?address=${encodeURIComponent(homeAddress)}`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch home info')
+      const filled = []
+      if (data.sqft) { setSqft(data.sqft); filled.push('sqft') }
+      if (data.bedrooms) { setBedrooms(data.bedrooms); filled.push('bedrooms') }
+      if (data.bathrooms) { setBathrooms(data.bathrooms); filled.push('bathrooms') }
+      if (data.yearBuilt) { setYearBuilt(data.yearBuilt); filled.push('yearBuilt') }
+      if (data.propertyType) { setPropertyType(data.propertyType); filled.push('propertyType') }
+      if (data.stories) { setStories(data.stories); filled.push('stories') }
+      if (data.pool !== undefined && data.pool !== null) { setPool(data.pool); filled.push('pool') }
+      if (data.garageCars) { setGarageCars(data.garageCars); filled.push('garageCars') }
+      if (data.lotAcres) { setLotAcres(data.lotAcres); filled.push('lotAcres') }
+      setHomeInfoFilled(filled)
+    } catch (err) {
+      setHomeInfoError(err.message)
+    } finally {
+      setHomeInfoLoading(false)
+    }
   }
 
   const fieldInput = "border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
@@ -375,6 +405,42 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
               Go back
             </button>
           </p>
+        )}
+
+        {homeAddress && (
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={handleFetchHomeInfo}
+              disabled={homeInfoLoading}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+              style={{ backgroundColor: ACCENT }}
+            >
+              {homeInfoLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                  Looking up your home…
+                </>
+              ) : (
+                <>⚡ Auto-fill from Zillow</>
+              )}
+            </button>
+
+            {homeInfoFilled.length > 0 && (
+              <p className="mt-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2">
+                ✓ Filled {homeInfoFilled.length} of 9 fields from Zillow — please verify and fill in anything that&apos;s missing (condition is always manual).
+              </p>
+            )}
+
+            {homeInfoError && (
+              <p className="mt-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                Could not auto-fill: {homeInfoError}. Fill in the fields manually below.
+              </p>
+            )}
+          </div>
         )}
 
         <div className="rounded-lg border border-gray-200 bg-white p-5">
