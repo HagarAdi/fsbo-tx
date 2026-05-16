@@ -1,7 +1,22 @@
+function extractLastBalanced(text, open, close) {
+  const stripped = text.replace(/```json|```/g, '');
+  const lastClose = stripped.lastIndexOf(close);
+  if (lastClose === -1) return null;
+  let depth = 0;
+  for (let i = lastClose; i >= 0; i--) {
+    if (stripped[i] === close) depth++;
+    else if (stripped[i] === open) {
+      depth--;
+      if (depth === 0) return stripped.slice(i, lastClose + 1);
+    }
+  }
+  return null;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  if (!process.env.GEMINI_API_KEY) {
+  if (!process.env.RUNWARE_API_KEY) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
@@ -28,20 +43,25 @@ export default async function handler(req, res) {
     - impact: exactly one of "Looks Good", "Still Needed" (string)`;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    'https://api.runware.ai/v1/chat/completions',
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.RUNWARE_API_KEY}`,
+      },
       body: JSON.stringify({
-        contents: [{
-          parts: [
+        model: 'google:gemini@3.1-pro',
+        max_completion_tokens: 8000,
+        reasoning_effort: 'low',
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: mode === 'verify' ? verifyPrompt : analyzePrompt },
             ...images.map(img => ({
-              inline_data: {
-                mime_type: 'image/jpeg',
-                data: img,
-              },
+              type: 'image_url',
+              image_url: { url: `data:image/jpeg;base64,${img}` },
             })),
-            { text: mode === 'verify' ? verifyPrompt : analyzePrompt },
           ],
         }],
       }),
@@ -51,11 +71,11 @@ export default async function handler(req, res) {
   const data = await response.json();
 
   try {
-    const text = data.candidates[0].content.parts[0].text;
-    const clean = text.replace(/```json|```/g, '').trim();
-    const findings = JSON.parse(clean);
+    const text = data.choices[0].message.content;
+    const jsonText = extractLastBalanced(text, '[', ']') || text.trim();
+    const findings = JSON.parse(jsonText);
     res.status(200).json({ findings });
-  } catch (e) {
+  } catch {
     res.status(200).json({ findings: [], error: 'Could not parse response' });
   }
 }
