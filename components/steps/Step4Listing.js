@@ -339,8 +339,9 @@ function UploadZone({ photos, onAdd, maxPhotos }) {
   )
 }
 
-function PhotoWizard({ stages, stageIndex, photos, onAdd, onAdvance, label }) {
+function PhotoWizard({ stages, stageIndex, photos, onAdd, onAdvance, onAnalyze, label }) {
   const current = stages[stageIndex]
+  const isLastStage = stageIndex === stages.length - 1
   if (!current) return null
   return (
     <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
@@ -371,11 +372,11 @@ function PhotoWizard({ stages, stageIndex, photos, onAdd, onAdvance, label }) {
         <div className="flex gap-3 mt-5">
           <button
             type="button"
-            onClick={onAdvance}
+            onClick={isLastStage && onAnalyze ? () => { onAdvance(); onAnalyze() } : onAdvance}
             className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
             style={{ backgroundColor: ACCENT }}
           >
-            {current.nextLabel}
+            {isLastStage && onAnalyze ? 'Analyze my Photos →' : current.nextLabel}
           </button>
           <button
             type="button"
@@ -836,7 +837,7 @@ export default function Step4Listing({ onSelectStep }) {
 
                   {!wizardDone ? (
                     <div className="mb-8">
-                      <PhotoWizard stages={BEFORE_STAGES} stageIndex={wizardStage} photos={photos} onAdd={addBeforePhotos} onAdvance={advanceBeforeWizard} label="Room" />
+                      <PhotoWizard stages={BEFORE_STAGES} stageIndex={wizardStage} photos={photos} onAdd={addBeforePhotos} onAdvance={advanceBeforeWizard} onAnalyze={handleAnalyzePhotos} label="Room" />
                     </div>
                   ) : (
                     <div className="rounded-xl border border-gray-200 bg-white p-6 mb-8">
@@ -845,23 +846,25 @@ export default function Step4Listing({ onSelectStep }) {
                           ? `You uploaded ${totalBeforePhotos} photo${totalBeforePhotos !== 1 ? 's' : ''} across ${uploadedRooms.length} room${uploadedRooms.length !== 1 ? 's' : ''}`
                           : "No photos uploaded — that's okay, you can still move forward."}
                       </p>
-                      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                        <div>
-                          <button
-                            type="button"
-                            onClick={handleAnalyzePhotos}
-                            disabled={analyzing}
-                            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ backgroundColor: ACCENT }}
-                          >
-                            {analyzing ? 'Analyzing your shots... 🔍' : 'Get AI feedback →'}
+                      {!aiFeedback && (
+                        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                          <div>
+                            <button
+                              type="button"
+                              onClick={handleAnalyzePhotos}
+                              disabled={analyzing}
+                              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                              style={{ backgroundColor: ACCENT }}
+                            >
+                              {analyzing ? 'Analyzing your shots... 🔍' : 'Analyze my Photos →'}
+                            </button>
+                            {analyzeError && <p className="mt-2 text-sm text-gray-500">{analyzeError}</p>}
+                          </div>
+                          <button type="button" onClick={() => goTo(2)} className="text-sm text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors">
+                            Skip — go to Your Listing
                           </button>
-                          {analyzeError && <p className="mt-2 text-sm text-gray-500">{analyzeError}</p>}
                         </div>
-                        <button type="button" onClick={() => goTo(2)} className="text-sm text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors">
-                          Skip — go to Your Listing
-                        </button>
-                      </div>
+                      )}
 
                       {aiFeedback && aiFeedback.length > 0 && (() => {
                         const allBeforePhotos = Object.values(photos).flat()

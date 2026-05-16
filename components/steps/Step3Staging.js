@@ -232,6 +232,7 @@ export default function Step3Staging({ onSelectStep }) {
 
   const addPhotos = (stageId, newPhotos) => setPhotos(prev => ({ ...prev, [stageId]: [...prev[stageId], ...newPhotos] }))
   const advanceWizard = () => { if (wizardStage < WIZARD_STAGES.length - 1) setWizardStage(s => s + 1); else setWizardDone(true) }
+  const handleLastStageAnalyze = () => { advanceWizard(); handleAnalyze() }
   const totalPhotos = Object.values(photos).reduce((sum, arr) => sum + arr.length, 0)
   const roomsWithPhotos = Object.values(photos).filter(arr => arr.length > 0).length
   const currentStage = WIZARD_STAGES[wizardStage]
@@ -415,7 +416,14 @@ export default function Step3Staging({ onSelectStep }) {
                       <div className="px-6 py-5">
                         <UploadZone photos={photos[currentStage.id]} onAdd={newPhotos => addPhotos(currentStage.id, newPhotos)} maxPhotos={currentStage.maxPhotos} />
                         <div className="flex gap-3 mt-5">
-                          <button type="button" onClick={advanceWizard} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>{currentStage.nextLabel}</button>
+                          <button
+                            type="button"
+                            onClick={wizardStage === WIZARD_STAGES.length - 1 ? handleLastStageAnalyze : advanceWizard}
+                            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                            style={{ backgroundColor: ACCENT }}
+                          >
+                            {wizardStage === WIZARD_STAGES.length - 1 ? 'Analyze my Photos →' : currentStage.nextLabel}
+                          </button>
                           <button type="button" onClick={advanceWizard} className="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors">Skip</button>
                         </div>
                       </div>
@@ -427,23 +435,25 @@ export default function Step3Staging({ onSelectStep }) {
                           ? `You uploaded ${totalPhotos} photo${totalPhotos !== 1 ? 's' : ''} across ${roomsWithPhotos} room${roomsWithPhotos !== 1 ? 's' : ''}`
                           : "No photos uploaded — that's okay, you can still use the checklist."}
                       </p>
-                      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                        <div>
-                          <button
-                            type="button"
-                            onClick={handleAnalyze}
-                            disabled={analyzing}
-                            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ backgroundColor: ACCENT }}
-                          >
-                            {analyzing ? 'Analyzing your photos... 🔍' : 'Analyze my photos →'}
+                      {!aiSuggestions && (
+                        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                          <div>
+                            <button
+                              type="button"
+                              onClick={handleAnalyze}
+                              disabled={analyzing}
+                              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                              style={{ backgroundColor: ACCENT }}
+                            >
+                              {analyzing ? 'Analyzing your photos... 🔍' : 'Analyze my Photos →'}
+                            </button>
+                            {analyzeError && <p className="mt-2 text-sm text-gray-500">{analyzeError}</p>}
+                          </div>
+                          <button type="button" onClick={() => goTo(2)} className="text-sm text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors">
+                            Skip — go straight to checklist
                           </button>
-                          {analyzeError && <p className="mt-2 text-sm text-gray-500">{analyzeError}</p>}
                         </div>
-                        <button type="button" onClick={() => goTo(2)} className="text-sm text-gray-400 underline underline-offset-2 hover:text-gray-600 transition-colors">
-                          Skip — go straight to checklist
-                        </button>
-                      </div>
+                      )}
                     </div>
                   )}
 
