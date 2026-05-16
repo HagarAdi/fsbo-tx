@@ -426,7 +426,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
 
         {homeInfoFilled.length > 0 && (
           <p className="mb-4 text-xs text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2">
-            ✓ Filled {homeInfoFilled.length} of 9 fields — please verify and fill in anything that&apos;s missing (condition is always manual).
+            ✓ Pre-filled {homeInfoFilled.length} fields — please verify and fill in anything that&apos;s missing.
           </p>
         )}
 
