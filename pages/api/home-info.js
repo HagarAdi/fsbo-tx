@@ -6,6 +6,13 @@ const HOME_TYPE_MAP = {
   MULTI_FAMILY_5_PLUS: 'multi',
 }
 
+function pick(...vals) {
+  for (const v of vals) {
+    if (v !== undefined && v !== null && v !== '') return v
+  }
+  return undefined
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -30,50 +37,83 @@ export default async function handler(req, res) {
       return res.status(response.status).json({ error: `Zillow API error: ${response.status}` })
     }
     raw = await response.json()
-  } catch (err) {
+  } catch {
     return res.status(502).json({ error: 'Failed to reach Zillow API' })
   }
 
-  // Some wrappers nest the payload under .data
-  const d = raw?.data ?? raw
-  const facts = d?.resoFacts ?? {}
+  // Unwrap common envelope shapes
+  const d = raw?.data ?? raw?.property ?? raw?.result ?? raw
+  const facts = d?.resoFacts ?? d?.facts ?? d?.resoFacts ?? {}
+
   const result = {}
 
-  const livingArea = d.livingArea ?? facts.livingArea
-  if (livingArea) result.sqft = String(Math.round(livingArea))
+  // sqft — try every common field name
+  const sqftRaw = pick(
+    d.livingArea, d.sqFt, d.sqft, d.finishedSqFt, d.livingAreaValue,
+    d.floorSize, d.area, d.totalArea, facts.livingArea, facts.sqFt
+  )
+  if (sqftRaw) result.sqft = String(Math.round(Number(sqftRaw)))
 
-  if (d.bedrooms != null) result.bedrooms = String(d.bedrooms)
-  if (d.bathrooms != null) result.bathrooms = String(d.bathrooms)
-  if (d.yearBuilt != null) result.yearBuilt = String(d.yearBuilt)
+  // bedrooms
+  const bedsRaw = pick(d.bedrooms, d.beds, d.numBedrooms, d.bedroomsTotal, facts.bedrooms, facts.beds)
+  if (bedsRaw != null) result.bedrooms = String(bedsRaw)
 
-  const homeType = d.homeType ?? d.propertyType
-  if (homeType && HOME_TYPE_MAP[homeType]) result.propertyType = HOME_TYPE_MAP[homeType]
+  // bathrooms
+  const bathsRaw = pick(
+    d.bathrooms, d.baths, d.numBathrooms, d.bathroomsTotal,
+    d.totalBathrooms, facts.bathrooms, facts.baths
+  )
+  if (bathsRaw != null) result.bathrooms = String(bathsRaw)
 
-  const hasPool = facts.hasPool ?? d.hasPool
-  if (hasPool != null) result.pool = Boolean(hasPool)
+  // yearBuilt
+  const yearBuiltRaw = pick(d.yearBuilt, d.builtYear, facts.yearBuilt)
+  if (yearBuiltRaw) result.yearBuilt = String(yearBuiltRaw)
 
-  const parkingRaw = facts.parkingCapacity ?? facts.garageSpaces ?? d.garageSpaces
-  if (parkingRaw != null) {
-    const cars = parseInt(parkingRaw)
+  // propertyType
+  const homeTypeRaw = pick(d.homeType, d.propertyType, d.homeSubType, d.propertySubType)
+  if (homeTypeRaw && HOME_TYPE_MAP[homeTypeRaw]) result.propertyType = HOME_TYPE_MAP[homeTypeRaw]
+
+  // pool
+  const hasPoolRaw = pick(facts.hasPool, d.hasPool, d.pool)
+  if (hasPoolRaw != null) result.pool = hasPoolRaw === true || hasPoolRaw === 'Yes' || hasPoolRaw === 'yes'
+
+  // garage
+  const garageRaw = pick(
+    facts.parkingCapacity, facts.garageSpaces, facts.numGarageSpaces,
+    d.garageSpaces, d.numGarageSpaces, d.parkingCapacity
+  )
+  if (garageRaw != null) {
+    const cars = parseInt(garageRaw)
     if (!isNaN(cars)) result.garageCars = cars >= 3 ? '3' : String(Math.max(0, cars))
   }
 
-  const storiesRaw = facts.stories ?? d.stories
+  // stories
+  const storiesRaw = pick(facts.stories, facts.numFloors, d.stories, d.numFloors, d.numStories)
   if (storiesRaw != null) {
     const s = parseInt(storiesRaw)
     if (s === 1) result.stories = 'one'
     else if (s >= 2) result.stories = 'two'
   }
 
-  const lotValue = d.lotAreaValue
-  const lotUnit = (d.lotAreaUnit ?? '').toLowerCase()
-  if (lotValue) {
-    if (lotUnit === 'acres') {
-      result.lotAcres = String(parseFloat(lotValue).toFixed(6))
+  // lot size
+  const lotValueRaw = pick(
+    d.lotAreaValue, d.lotSize, d.lotSqFt, d.lotSizeSquareFeet, d.lotSizeSqFt, facts.lotSize
+  )
+  if (lotValueRaw) {
+    const lotNum = parseFloat(lotValueRaw)
+    const lotUnitRaw = (pick(d.lotAreaUnit, d.lotSizeUnit) ?? '').toLowerCase()
+    if (lotUnitRaw === 'acres' || lotUnitRaw === 'acre') {
+      result.lotAcres = lotNum.toFixed(6)
     } else {
-      // Default: treat as sqft
-      result.lotAcres = (parseFloat(lotValue) / 43560).toFixed(6)
+      result.lotAcres = (lotNum / 43560).toFixed(6)
     }
+  }
+
+  // _debug helps diagnose field-name mismatches without a server log
+  result._debug = {
+    topKeys: Object.keys(raw ?? {}),
+    dKeys: Object.keys(d ?? {}),
+    factsKeys: Object.keys(facts ?? {}),
   }
 
   return res.status(200).json(result)
