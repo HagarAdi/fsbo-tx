@@ -27,7 +27,7 @@ export default function OnboardingModal({ onAddressSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-      <div className="w-full max-w-[480px] bg-white rounded-2xl shadow-2xl p-8">
+      <div className="w-full max-w-[480px] bg-white rounded-2xl shadow-2xl p-5 sm:p-8">
         <div className="text-center mb-6">
           <p className="text-2xl font-bold text-gray-900">🏠 FSBO Texas Guide</p>
           <h2 className="text-xl font-bold text-gray-900 mt-5 mb-2">Let&apos;s get started</h2>
