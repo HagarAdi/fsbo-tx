@@ -261,7 +261,7 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, comp
     <div className="min-h-full bg-slate-950 flex flex-col">
 
       {/* ── Sticky Header ── */}
-      <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-4 sm:px-6 py-3 flex items-center justify-between">
         <p className="text-white font-bold text-sm tracking-wide">FSBO Texas Guide</p>
 
         <div className="text-right">

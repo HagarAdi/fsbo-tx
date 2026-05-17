@@ -346,7 +346,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       </p>
 
       {/* Sub-step tabs */}
-      <div className="flex items-center mb-8">
+      <div className="flex items-center mb-6 sm:mb-8 overflow-x-auto pb-1">
         {SUB_STEPS.map((s, i) => (
           <div key={s.id} className="flex items-center">
             <button
@@ -816,7 +816,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                   />
                 </div>
 
-                <div className="flex flex-wrap gap-x-5 gap-y-3 mb-4">
+                <div className="grid grid-cols-2 gap-3 mb-4 sm:flex sm:flex-wrap sm:gap-x-5 sm:gap-y-3">
                   <div>
                     <label className={fieldLabel + " flex items-center"}>
                       List Price
@@ -829,7 +829,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                       value={comp.price}
                       onChange={(e) => updateComp(i, 'price', e.target.value)}
                       placeholder="485000"
-                      className={"w-32 " + fieldInput}
+                      className={"w-full sm:w-32 " + fieldInput}
                     />
                   </div>
                   <div>
@@ -844,7 +844,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                       value={comp.sqft}
                       onChange={(e) => updateComp(i, 'sqft', e.target.value)}
                       placeholder="2050"
-                      className={"w-24 " + fieldInput}
+                      className={"w-full sm:w-24 " + fieldInput}
                     />
                   </div>
                   <div>
@@ -859,7 +859,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                       value={comp.yearBuilt || ''}
                       onChange={(e) => updateComp(i, 'yearBuilt', e.target.value)}
                       placeholder="2005"
-                      className={"w-24 " + fieldInput}
+                      className={"w-full sm:w-24 " + fieldInput}
                     />
                   </div>
                   <div>
@@ -874,7 +874,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                       value={comp.dom}
                       onChange={(e) => updateComp(i, 'dom', e.target.value)}
                       placeholder="12"
-                      className={"w-20 " + fieldInput}
+                      className={"w-full sm:w-20 " + fieldInput}
                     />
                   </div>
                 </div>
@@ -887,13 +887,13 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                         {compTooltips.comp_features}
                       </HelpTip>
                     </p>
-                    <div className="flex flex-wrap gap-x-5 gap-y-3">
+                    <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-x-5 sm:gap-y-3">
                       <div>
                         <label className={fieldLabel}>Property type</label>
                         <select
                           value={comp.propertyType ?? ''}
                           onChange={(e) => updateComp(i, 'propertyType', e.target.value)}
-                          className={"w-36 " + fieldInput}
+                          className={"w-full sm:w-36 " + fieldInput}
                         >
                           <option value="">—</option>
                           {PROPERTY_TYPE_OPTIONS.map((opt) => (
@@ -909,7 +909,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                           step="1"
                           value={comp.bedrooms}
                           onChange={(e) => updateComp(i, 'bedrooms', e.target.value)}
-                          className={"w-16 " + fieldInput}
+                          className={"w-full sm:w-16 " + fieldInput}
                         />
                       </div>
                       <div>
@@ -920,7 +920,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                           step="0.5"
                           value={comp.bathrooms}
                           onChange={(e) => updateComp(i, 'bathrooms', e.target.value)}
-                          className={"w-16 " + fieldInput}
+                          className={"w-full sm:w-16 " + fieldInput}
                         />
                       </div>
                       <div>
@@ -932,7 +932,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                           value={comp.lotAcres}
                           onChange={(e) => updateComp(i, 'lotAcres', e.target.value)}
                           placeholder="0.15"
-                          className={"w-20 " + fieldInput}
+                          className={"w-full sm:w-20 " + fieldInput}
                         />
                       </div>
                       <div>
@@ -943,7 +943,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                             const v = e.target.value
                             updateComp(i, 'pool', v === '' ? null : v === 'true')
                           }}
-                          className={"w-20 " + fieldInput}
+                          className={"w-full sm:w-20 " + fieldInput}
                         >
                           <option value="">—</option>
                           <option value="true">Yes</option>
@@ -955,7 +955,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                         <select
                           value={comp.garageCars ?? ''}
                           onChange={(e) => updateComp(i, 'garageCars', e.target.value)}
-                          className={"w-20 " + fieldInput}
+                          className={"w-full sm:w-20 " + fieldInput}
                         >
                           {[{ v: '', l: '—' }, { v: '0', l: '0' }, { v: '1', l: '1' }, { v: '2', l: '2' }, { v: '3', l: '3+' }].map((opt) => (
                             <option key={String(opt.v)} value={opt.v}>{opt.l}</option>
@@ -967,7 +967,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                         <select
                           value={comp.stories ?? ''}
                           onChange={(e) => updateComp(i, 'stories', e.target.value)}
-                          className={"w-24 " + fieldInput}
+                          className={"w-full sm:w-24 " + fieldInput}
                         >
                           <option value="">—</option>
                           <option value="one">1</option>
@@ -980,7 +980,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                         <select
                           value={comp.condition ?? ''}
                           onChange={(e) => updateComp(i, 'condition', e.target.value)}
-                          className={"w-32 " + fieldInput}
+                          className={"w-full sm:w-32 " + fieldInput}
                         >
                           {[{ v: '', l: '—' }, { v: 'Excellent', l: 'Excellent' }, { v: 'Good', l: 'Good' }, { v: 'Average', l: 'Average' }, { v: 'Fair', l: 'Fair' }].map((opt) => (
                             <option key={String(opt.v)} value={opt.v}>{opt.l}</option>
