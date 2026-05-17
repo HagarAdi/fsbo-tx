@@ -37,10 +37,15 @@ function deriveStats(showings) {
 function useAddressMeta() {
   const [meta, setMeta] = useState(null)
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('fsbo_homeAddressMeta')
-      if (raw) setMeta(JSON.parse(raw))
-    } catch {}
+    function load() {
+      try {
+        const raw = localStorage.getItem('fsbo_homeAddressMeta')
+        if (raw) setMeta(JSON.parse(raw))
+      } catch {}
+    }
+    load()
+    window.addEventListener('fsbo_address_meta_changed', load)
+    return () => window.removeEventListener('fsbo_address_meta_changed', load)
   }, [])
   return meta
 }
