@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { notifyStepDataChange } from '../../utils/notifyStepData'
 import { saveRoomPhotos, loadRoomPhotos } from '../../utils/photoStorage'
+import { canUse, recordUse } from '../../utils/usageLimits'
 import MilestoneCelebration from '../MilestoneCelebration'
 
 const ACCENT = '#16a34a'
@@ -202,6 +203,10 @@ export default function Step3Staging({ onSelectStep }) {
       setAnalyzeError('Upload a photo first, or skip to the checklist.')
       return
     }
+    if (!canUse('analyze-staging')) {
+      setAnalyzeError("You've used today's 3 staging analyses. Resets at midnight.")
+      return
+    }
     setAnalyzing(true)
     setAiSuggestions(null)
     setAnalyzeError(null)
@@ -214,6 +219,7 @@ export default function Step3Staging({ onSelectStep }) {
       })
       const data = await res.json()
       const findings = data.findings || []
+      recordUse('analyze-staging')
       setAiSuggestions(findings)
       try {
         const saved = localStorage.getItem('fsbo_stepData')
