@@ -18,6 +18,7 @@ export default function OnboardingModal({ onAddressSave }) {
         lng: place.lng,
         components: place.components,
       }))
+      window.dispatchEvent(new Event('fsbo_address_meta_changed'))
       onAddressSave(place.formattedAddress)
     } else {
       onAddressSave(rawInput.trim())

@@ -560,6 +560,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                 <option value="">Select</option>
                 <option value="one">One-story</option>
                 <option value="two">Two-story</option>
+                <option value="three_plus">3+ stories</option>
               </select>
             </div>
 
@@ -971,6 +972,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                           <option value="">—</option>
                           <option value="one">1</option>
                           <option value="two">2</option>
+                          <option value="three_plus">3+</option>
                         </select>
                       </div>
                       <div>
