@@ -30,15 +30,20 @@ export default async function handler(req, res) {
   const facts = pd.resoFacts ?? {}
   const result = {}
 
+  const HOME_TYPE_MAP = { SINGLE_FAMILY: 'single', TOWNHOUSE: 'town', CONDO: 'condo', MULTI_FAMILY: 'multi' }
+
   if (pd.livingArea != null) result.sqft = String(Math.round(Number(pd.livingArea)))
   if (facts.bedrooms != null) result.bedrooms = String(facts.bedrooms)
   if (facts.bathroomsFloat != null) result.bathrooms = String(facts.bathroomsFloat)
   if (facts.yearBuilt != null) result.yearBuilt = String(facts.yearBuilt)
-  if (pd.homeType) result.propertyType = pd.homeType
-  if (pd.lotAreaValue != null && pd.lotAreaUnits) {
-    result.lotSize = `${pd.lotAreaValue} ${pd.lotAreaUnits}`
-  } else if (facts.lotSize) {
-    result.lotSize = facts.lotSize
+  if (pd.homeType && HOME_TYPE_MAP[pd.homeType]) result.propertyType = HOME_TYPE_MAP[pd.homeType]
+  if (pd.lotAreaValue != null) {
+    const units = (pd.lotAreaUnits || '').toLowerCase()
+    if (units.includes('acre')) {
+      result.lotAcres = String(pd.lotAreaValue)
+    } else if (units.includes('square') || units.includes('sq')) {
+      result.lotAcres = (pd.lotAreaValue / 43560).toFixed(4)
+    }
   }
 
   return res.status(200).json(result)
