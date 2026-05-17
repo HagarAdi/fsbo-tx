@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   let raw
   try {
     const response = await fetch(
-      `https://private-zillow.p.rapidapi.com/byaddress?propertyaddress=${encodeURIComponent(address)}`,
+      `https://private-zillow.p.rapidapi.com/pro/byaddress?propertyaddress=${encodeURIComponent(address)}`,
       {
         headers: {
           'x-rapidapi-host': 'private-zillow.p.rapidapi.com',
@@ -26,15 +26,20 @@ export default async function handler(req, res) {
     return res.status(502).json({ error: 'Failed to reach Zillow API' })
   }
 
+  const pd = raw?.propertyDetails ?? {}
+  const facts = pd.resoFacts ?? {}
   const result = {}
 
-  // Actual field names returned by this API
-  if (raw['Area(sqft)']) result.sqft = String(Math.round(Number(raw['Area(sqft)'])))
-  if (raw.Bedrooms != null) result.bedrooms = String(raw.Bedrooms)
-  if (raw.Bathrooms != null) result.bathrooms = String(raw.Bathrooms)
-  if (raw.yearBuilt) result.yearBuilt = String(raw.yearBuilt)
-
-  // propertyType, stories, pool, garageCars, lotAcres are not returned by this endpoint
+  if (pd.livingArea != null) result.sqft = String(Math.round(Number(pd.livingArea)))
+  if (facts.bedrooms != null) result.bedrooms = String(facts.bedrooms)
+  if (facts.bathroomsFloat != null) result.bathrooms = String(facts.bathroomsFloat)
+  if (facts.yearBuilt != null) result.yearBuilt = String(facts.yearBuilt)
+  if (pd.homeType) result.propertyType = pd.homeType
+  if (pd.lotAreaValue != null && pd.lotAreaUnits) {
+    result.lotSize = `${pd.lotAreaValue} ${pd.lotAreaUnits}`
+  } else if (facts.lotSize) {
+    result.lotSize = facts.lotSize
+  }
 
   return res.status(200).json(result)
 }
