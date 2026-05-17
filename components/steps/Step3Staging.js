@@ -442,7 +442,7 @@ export default function Step3Staging({ onSelectStep }) {
                           <button
                             type="button"
                             onClick={wizardStage === WIZARD_STAGES.length - 1 ? handleLastStageAnalyze : advanceWizard}
-                            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation"
                             style={{ backgroundColor: ACCENT }}
                           >
                             {wizardStage === WIZARD_STAGES.length - 1 ? 'Analyze my Photos →' : currentStage.nextLabel}
@@ -465,7 +465,7 @@ export default function Step3Staging({ onSelectStep }) {
                               type="button"
                               onClick={handleAnalyze}
                               disabled={analyzing}
-                              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                               style={{ backgroundColor: ACCENT }}
                             >
                               {analyzing ? 'Analyzing your photos... 🔍' : 'Analyze my Photos →'}
@@ -557,7 +557,7 @@ export default function Step3Staging({ onSelectStep }) {
                   })()}
 
                   <div className="flex justify-end pt-2">
-                    <button type="button" onClick={() => goTo(2)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                    <button type="button" onClick={() => goTo(2)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                       Continue to Staging Checklist →
                     </button>
                   </div>
@@ -672,7 +672,7 @@ export default function Step3Staging({ onSelectStep }) {
                       <button type="button" onClick={() => goTo(1)} className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors">
                         ← Back
                       </button>
-                      <button type="button" onClick={() => setShowMilestone(true)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                      <button type="button" onClick={() => setShowMilestone(true)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                         Move to the next step: Photography &amp; Listing →
                       </button>
                     </div>
@@ -710,7 +710,7 @@ export default function Step3Staging({ onSelectStep }) {
                         <p className="text-xs font-semibold text-gray-900 truncate">{name}</p>
                         <p className="text-xs text-gray-400">{service} · ⭐ {rating}</p>
                       </div>
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                         Quote
                       </a>
                     </div>

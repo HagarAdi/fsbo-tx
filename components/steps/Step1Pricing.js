@@ -655,7 +655,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           <button
             type="button"
             onClick={() => goTo(2)}
-            className="px-6 py-3 rounded-lg text-sm font-semibold text-white flex items-center gap-2 transition-opacity hover:opacity-90"
+            className="px-6 py-3 rounded-lg text-sm font-semibold text-white flex items-center gap-2 transition-opacity hover:opacity-90 touch-manipulation touch-manipulation"
             style={{ backgroundColor: ACCENT }}
           >
             Continue: Market Comps →
@@ -1099,7 +1099,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           <button
             type="button"
             onClick={() => onSelectStep && onSelectStep(2)}
-            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
+            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation touch-manipulation flex items-center gap-2"
             style={{ backgroundColor: ACCENT }}
           >
             Next: Step 2 — Repairs &amp; Pre-Listing Fixes →

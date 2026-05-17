@@ -511,7 +511,7 @@ export default function Step8Title({ onSelectStep }) {
           <button
             type="button"
             onClick={() => onSelectStep && onSelectStep(9)}
-            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
+            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation flex items-center gap-2"
             style={{ backgroundColor: ACCENT }}
           >
             Move to the next step: Closing Day →

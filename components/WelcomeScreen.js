@@ -170,8 +170,8 @@ function HeroCard({ allDone, nextStep, onSelectStep }) {
       <button
         onClick={() => onSelectStep && onSelectStep(nextStep.id)}
         className="shrink-0 px-8 py-3 rounded-xl font-bold text-slate-900 text-base
-                   bg-emerald-400 hover:bg-emerald-300 active:scale-95
-                   transition-all duration-150 shadow-lg shadow-emerald-900/30"
+                   bg-emerald-400 hover:bg-emerald-300
+                   transition-colors duration-100 touch-manipulation shadow-lg shadow-emerald-900/30"
       >
         Start Step {nextStep.id} →
       </button>
