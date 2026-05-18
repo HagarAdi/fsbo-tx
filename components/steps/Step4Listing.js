@@ -1202,10 +1202,10 @@ export default function Step4Listing({ onSelectStep }) {
                                 <p className="text-xs text-gray-600 mt-1">{p.blurb}</p>
                               </div>
                               <div className="flex flex-col gap-2 flex-shrink-0">
-                                <a href={p.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-800 bg-white hover:bg-gray-50 transition-colors text-center">
+                                <a href={p.url} target="_blank" rel="noopener noreferrer" className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-800 bg-white hover:bg-gray-50 transition-colors text-center touch-manipulation">
                                   Visit →
                                 </a>
-                                <button type="button" onClick={() => handleSelectMls(p.name)} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
+                                <button type="button" onClick={() => handleSelectMls(p.name)} className="px-3 py-2 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                                   Mark as selected
                                 </button>
                               </div>
@@ -1487,7 +1487,7 @@ export default function Step4Listing({ onSelectStep }) {
                         <p className="text-xs font-semibold text-gray-900 truncate">{name}</p>
                         <p className="text-xs text-gray-400">{specialty} · ⭐ {rating} · {price}</p>
                       </div>
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 px-2.5 py-2 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                         Quote
                       </a>
                     </div>
