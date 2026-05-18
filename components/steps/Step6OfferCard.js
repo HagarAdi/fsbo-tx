@@ -232,7 +232,7 @@ export default function Step6OfferCard({
               <button
                 type="button"
                 onClick={() => removeOffer(offer.id)}
-                className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                className="p-2.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors touch-manipulation"
                 aria-label="Delete offer"
                 title="Delete"
               >
@@ -243,7 +243,7 @@ export default function Step6OfferCard({
               <button
                 type="button"
                 onClick={() => toggleExpanded(offer.id)}
-                className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                className="p-2.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors touch-manipulation"
                 aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
                 title={isExpanded ? 'Hide details' : 'Show details'}
               >

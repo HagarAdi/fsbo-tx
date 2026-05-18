@@ -13,7 +13,7 @@ function DrawerInner({ onClose, source }) {
           type="button"
           onClick={onClose}
           aria-label="Close"
-          style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#9ca3af', lineHeight: 0 }}
+          style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', padding: '10px', color: '#9ca3af', lineHeight: 0, touchAction: 'manipulation' }}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

@@ -428,7 +428,7 @@ export default function Step7Inspection({ onSelectStep }) {
                             <button
                               type="button"
                               onClick={() => removeRequest(r.id)}
-                              className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                              className="p-2.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors touch-manipulation"
                               aria-label="Delete repair request"
                               title="Delete"
                             >

@@ -39,7 +39,7 @@ export default function HelpTip({
             setActiveTooltip((cur) => (cur === id ? null : id))
           }
         }}
-        className="inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-bold text-gray-400 border border-gray-300 hover:text-gray-600 hover:border-gray-400 transition-colors ml-1.5 flex-shrink-0 leading-none"
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold text-gray-400 border border-gray-300 hover:text-gray-600 hover:border-gray-400 transition-colors ml-1.5 flex-shrink-0 leading-none touch-manipulation"
         aria-label="Show tip"
         aria-expanded={isActive}
       >

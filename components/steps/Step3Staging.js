@@ -710,7 +710,7 @@ export default function Step3Staging({ onSelectStep }) {
                         <p className="text-xs font-semibold text-gray-900 truncate">{name}</p>
                         <p className="text-xs text-gray-400">{service} · ⭐ {rating}</p>
                       </div>
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 px-2.5 py-2 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                         Quote
                       </a>
                     </div>

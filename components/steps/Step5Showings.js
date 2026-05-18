@@ -376,7 +376,7 @@ export default function Step5Showings({ onSelectStep }) {
                             <button type="button" onClick={goNextMonth} aria-label="Next month" className="w-10 h-10 rounded-md text-gray-500 hover:bg-gray-100 transition-colors touch-manipulation">›</button>
                           </div>
                           <p className="text-sm font-semibold text-gray-800">{calendarMonthLabel}</p>
-                          <button type="button" onClick={goThisMonth} className="text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors px-2 py-1 rounded-md hover:bg-gray-100">
+                          <button type="button" onClick={goThisMonth} className="text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors px-2 py-2 rounded-md hover:bg-gray-100 touch-manipulation">
                             Today
                           </button>
                         </div>
