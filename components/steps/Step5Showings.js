@@ -281,7 +281,7 @@ export default function Step5Showings({ onSelectStep }) {
                                   <button
                                     type="button"
                                     onClick={() => deleteShowing(s.id)}
-                                    className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                    className="p-2.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors touch-manipulation"
                                     aria-label="Delete showing"
                                     title="Delete"
                                   >
@@ -292,7 +292,7 @@ export default function Step5Showings({ onSelectStep }) {
                                   <button
                                     type="button"
                                     onClick={() => toggleExpand(s.id)}
-                                    className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                                    className="p-2.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors touch-manipulation"
                                     aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
                                     title={isExpanded ? 'Hide details' : 'Show details'}
                                   >
@@ -372,8 +372,8 @@ export default function Step5Showings({ onSelectStep }) {
                       <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
                         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                           <div className="flex items-center gap-1">
-                            <button type="button" onClick={goPrevMonth} aria-label="Previous month" className="w-8 h-8 rounded-md text-gray-500 hover:bg-gray-100 transition-colors">‹</button>
-                            <button type="button" onClick={goNextMonth} aria-label="Next month" className="w-8 h-8 rounded-md text-gray-500 hover:bg-gray-100 transition-colors">›</button>
+                            <button type="button" onClick={goPrevMonth} aria-label="Previous month" className="w-10 h-10 rounded-md text-gray-500 hover:bg-gray-100 transition-colors touch-manipulation">‹</button>
+                            <button type="button" onClick={goNextMonth} aria-label="Next month" className="w-10 h-10 rounded-md text-gray-500 hover:bg-gray-100 transition-colors touch-manipulation">›</button>
                           </div>
                           <p className="text-sm font-semibold text-gray-800">{calendarMonthLabel}</p>
                           <button type="button" onClick={goThisMonth} className="text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors px-2 py-1 rounded-md hover:bg-gray-100">

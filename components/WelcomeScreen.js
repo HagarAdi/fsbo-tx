@@ -57,7 +57,7 @@ function StepRow({ step, isComplete, onClick }) {
     <button
       onClick={() => onClick(step.id)}
       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left
-                 hover:bg-slate-50 active:scale-[0.98] transition-all duration-100"
+                 hover:bg-slate-50 transition-colors touch-manipulation"
     >
       <span
         className="w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full shrink-0"
@@ -274,7 +274,7 @@ export default function WelcomeScreen({ homeAddress = '', onShowOnboarding, comp
             <button
               onClick={() => onSelectStep && onSelectStep(1)}
               className="text-base font-bold text-emerald-400 hover:text-emerald-300
-                         active:scale-95 transition-all duration-100 underline underline-offset-2"
+                         transition-colors touch-manipulation underline underline-offset-2"
             >
               Complete Step 1
             </button>
