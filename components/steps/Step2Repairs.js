@@ -424,7 +424,7 @@ export default function Step2Repairs({ onSelectStep }) {
               <button
                 type="button"
                 onClick={() => onSelectStep && onSelectStep(3)}
-                className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation touch-manipulation"
                 style={{ backgroundColor: ACCENT }}
               >
                 Move to the next step: Staging &amp; Curb Appeal →
@@ -449,7 +449,7 @@ export default function Step2Repairs({ onSelectStep }) {
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-shrink-0 text-center px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                    className="flex-shrink-0 text-center px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation"
                     style={{ backgroundColor: ACCENT }}
                   >
                     Quote

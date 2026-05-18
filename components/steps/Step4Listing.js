@@ -375,7 +375,7 @@ function PhotoWizard({ stages, stageIndex, photos, onAdd, onAdvance, onAnalyze, 
           <button
             type="button"
             onClick={isLastStage && onAnalyze ? () => { onAdvance(); onAnalyze() } : onAdvance}
-            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation"
             style={{ backgroundColor: ACCENT }}
           >
             {isLastStage && onAnalyze ? 'Analyze my Photos →' : current.nextLabel}
@@ -902,7 +902,7 @@ export default function Step4Listing({ onSelectStep }) {
                               type="button"
                               onClick={handleAnalyzePhotos}
                               disabled={analyzing}
-                              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                               style={{ backgroundColor: ACCENT }}
                             >
                               {analyzing ? 'Analyzing your shots... 🔍' : 'Analyze my Photos →'}
@@ -986,7 +986,7 @@ export default function Step4Listing({ onSelectStep }) {
                               type="button"
                               onClick={handleCompare}
                               disabled={comparing}
-                              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
                               style={{ backgroundColor: ACCENT }}
                             >
                               {comparing ? 'Comparing your shots... 🔍' : 'Compare before & after →'}
@@ -1065,7 +1065,7 @@ export default function Step4Listing({ onSelectStep }) {
                   )}
 
                   <div className="flex justify-end pt-2">
-                    <button type="button" onClick={() => goTo(2)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                    <button type="button" onClick={() => goTo(2)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                       Continue to Your Listing →
                     </button>
                   </div>
@@ -1148,7 +1148,7 @@ export default function Step4Listing({ onSelectStep }) {
                         type="button"
                         onClick={handleGenerateAll}
                         disabled={generating}
-                        className="w-full px-5 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                        className="w-full px-5 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                         style={{ backgroundColor: ACCENT }}
                       >
                         {generating ? (
@@ -1205,7 +1205,7 @@ export default function Step4Listing({ onSelectStep }) {
                                 <a href={p.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-800 bg-white hover:bg-gray-50 transition-colors text-center">
                                   Visit →
                                 </a>
-                                <button type="button" onClick={() => handleSelectMls(p.name)} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                                <button type="button" onClick={() => handleSelectMls(p.name)} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                                   Mark as selected
                                 </button>
                               </div>
@@ -1278,7 +1278,7 @@ export default function Step4Listing({ onSelectStep }) {
                       <button type="button" onClick={() => goTo(1)} className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors">
                         ← Back
                       </button>
-                      <button type="button" onClick={() => goTo(3)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                      <button type="button" onClick={() => goTo(3)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                         Continue to Title Company →
                       </button>
                     </div>
@@ -1414,7 +1414,7 @@ export default function Step4Listing({ onSelectStep }) {
                     <button type="button" onClick={() => goTo(2)} className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors">
                       ← Back
                     </button>
-                    <button type="button" onClick={() => onSelectStep && onSelectStep(5)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                    <button type="button" onClick={() => onSelectStep && onSelectStep(5)} className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                       Move to the next step: Showings &amp; Open Houses →
                     </button>
                   </div>
@@ -1487,7 +1487,7 @@ export default function Step4Listing({ onSelectStep }) {
                         <p className="text-xs font-semibold text-gray-900 truncate">{name}</p>
                         <p className="text-xs text-gray-400">{specialty} · ⭐ {rating} · {price}</p>
                       </div>
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                         Quote
                       </a>
                     </div>

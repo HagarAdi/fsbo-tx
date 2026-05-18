@@ -212,7 +212,7 @@ export default function Step6Offers({ onSelectStep }) {
               <button
                 type="button"
                 onClick={() => onSelectStep && onSelectStep(7)}
-                className="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                className="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation"
                 style={{ backgroundColor: ACCENT }}
               >
                 Move to the next step: Option Period &amp; Inspection →
@@ -230,7 +230,7 @@ export default function Step6Offers({ onSelectStep }) {
                 <button
                   type="button"
                   onClick={addOffer}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white flex-shrink-0 transition-opacity hover:opacity-90"
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white flex-shrink-0 transition-opacity hover:opacity-90 touch-manipulation"
                   style={{ backgroundColor: ACCENT }}
                 >
                   + Add Offer
@@ -244,7 +244,7 @@ export default function Step6Offers({ onSelectStep }) {
                 <button
                   type="button"
                   onClick={addOffer}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation"
                   style={{ backgroundColor: ACCENT }}
                 >
                   Log your first offer
@@ -362,7 +362,7 @@ export default function Step6Offers({ onSelectStep }) {
             <button
               type="button"
               onClick={() => onSelectStep && onSelectStep(7)}
-              className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 flex items-center gap-2"
+              className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation flex items-center gap-2"
               style={{ backgroundColor: ACCENT }}
             >
               Move to the next step: Option Period &amp; Inspection →

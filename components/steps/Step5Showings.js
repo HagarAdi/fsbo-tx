@@ -246,7 +246,7 @@ export default function Step5Showings({ onSelectStep }) {
                       <button
                         type="button"
                         onClick={addShowing}
-                        className="px-4 py-2 rounded-lg text-sm font-semibold text-white flex-shrink-0 transition-opacity hover:opacity-90"
+                        className="px-4 py-2 rounded-lg text-sm font-semibold text-white flex-shrink-0 transition-opacity hover:opacity-90 touch-manipulation"
                         style={{ backgroundColor: ACCENT }}
                       >
                         + Log New Showing
@@ -362,7 +362,7 @@ export default function Step5Showings({ onSelectStep }) {
                     {showings.length === 0 && logView === 'list' && (
                       <div className="rounded-xl border border-dashed border-gray-200 py-10 flex flex-col items-center gap-3">
                         <p className="text-sm text-gray-400">No showings logged yet.</p>
-                        <button type="button" onClick={addShowing} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+                        <button type="button" onClick={addShowing} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                           Log your first showing
                         </button>
                       </div>
@@ -449,7 +449,7 @@ export default function Step5Showings({ onSelectStep }) {
                     <button
                       type="button"
                       onClick={() => setShowMilestone(true)}
-                      className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                      className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation"
                       style={{ backgroundColor: ACCENT }}
                     >
                       Move to the next step: Review &amp; Negotiate Offers →
@@ -556,7 +556,7 @@ export default function Step5Showings({ onSelectStep }) {
             <button
               type="button"
               onClick={closeModal}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation"
               style={{ backgroundColor: ACCENT }}
             >
               Got it
@@ -610,7 +610,7 @@ export default function Step5Showings({ onSelectStep }) {
               <button type="button" onClick={() => deleteShowing(panelShowing.id)} className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
                 Delete
               </button>
-              <button type="button" onClick={closePanel} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: ACCENT }}>
+              <button type="button" onClick={closePanel} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation" style={{ backgroundColor: ACCENT }}>
                 Done
               </button>
             </footer>
