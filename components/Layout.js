@@ -60,7 +60,7 @@ export default function Layout({ children }) {
                   onClick={() => setSidebarOpen(true)}
                   title="Show steps"
                   className="w-9 h-full bg-gray-50 border-r border-gray-200 hover:bg-gray-100
-                             transition-colors flex flex-col items-center justify-center gap-2 text-gray-400"
+                             transition-colors flex flex-col items-center justify-center gap-2 text-gray-400 touch-manipulation"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor">
                     <path d="M6 4l4 4-4 4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

@@ -90,7 +90,7 @@ export default function Sidebar({ onClose, onCollapse }) {
               type="button"
               onClick={onCollapse}
               title="Collapse sidebar"
-              className="hidden md:flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-200 transition-colors text-gray-400 text-sm font-bold ml-2"
+              className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-200 transition-colors text-gray-400 text-sm font-bold ml-2 touch-manipulation"
               aria-label="Collapse sidebar"
             >
               ‹‹
