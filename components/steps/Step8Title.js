@@ -569,7 +569,7 @@ export default function Step8Title({ onSelectStep }) {
                 {DRAWERS.find(d => d.id === activeDrawer)?.emoji}{' '}
                 {DRAWERS.find(d => d.id === activeDrawer)?.label}
               </span>
-              <button type="button" onClick={() => setActiveDrawer(null)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+              <button type="button" onClick={() => setActiveDrawer(null)} className="w-10 h-10 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors text-xl touch-manipulation">✕</button>
             </div>
 
             <div className="overflow-y-auto flex-1 px-5 py-6 space-y-6">

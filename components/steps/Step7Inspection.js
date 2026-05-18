@@ -732,7 +732,7 @@ export default function Step7Inspection({ onSelectStep }) {
                 {DRAWERS.find(d => d.id === activeDrawer)?.label}
               </h3>
               <button type="button" onClick={closeDrawer}
-                className="text-gray-400 hover:text-gray-600 transition-colors text-2xl leading-none">
+                className="w-10 h-10 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors text-2xl leading-none touch-manipulation">
                 ×
               </button>
             </div>
