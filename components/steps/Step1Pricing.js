@@ -107,8 +107,9 @@ const COMPS_TIPS = [
 ]
 
 const SUB_STEPS = [
-  { id: 1, label: 'Property Details' },
-  { id: 2, label: 'Market Comps' },
+  { id: 1, label: 'Your Listing Price' },
+  { id: 2, label: 'Property Details' },
+  { id: 3, label: 'Market Comps' },
 ]
 
 const slideVariants = {
@@ -155,6 +156,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
   const [dataLoaded, setDataLoaded] = useState(false)
   const autoFillAttemptedRef = useRef(false)
 
+  // null = not chosen yet, 'manual' = user has a price, 'comps' = researching neighbors
+  const [priceMode, setPriceMode] = useState(null)
+  const [manualPrice, setManualPrice] = useState('')
+  // 'manual' | 'comps' — which price the user selected when both exist
+  const [selectedPrice, setSelectedPrice] = useState(null)
+
   const goTo = (step) => {
     setDirection(step > activeSubStep ? 1 : -1)
     setActiveSubStep(step)
@@ -187,15 +194,40 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     }
   }
 
-  // Auto-fill once after localStorage data is loaded, only if the form is still empty
-  useEffect(() => {
-    if (!dataLoaded || !homeAddress || autoFillAttemptedRef.current) return
-    autoFillAttemptedRef.current = true
-    if (!sqft && !bedrooms && !bathrooms) {
+  // Deferred to when the user actually navigates to Property Details
+  const triggerAutoFill = () => {
+    if (!autoFillAttemptedRef.current && homeAddress && !sqft && !bedrooms && !bathrooms) {
+      autoFillAttemptedRef.current = true
       handleFetchHomeInfo(homeAddress)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataLoaded])
+  }
+
+  const handleUseManualPrice = () => {
+    const num = parseFloat(manualPrice)
+    if (!(num > 0)) return
+    const estimate = { currentEstimate: Math.round(num), suggestedListPrice: Math.round(num) }
+    try { localStorage.setItem('fsbo_priceEstimate', JSON.stringify(estimate)) } catch {}
+    if (onPriceUpdate) onPriceUpdate(estimate)
+    if (onSelectStep) onSelectStep(2)
+  }
+
+  const handleGoToPropertyDetails = (mode) => {
+    setPriceMode(mode)
+    goTo(2)
+    triggerAutoFill()
+  }
+
+  const handleSelectPrice = (source) => {
+    setSelectedPrice(source)
+    const num = source === 'manual' ? parseFloat(manualPrice) : baseValue
+    if (!(num > 0)) return
+    const estimate = {
+      currentEstimate: Math.round(num),
+      suggestedListPrice: source === 'comps' ? suggestedListPrice : Math.round(num),
+    }
+    try { localStorage.setItem('fsbo_priceEstimate', JSON.stringify(estimate)) } catch {}
+    if (onPriceUpdate) onPriceUpdate(estimate)
+  }
 
   const fieldInput = "border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-green-500 bg-white"
   const fieldLabel = "block text-[11px] font-medium uppercase tracking-wide text-gray-500 mb-1"
@@ -205,13 +237,14 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     : lotAcres
   const handleLotChange = (raw) => {
     if (lotUnit === 'sqft') {
-      const sqft = parseFloat(raw)
-      setLotAcres(Number.isFinite(sqft) ? (sqft / SQFT_PER_ACRE).toFixed(6) : '')
+      const sqftVal = parseFloat(raw)
+      setLotAcres(Number.isFinite(sqftVal) ? (sqftVal / SQFT_PER_ACRE).toFixed(6) : '')
     } else {
       setLotAcres(raw)
     }
   }
 
+  // Load from localStorage on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem('fsbo_stepData')
@@ -233,23 +266,28 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           if (s1.comps && s1.comps.length > 0) {
             setComps(s1.comps.map((c) => ({ ...EMPTY_COMP, ...c })))
           }
+          if (s1.priceMode !== undefined) setPriceMode(s1.priceMode)
+          if (s1.manualPrice !== undefined) setManualPrice(s1.manualPrice)
+          if (s1.selectedPrice !== undefined) setSelectedPrice(s1.selectedPrice)
         }
       }
     } catch {}
     setDataLoaded(true)
   }, [])
 
+  // Persist to localStorage whenever any field changes (guarded until load is complete)
   useEffect(() => {
+    if (!dataLoaded) return
     try {
       const saved = localStorage.getItem('fsbo_stepData')
       const existing = saved ? JSON.parse(saved) : {}
       localStorage.setItem(
         'fsbo_stepData',
-        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, propertyType, lotUnit, comps } })
+        JSON.stringify({ ...existing, step1: { sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, propertyType, lotUnit, comps, priceMode, manualPrice, selectedPrice } })
       )
       notifyStepDataChange()
     } catch {}
-  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, propertyType, lotUnit, comps])
+  }, [sqft, bedrooms, bathrooms, yearBuilt, condition, stories, pool, garageCars, lotAcres, propertyType, lotUnit, comps, priceMode, manualPrice, selectedPrice, dataLoaded])
 
   const updateComp = (index, field, value) => {
     setComps((prev) => {
@@ -314,8 +352,11 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
     ? Math.ceil(baseValue / 25000) * 25000 - 100
     : null
 
+  // Write comp-based price to localStorage — skipped when user has selected manual price
   useEffect(() => {
     if (!baseValue) return
+    if (selectedPrice === 'manual') return
+    if (priceMode === 'manual' && selectedPrice === null) return
     const estimate = {
       currentEstimate: Math.round(baseValue),
       suggestedListPrice,
@@ -324,7 +365,12 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       localStorage.setItem('fsbo_priceEstimate', JSON.stringify(estimate))
     } catch {}
     if (onPriceUpdate) onPriceUpdate(estimate)
-  }, [baseValue, suggestedListPrice, onPriceUpdate])
+  }, [baseValue, suggestedListPrice, onPriceUpdate, selectedPrice, priceMode])
+
+  const manualNum = parseFloat(manualPrice)
+  const showComparison = priceMode === 'manual' && hasComps && baseValue && manualNum > 0
+  const gapPct = showComparison ? Math.abs(manualNum - baseValue) / baseValue * 100 : 0
+  const manualIsHigher = manualNum > baseValue
 
   return (
     <div className="px-4 py-8 md:px-10 md:py-12">
@@ -391,8 +437,71 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
           exit="exit"
         >
 
-      {/* ── CARD 1: Property Details ── */}
+      {/* ── CARD 1: Your Listing Price (gate) ── */}
       {activeSubStep === 1 && (
+      <section className="mb-10">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Do you have a listing price in mind?</h3>
+        <p className="text-sm text-gray-500 mb-6">
+          Enter your number and move on, or see what similar homes nearby are listing for first.
+        </p>
+
+        <div className="space-y-4">
+          {/* Option A */}
+          <div className="rounded-xl border-2 border-gray-200 bg-white p-5 hover:border-green-200 transition-colors">
+            <h4 className="text-base font-semibold text-gray-900 mb-1">I have a price in mind</h4>
+            <p className="text-sm text-gray-500 mb-4">Enter it and move straight to Step 2 — repairs and pre-listing fixes.</p>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-sm font-medium text-gray-700">$</span>
+              <input
+                type="number"
+                value={manualPrice}
+                onChange={(e) => setManualPrice(e.target.value)}
+                placeholder="e.g. 485000"
+                className={"flex-1 max-w-[200px] " + fieldInput}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={handleUseManualPrice}
+                disabled={!(manualNum > 0)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed w-fit"
+                style={{ backgroundColor: ACCENT }}
+              >
+                Use this price → go to Step 2
+              </button>
+              {manualNum > 0 && (
+                <button
+                  type="button"
+                  onClick={() => handleGoToPropertyDetails('manual')}
+                  className="text-sm text-left underline underline-offset-2 transition-colors w-fit"
+                  style={{ color: ACCENT }}
+                >
+                  Want to see what neighbors are listing first? →
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Option B */}
+          <div className="rounded-xl border-2 border-gray-200 bg-white p-5 hover:border-green-200 transition-colors">
+            <h4 className="text-base font-semibold text-gray-900 mb-1">Not sure yet</h4>
+            <p className="text-sm text-gray-500 mb-4">See what similar homes in your area are listing for and build a price from there.</p>
+            <button
+              type="button"
+              onClick={() => handleGoToPropertyDetails('comps')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              style={{ backgroundColor: ACCENT }}
+            >
+              See what neighbors are listing →
+            </button>
+          </div>
+        </div>
+      </section>
+      )}
+
+      {/* ── CARD 2: Property Details ── */}
+      {activeSubStep === 2 && (
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Your home details</h3>
 
@@ -654,8 +763,8 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         <div className="mt-8 flex justify-end">
           <button
             type="button"
-            onClick={() => goTo(2)}
-            className="px-6 py-3 rounded-lg text-sm font-semibold text-white flex items-center gap-2 transition-opacity hover:opacity-90 touch-manipulation touch-manipulation"
+            onClick={() => goTo(3)}
+            className="px-6 py-3 rounded-lg text-sm font-semibold text-white flex items-center gap-2 transition-opacity hover:opacity-90 touch-manipulation"
             style={{ backgroundColor: ACCENT }}
           >
             Continue: Market Comps →
@@ -664,8 +773,8 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       </section>
       )}
 
-      {/* ── CARD 2: Market Comps ── */}
-      {activeSubStep === 2 && (
+      {/* ── CARD 3: Market Comps ── */}
+      {activeSubStep === 3 && (
       <div>
       <section className="mb-10">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">How to find your comps</h3>
@@ -699,7 +808,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
       </section>
 
       <section className="mb-10">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Comparable sales</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Comparable listings</h3>
         <p className="text-sm text-gray-500 mb-4">
           Enter 3–5 recent nearby listings to establish your price baseline. Each comp&apos;s features are normalized to match your home before averaging.
         </p>
@@ -755,8 +864,6 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
 
         <div className="space-y-3">
           {comps.map((comp, i) => {
-            const stats = compStats[i]
-
             const compSqftNum = comp.sqft !== '' ? parseFloat(comp.sqft) : NaN
             const sqftOutlier = sqftNum > 0 && !isNaN(compSqftNum)
               && Math.abs(compSqftNum / sqftNum - 1) > 0.25
@@ -778,11 +885,11 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
             const bathroomsMismatch = !isNaN(compBathrooms) && !isNaN(subjBathrooms)
               && Math.abs(compBathrooms - subjBathrooms) >= 1
 
-            const compLotAcres = (comp.lotAcres || '') !== '' ? parseFloat(comp.lotAcres) : NaN
+            const compLotAcresNum = (comp.lotAcres || '') !== '' ? parseFloat(comp.lotAcres) : NaN
             const subjLotAcres = lotAcres !== '' ? parseFloat(lotAcres) : NaN
-            const lotMismatch = !isNaN(compLotAcres) && !isNaN(subjLotAcres)
-              && subjLotAcres > 0 && compLotAcres > 0
-              && Math.abs(compLotAcres / subjLotAcres - 1) > 0.5
+            const lotMismatch = !isNaN(compLotAcresNum) && !isNaN(subjLotAcres)
+              && subjLotAcres > 0 && compLotAcresNum > 0
+              && Math.abs(compLotAcresNum / subjLotAcres - 1) > 0.5
 
             const priceNum = parseFloat(comp.price)
             const domNum = parseFloat(comp.dom)
@@ -1017,14 +1124,13 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
                             <li>⚠ This comp has {compBathrooms} bathroom{compBathrooms === 1 ? '' : 's'} vs your home&apos;s {subjBathrooms} — find a closer match</li>
                           )}
                           {lotMismatch && (
-                            <li>⚠ This comp&apos;s lot is {compLotAcres} acres vs your home&apos;s {subjLotAcres} — find a closer match for accurate pricing</li>
+                            <li>⚠ This comp&apos;s lot is {compLotAcresNum} acres vs your home&apos;s {subjLotAcres} — find a closer match for accurate pricing</li>
                           )}
                         </>
                       )}
                     </ul>
                   </div>
                 )}
-
               </div>
             )
           })}
@@ -1042,69 +1148,140 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         )}
       </section>
 
-        {hasComps && baseValue && (
-          <section className="mb-10">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Suggested List Price</h3>
+      {/* ── Price output ── */}
+      {hasComps && baseValue && (
+        <section className="mb-10">
+          {showComparison ? (
+            <>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Your price vs. what comps suggest</h3>
 
-            <div
-              className="rounded-xl border-2 px-6 py-6 mb-4"
-              style={{ borderColor: ACCENT, backgroundColor: '#f0fdf4' }}
-            >
-              <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#166534' }}>
-                Recommended list price
-              </p>
-              <p className="text-4xl font-bold mb-2" style={{ color: '#14532d' }}>
-                ${formatDollars(suggestedListPrice)}
-              </p>
-              <p className="text-sm" style={{ color: '#166534' }}>
-                Calculated range: <span className="font-semibold">${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}</span>
-              </p>
-              <p className="mt-3 text-xs" style={{ color: '#166534' }}>
-                💡 Priced just under the next $25k bucket to land inside Zillow and Redfin search filters (e.g. buyers searching &quot;under $625k&quot; will see a $624,900 listing).
-              </p>
-            </div>
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div
+                  className="rounded-xl border-2 px-4 py-4 text-center transition-colors"
+                  style={{
+                    borderColor: selectedPrice === 'manual' ? ACCENT : '#e5e7eb',
+                    backgroundColor: selectedPrice === 'manual' ? '#f0fdf4' : 'white',
+                  }}
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Your price</p>
+                  <p className="text-2xl font-bold text-gray-900">${formatDollars(manualNum)}</p>
+                </div>
+                <div
+                  className="rounded-xl border-2 px-4 py-4 text-center transition-colors"
+                  style={{
+                    borderColor: selectedPrice === 'comps' ? ACCENT : '#e5e7eb',
+                    backgroundColor: selectedPrice === 'comps' ? '#f0fdf4' : 'white',
+                  }}
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Comp-based</p>
+                  <p className="text-2xl font-bold text-gray-900">${formatDollars(suggestedListPrice)}</p>
+                </div>
+              </div>
 
-            <div className="mb-4 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                Comps give you a defensible baseline, but the market can swing the actual sale price 5–10% either way.
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <p className="text-sm font-semibold text-gray-800 mb-3">Which do you want to use going forward?</p>
+              <div className="flex flex-col sm:flex-row gap-3 mb-4">
                 <button
                   type="button"
-                  onClick={() => setAppraiserPanelOpen(true)}
-                  className="inline-flex items-center gap-1 rounded-md px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: ACCENT }}
+                  onClick={() => handleSelectPrice('manual')}
+                  className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold border-2 transition-all"
+                  style={
+                    selectedPrice === 'manual'
+                      ? { borderColor: ACCENT, backgroundColor: '#f0fdf4', color: '#15803d' }
+                      : { borderColor: '#e5e7eb', backgroundColor: 'white', color: '#374151' }
+                  }
                 >
-                  Get a pre-listing appraisal
-                  <span aria-hidden="true">→</span>
+                  {selectedPrice === 'manual' ? '✓ ' : ''}My price: ${formatDollars(manualNum)}
                 </button>
-                <span className="text-xs text-gray-500">$300–400</span>
+                <button
+                  type="button"
+                  onClick={() => handleSelectPrice('comps')}
+                  className="flex-1 px-4 py-3 rounded-lg text-sm font-semibold border-2 transition-all"
+                  style={
+                    selectedPrice === 'comps'
+                      ? { borderColor: ACCENT, backgroundColor: '#f0fdf4', color: '#15803d' }
+                      : { borderColor: '#e5e7eb', backgroundColor: 'white', color: '#374151' }
+                  }
+                >
+                  {selectedPrice === 'comps' ? '✓ ' : ''}Comp-based: ${formatDollars(suggestedListPrice)}
+                </button>
               </div>
-            </div>
 
-            {validCount < 3 && (
-              <div className="mb-4 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a', color: '#92400e' }}>
-                ⚠ This estimate is based on only {validCount} comp{validCount === 1 ? '' : 's'}. We recommend at least 3 to defend the price against buyer pushback.
+              {gapPct > 10 && (
+                <p className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded px-3 py-2.5 mb-4">
+                  Your price is {Math.round(gapPct)}% {manualIsHigher ? 'above' : 'below'} what comps suggest. Texas buyers will see the same listings you did — they&apos;ll know.
+                </p>
+              )}
+
+              {validCount < 3 && (
+                <div className="mb-4 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a', color: '#92400e' }}>
+                  ⚠ Comp data is based on only {validCount} comp{validCount === 1 ? '' : 's'}. Add at least 3 to make the comparison meaningful.
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">What your comps suggest</h3>
+
+              <div
+                className="rounded-xl border-2 px-6 py-6 mb-4"
+                style={{ borderColor: ACCENT, backgroundColor: '#f0fdf4' }}
+              >
+                <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#166534' }}>
+                  Comp-based listing price
+                </p>
+                <p className="text-4xl font-bold mb-2" style={{ color: '#14532d' }}>
+                  ${formatDollars(suggestedListPrice)}
+                </p>
+                <p className="text-sm" style={{ color: '#166534' }}>
+                  Calculated range: <span className="font-semibold">${formatDollars(rangeMin)} — ${formatDollars(rangeMax)}</span>
+                </p>
+                <p className="mt-3 text-xs" style={{ color: '#166534' }}>
+                  💡 Priced just under the next $25k bucket to land inside Zillow and Redfin search filters (e.g. buyers searching &quot;under $625k&quot; will see a $624,900 listing).
+                </p>
               </div>
-            )}
 
-            <p className="mt-3 text-xs text-gray-500">
-              📊 This is an AI-generated calculation based on the data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
+              {validCount < 3 && (
+                <div className="mb-4 rounded-lg px-4 py-3 text-sm" style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a', color: '#92400e' }}>
+                  ⚠ This baseline is from only {validCount} comp{validCount === 1 ? '' : 's'}. Add at least 3 to defend the price against buyer pushback.
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="mb-4 rounded-lg px-4 py-3" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              Comps give you a defensible baseline, but the market can swing the actual sale price 5–10% either way.
             </p>
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <button
+                type="button"
+                onClick={() => setAppraiserPanelOpen(true)}
+                className="inline-flex items-center gap-1 rounded-md px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: ACCENT }}
+              >
+                Get a pre-listing appraisal
+                <span aria-hidden="true">→</span>
+              </button>
+              <span className="text-xs text-gray-500">$300–400</span>
+            </div>
+          </div>
 
-          </section>
-        )}
+          <p className="mt-3 text-xs text-gray-500">
+            📊 This is a calculation based on the listing data you entered. It is not an appraisal and should not be used as the basis for any loan or legal transaction.
+          </p>
+        </section>
+      )}
 
-        <div className="pt-6 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={() => onSelectStep && onSelectStep(2)}
-            className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation touch-manipulation flex items-center gap-2"
-            style={{ backgroundColor: ACCENT }}
-          >
-            Next: Step 2 — Repairs &amp; Pre-Listing Fixes →
-          </button>
-        </div>
+      <div className="pt-6 border-t border-gray-100">
+        <button
+          type="button"
+          onClick={() => onSelectStep && onSelectStep(2)}
+          className="px-6 py-3 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90 touch-manipulation flex items-center gap-2"
+          style={{ backgroundColor: ACCENT }}
+        >
+          Next: Step 2 — Repairs &amp; Pre-Listing Fixes →
+        </button>
+      </div>
       </div>
       )}
 
@@ -1117,7 +1294,7 @@ export default function Step1Pricing({ homeAddress, onPriceUpdate, onSelectStep 
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <h4 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Pro Tips</h4>
           <div className="space-y-3">
-            {(activeSubStep === 2 ? COMPS_TIPS : PRO_TIPS).map(({ tip, source }, i) => (
+            {(activeSubStep === 3 ? COMPS_TIPS : PRO_TIPS).map(({ tip, source }, i) => (
               <div key={i} className="border-l-2 pl-3" style={{ borderColor: ACCENT }}>
                 <p className="text-xs text-gray-700 leading-relaxed mb-1">{tip}</p>
                 <p className="text-xs text-gray-400">— {source}</p>
